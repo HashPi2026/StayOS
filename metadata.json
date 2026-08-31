@@ -1,0 +1,6 @@
+{
+  "name": "StayOS",
+  "description": "Enterprise hospitality management and property configuration system featuring Property Master, Buildings Management, and inventory configuration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
