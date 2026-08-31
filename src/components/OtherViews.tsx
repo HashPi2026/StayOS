@@ -1,58 +1,6 @@
 import React, { useState } from 'react';
 import { useProperty } from '../context/PropertyContext';
 
-export const RoomTypesView: React.FC = () => {
-  const { roomTypes, navigate } = useProperty();
-  return (
-    <div className="flex flex-col w-full h-full max-w-[1200px] mx-auto px-6 py-8 min-h-screen bg-[#f7f9fb]">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <nav className="flex items-center text-body-sm text-[#75859d] mb-1">
-            <span onClick={() => navigate('overview')} className="hover:text-[#000000] cursor-pointer">Configuration</span>
-            <span className="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
-            <span className="text-[#191c1e] font-semibold">Room Types</span>
-          </nav>
-          <h1 className="text-headline-md font-semibold text-[#191c1e]">Room Types</h1>
-          <p className="text-body-md text-[#45464d] mt-0.5">Manage room categories, bed layouts, and default base rates.</p>
-        </div>
-      </div>
-
-      <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-[#f2f4f6] border-b border-[#e0e3e5] text-label-uppercase text-[#45464d]">
-              <th className="px-4 py-3">Room Type</th>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Capacity</th>
-              <th className="px-4 py-3">Bed Configuration</th>
-              <th className="px-4 py-3">Base Rate</th>
-              <th className="px-4 py-3">Inventory</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#e0e3e5] text-body-md text-[#191c1e]">
-            {roomTypes.map((rt) => (
-              <tr key={rt.id} className="hover:bg-[#f2f4f6]/60 transition-colors">
-                <td className="px-4 py-3 font-semibold">{rt.name}</td>
-                <td className="px-4 py-3 font-data-mono text-[12px]">{rt.code}</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 rounded bg-[#dae2fd] text-[#131b2e] text-[11px] font-semibold">
-                    {rt.category}
-                  </span>
-                </td>
-                <td className="px-4 py-3">{rt.capacity} Guests</td>
-                <td className="px-4 py-3 text-[#45464d]">{rt.bedType}</td>
-                <td className="px-4 py-3 font-semibold text-[#0058be]">${rt.baseRate} / night</td>
-                <td className="px-4 py-3 font-data-mono">{rt.totalUnits} Units</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
 export const RoomsView: React.FC = () => {
   const { rooms, buildings, navigate } = useProperty();
   const [selectedBuildingFilter, setSelectedBuildingFilter] = useState('all');

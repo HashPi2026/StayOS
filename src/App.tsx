@@ -13,12 +13,35 @@ import { AddBuildingView } from './components/AddBuildingView';
 import { EditBuildingView } from './components/EditBuildingView';
 import { BuildingDrawer } from './components/BuildingDrawer';
 import { DeleteBuildingDialog } from './components/DeleteBuildingDialog';
+import { FloorsListView } from './components/FloorsListView';
+import { FloorDrawer } from './components/FloorDrawer';
+import { DeleteFloorDialog } from './components/DeleteFloorDialog';
+import { RoomTypesListView } from './components/RoomTypesListView';
+import { AddRoomTypeView } from './components/AddRoomTypeView';
+import { EditRoomTypeView } from './components/EditRoomTypeView';
+import { RoomTypeDrawer } from './components/RoomTypeDrawer';
+import { DeleteRoomTypeDialog } from './components/DeleteRoomTypeDialog';
+import { RoomsListView } from './components/RoomsListView';
+import { AddRoomView } from './components/AddRoomView';
+import { BulkAddRoomsView } from './components/BulkAddRoomsView';
+import { EditRoomView } from './components/EditRoomView';
+import { DeleteRoomDialog } from './components/DeleteRoomDialog';
+import { RoomStatusMasterView } from './components/RoomStatusMasterView';
+import { RoomStatusDrawer } from './components/RoomStatusDrawer';
+import { DeleteRoomStatusDialog } from './components/DeleteRoomStatusDialog';
+import { TaxesView } from './components/TaxesView';
+import { TaxConfigurationView } from './components/TaxConfigurationView';
+import { AddTaxView } from './components/AddTaxView';
+import { AddTaxRateView } from './components/AddTaxRateView';
+import { RateTypesView } from './components/RateTypesView';
+import { TaxDrawer } from './components/TaxDrawer';
+import { TaxRuleDrawer } from './components/TaxRuleDrawer';
+import { TaxConfigDrawer } from './components/TaxConfigDrawer';
+import { DeleteTaxDialog } from './components/DeleteTaxDialog';
 import { VerifyPinModal } from './components/VerifyPinModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { ToastContainer } from './components/ToastContainer';
 import {
-  RoomTypesView,
-  RoomsView,
   AmenitiesView,
   AuditLogsView,
   SystemHealthView,
@@ -38,28 +61,40 @@ const MainLayout: React.FC = () => {
         return <AddBuildingView />;
       case 'edit-building':
         return <EditBuildingView />;
+      case 'floors':
+        return <FloorsListView />;
       case 'room-types':
-        return <RoomTypesView />;
+        return <RoomTypesListView />;
+      case 'add-room-type':
+        return <AddRoomTypeView />;
+      case 'edit-room-type':
+        return <EditRoomTypeView />;
       case 'rooms':
-        return <RoomsView />;
+        return <RoomsListView />;
+      case 'add-room':
+        return <AddRoomView />;
+      case 'bulk-add-rooms':
+        return <BulkAddRoomsView />;
+      case 'edit-room':
+        return <EditRoomView />;
+      case 'room-status':
+        return <RoomStatusMasterView />;
       case 'amenities':
         return <AmenitiesView />;
       case 'rates-packages':
-        return (
-          <GenericSettingsView
-            title="Rates & Packages"
-            subtitle="Manage dynamic pricing models, rate tiers, and promotional packaging."
-            category="Configuration"
-          />
-        );
+        return <RateTypesView />;
       case 'taxes':
-        return (
-          <GenericSettingsView
-            title="Taxes & Surcharges"
-            subtitle="Configure regional accommodation taxes, VAT rules, and municipal fees."
-            category="Configuration"
-          />
-        );
+        return <TaxesView />;
+      case 'tax-configuration':
+        return <TaxConfigurationView />;
+      case 'add-tax':
+        return <AddTaxView />;
+      case 'edit-tax':
+        return <AddTaxView isEdit />;
+      case 'add-tax-rate':
+        return <AddTaxRateView />;
+      case 'edit-tax-rate':
+        return <AddTaxRateView isEdit />;
       case 'policies':
         return (
           <GenericSettingsView
@@ -117,6 +152,17 @@ const MainLayout: React.FC = () => {
       {/* Global Modals & Drawers */}
       <BuildingDrawer />
       <DeleteBuildingDialog />
+      <FloorDrawer />
+      <DeleteFloorDialog />
+      <RoomTypeDrawer />
+      <DeleteRoomTypeDialog />
+      <DeleteRoomDialog />
+      <RoomStatusDrawer />
+      <DeleteRoomStatusDialog />
+      <TaxDrawer />
+      <TaxRuleDrawer />
+      <TaxConfigDrawer />
+      <DeleteTaxDialog />
       <VerifyPinModal />
       <GlobalSearchModal />
       <ToastContainer />

@@ -21,17 +21,20 @@ export const Sidebar: React.FC = () => {
       title: 'Property',
       items: [
         { id: 'overview', label: 'Overview', icon: 'analytics' },
-        { id: 'buildings', label: 'Buildings', icon: 'domain' },
         { id: 'room-types', label: 'Room Types', icon: 'bedroom_parent' },
         { id: 'rooms', label: 'Rooms', icon: 'meeting_room' },
         { id: 'amenities', label: 'Amenities', icon: 'pool' },
+        { id: 'taxes', label: 'Taxes', icon: 'account_balance_wallet' },
+        { id: 'tax-configuration', label: 'Tax Configuration', icon: 'tune' },
+        { id: 'buildings', label: 'Buildings', icon: 'domain' },
+        { id: 'floors', label: 'Floors', icon: 'layers' },
+        { id: 'room-status', label: 'Room Status', icon: 'fact_check' },
       ],
     },
     {
       title: 'Configuration',
       items: [
-        { id: 'rates-packages', label: 'Rates & Packages', icon: 'sell' },
-        { id: 'taxes', label: 'Taxes', icon: 'account_balance_wallet' },
+        { id: 'rates-packages', label: 'Rates', icon: 'sell' },
         { id: 'policies', label: 'Policies', icon: 'policy' },
       ],
     },
@@ -55,7 +58,16 @@ export const Sidebar: React.FC = () => {
   // Helper to determine if item is active
   const isItemActive = (itemId: NavigationPath) => {
     if (activePath === itemId) return true;
-    if ((itemId === 'buildings') && (activePath === 'add-building' || activePath === 'edit-building')) {
+    if (itemId === 'buildings' && (activePath === 'add-building' || activePath === 'edit-building')) {
+      return true;
+    }
+    if (itemId === 'room-types' && (activePath === 'add-room-type' || activePath === 'edit-room-type')) {
+      return true;
+    }
+    if (itemId === 'rooms' && (activePath === 'add-room' || activePath === 'bulk-add-rooms' || activePath === 'edit-room')) {
+      return true;
+    }
+    if (itemId === 'taxes' && (activePath === 'taxes' || activePath === 'add-tax' || activePath === 'edit-tax')) {
       return true;
     }
     return false;
