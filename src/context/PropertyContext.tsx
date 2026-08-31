@@ -10,6 +10,9 @@ import {
   TaxItem,
   TaxSlab,
   RateTypeItem,
+  DocumentTypeItem,
+  OtherChargeCategoryItem,
+  OtherChargeItem,
   Amenity,
   AuditLog,
   NotificationItem,
@@ -23,6 +26,9 @@ import {
   INITIAL_ROOM_STATUSES,
   INITIAL_TAXES,
   INITIAL_RATE_TYPES,
+  INITIAL_DOCUMENT_TYPES,
+  INITIAL_OTHER_CHARGE_CATEGORIES,
+  INITIAL_OTHER_CHARGES,
   INITIAL_AMENITIES,
   INITIAL_AUDIT_LOGS,
   INITIAL_NOTIFICATIONS,
@@ -187,6 +193,60 @@ interface PropertyContextType {
   openDeleteRateTypeDialog: (rateType: RateTypeItem) => void;
   closeDeleteRateTypeDialog: () => void;
 
+  // Document Types
+  documentTypes: DocumentTypeItem[];
+  editingDocumentTypeId: string | null;
+  setEditingDocumentTypeId: (id: string | null) => void;
+  addDocumentType: (data: Omit<DocumentTypeItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateDocumentType: (id: string, updates: Partial<DocumentTypeItem>) => boolean;
+  deleteDocumentType: (id: string) => boolean;
+  toggleDocumentTypeStatus: (id: string) => boolean;
+  setDefaultDocumentType: (id: string) => boolean;
+  isDocumentTypeDrawerOpen: boolean;
+  drawerDocumentType: DocumentTypeItem | null;
+  openAddDocumentTypeDrawer: () => void;
+  openEditDocumentTypeDrawer: (docType: DocumentTypeItem) => void;
+  closeDocumentTypeDrawer: () => void;
+  isDeleteDocumentTypeDialogOpen: boolean;
+  deleteTargetDocumentType: DocumentTypeItem | null;
+  openDeleteDocumentTypeDialog: (docType: DocumentTypeItem) => void;
+  closeDeleteDocumentTypeDialog: () => void;
+
+  // Other Charges Categories
+  otherChargeCategories: OtherChargeCategoryItem[];
+  editingOtherChargeCategoryId: string | null;
+  setEditingOtherChargeCategoryId: (id: string | null) => void;
+  addOtherChargeCategory: (data: Omit<OtherChargeCategoryItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateOtherChargeCategory: (id: string, updates: Partial<OtherChargeCategoryItem>) => boolean;
+  deleteOtherChargeCategory: (id: string) => boolean;
+  setDefaultOtherChargeCategory: (id: string) => boolean;
+  isOtherChargeCategoryDrawerOpen: boolean;
+  drawerOtherChargeCategory: OtherChargeCategoryItem | null;
+  openAddOtherChargeCategoryDrawer: () => void;
+  openEditOtherChargeCategoryDrawer: (category: OtherChargeCategoryItem) => void;
+  closeOtherChargeCategoryDrawer: () => void;
+  isDeleteOtherChargeCategoryDialogOpen: boolean;
+  deleteTargetOtherChargeCategory: OtherChargeCategoryItem | null;
+  openDeleteOtherChargeCategoryDialog: (category: OtherChargeCategoryItem) => void;
+  closeDeleteOtherChargeCategoryDialog: () => void;
+
+  // Other Charges (Configuration)
+  otherCharges: OtherChargeItem[];
+  editingOtherChargeId: string | null;
+  setEditingOtherChargeId: (id: string | null) => void;
+  addOtherCharge: (data: Omit<OtherChargeItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateOtherCharge: (id: string, updates: Partial<OtherChargeItem>) => boolean;
+  deleteOtherCharge: (id: string) => boolean;
+  isOtherChargeDrawerOpen: boolean;
+  drawerOtherCharge: OtherChargeItem | null;
+  openAddOtherChargeDrawer: () => void;
+  openEditOtherChargeDrawer: (charge: OtherChargeItem) => void;
+  closeOtherChargeDrawer: () => void;
+  isDeleteOtherChargeDialogOpen: boolean;
+  deleteTargetOtherCharge: OtherChargeItem | null;
+  openDeleteOtherChargeDialog: (charge: OtherChargeItem) => void;
+  closeDeleteOtherChargeDialog: () => void;
+
   // Search Modal
   isSearchModalOpen: boolean;
   setSearchModalOpen: (open: boolean) => void;
@@ -316,6 +376,39 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [drawerRateType, setDrawerRateType] = useState<RateTypeItem | null>(null);
   const [isDeleteRateTypeDialogOpen, setIsDeleteRateTypeDialogOpen] = useState(false);
   const [deleteTargetRateType, setDeleteTargetRateType] = useState<RateTypeItem | null>(null);
+
+  // Document Types State
+  const [documentTypes, setDocumentTypes] = useState<DocumentTypeItem[]>(() => {
+    const saved = localStorage.getItem('stayos_document_types');
+    return saved ? JSON.parse(saved) : INITIAL_DOCUMENT_TYPES;
+  });
+  const [editingDocumentTypeId, setEditingDocumentTypeId] = useState<string | null>(null);
+  const [isDocumentTypeDrawerOpen, setIsDocumentTypeDrawerOpen] = useState(false);
+  const [drawerDocumentType, setDrawerDocumentType] = useState<DocumentTypeItem | null>(null);
+  const [isDeleteDocumentTypeDialogOpen, setIsDeleteDocumentTypeDialogOpen] = useState(false);
+  const [deleteTargetDocumentType, setDeleteTargetDocumentType] = useState<DocumentTypeItem | null>(null);
+
+  // Other Charges Categories State
+  const [otherChargeCategories, setOtherChargeCategories] = useState<OtherChargeCategoryItem[]>(() => {
+    const saved = localStorage.getItem('stayos_other_charge_categories');
+    return saved ? JSON.parse(saved) : INITIAL_OTHER_CHARGE_CATEGORIES;
+  });
+  const [editingOtherChargeCategoryId, setEditingOtherChargeCategoryId] = useState<string | null>(null);
+  const [isOtherChargeCategoryDrawerOpen, setIsOtherChargeCategoryDrawerOpen] = useState(false);
+  const [drawerOtherChargeCategory, setDrawerOtherChargeCategory] = useState<OtherChargeCategoryItem | null>(null);
+  const [isDeleteOtherChargeCategoryDialogOpen, setIsDeleteOtherChargeCategoryDialogOpen] = useState(false);
+  const [deleteTargetOtherChargeCategory, setDeleteTargetOtherChargeCategory] = useState<OtherChargeCategoryItem | null>(null);
+
+  // Other Charges State
+  const [otherCharges, setOtherCharges] = useState<OtherChargeItem[]>(() => {
+    const saved = localStorage.getItem('stayos_other_charges');
+    return saved ? JSON.parse(saved) : INITIAL_OTHER_CHARGES;
+  });
+  const [editingOtherChargeId, setEditingOtherChargeId] = useState<string | null>(null);
+  const [isOtherChargeDrawerOpen, setIsOtherChargeDrawerOpen] = useState(false);
+  const [drawerOtherCharge, setDrawerOtherCharge] = useState<OtherChargeItem | null>(null);
+  const [isDeleteOtherChargeDialogOpen, setIsDeleteOtherChargeDialogOpen] = useState(false);
+  const [deleteTargetOtherCharge, setDeleteTargetOtherCharge] = useState<OtherChargeItem | null>(null);
 
   const [isVerifyPinOpen, setVerifyPinOpen] = useState(false);
   const [isSearchModalOpen, setSearchModalOpen] = useState(false);
@@ -1228,6 +1321,358 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDeleteTargetRateType(null);
   };
 
+  // Document Types CRUD & Actions
+  const addDocumentType = (data: Omit<DocumentTypeItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const newDocType: DocumentTypeItem = {
+      ...data,
+      id: `doc-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    let updatedList = [...documentTypes];
+    // If set as default, clear default on all others
+    if (newDocType.isDefault) {
+      updatedList = updatedList.map((d) => ({ ...d, isDefault: false }));
+    }
+
+    const updated = [newDocType, ...updatedList];
+    setDocumentTypes(updated);
+    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+
+    // Audit log
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'CREATE',
+      module: 'Document Types',
+      details: `Created document type: ${newDocType.name} (${newDocType.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Document Type "${newDocType.name}" added successfully`, 'success');
+    return true;
+  };
+
+  const updateDocumentType = (id: string, updates: Partial<DocumentTypeItem>): boolean => {
+    let updatedList = [...documentTypes];
+    
+    // If marking as default, remove default from all others
+    if (updates.isDefault) {
+      updatedList = updatedList.map((d) => (d.id !== id ? { ...d, isDefault: false } : d));
+    }
+
+    const updated = updatedList.map((d) =>
+      d.id === id
+        ? {
+            ...d,
+            ...updates,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : d
+    );
+    setDocumentTypes(updated);
+    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+
+    const target = documentTypes.find((d) => d.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'UPDATE',
+      module: 'Document Types',
+      details: `Updated document type: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Document Type updated successfully`, 'success');
+    return true;
+  };
+
+  const deleteDocumentType = (id: string): boolean => {
+    const target = documentTypes.find((d) => d.id === id);
+    const updated = documentTypes.filter((d) => d.id !== id);
+    setDocumentTypes(updated);
+    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'DELETE',
+      module: 'Document Types',
+      details: `Deleted document type: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Document Type "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const toggleDocumentTypeStatus = (id: string): boolean => {
+    const target = documentTypes.find((d) => d.id === id);
+    if (!target) return false;
+    const newStatus = !target.isActive;
+    return updateDocumentType(id, { isActive: newStatus });
+  };
+
+  const setDefaultDocumentType = (id: string): boolean => {
+    const target = documentTypes.find((d) => d.id === id);
+    if (!target) return false;
+    return updateDocumentType(id, { isDefault: true, isActive: true });
+  };
+
+  const openAddDocumentTypeDrawer = () => {
+    setDrawerDocumentType(null);
+    setIsDocumentTypeDrawerOpen(true);
+  };
+
+  const openEditDocumentTypeDrawer = (docType: DocumentTypeItem) => {
+    setDrawerDocumentType(docType);
+    setIsDocumentTypeDrawerOpen(true);
+  };
+
+  const closeDocumentTypeDrawer = () => {
+    setIsDocumentTypeDrawerOpen(false);
+    setDrawerDocumentType(null);
+  };
+
+  const openDeleteDocumentTypeDialog = (docType: DocumentTypeItem) => {
+    setDeleteTargetDocumentType(docType);
+    setIsDeleteDocumentTypeDialogOpen(true);
+  };
+
+  const closeDeleteDocumentTypeDialog = () => {
+    setIsDeleteDocumentTypeDialogOpen(false);
+    setDeleteTargetDocumentType(null);
+  };
+
+  // Other Charges Categories CRUD & Actions
+  const addOtherChargeCategory = (data: Omit<OtherChargeCategoryItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const newCategory: OtherChargeCategoryItem = {
+      ...data,
+      id: `occ-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    let updatedList = [...otherChargeCategories];
+    if (newCategory.isDefault) {
+      updatedList = updatedList.map((c) => ({ ...c, isDefault: false }));
+    }
+
+    const updated = [newCategory, ...updatedList];
+    setOtherChargeCategories(updated);
+    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'CREATE',
+      module: 'Other Charges',
+      details: `Created charge category: ${newCategory.name} (${newCategory.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Category "${newCategory.name}" added successfully`, 'success');
+    return true;
+  };
+
+  const updateOtherChargeCategory = (id: string, updates: Partial<OtherChargeCategoryItem>): boolean => {
+    let updatedList = [...otherChargeCategories];
+    if (updates.isDefault) {
+      updatedList = updatedList.map((c) => (c.id !== id ? { ...c, isDefault: false } : c));
+    }
+
+    const updated = updatedList.map((c) =>
+      c.id === id
+        ? {
+            ...c,
+            ...updates,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : c
+    );
+    setOtherChargeCategories(updated);
+    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+
+    const target = otherChargeCategories.find((c) => c.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'UPDATE',
+      module: 'Other Charges',
+      details: `Updated charge category: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Category updated successfully`, 'success');
+    return true;
+  };
+
+  const deleteOtherChargeCategory = (id: string): boolean => {
+    const target = otherChargeCategories.find((c) => c.id === id);
+    const updated = otherChargeCategories.filter((c) => c.id !== id);
+    setOtherChargeCategories(updated);
+    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'DELETE',
+      module: 'Other Charges',
+      details: `Deleted charge category: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Category "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const setDefaultOtherChargeCategory = (id: string): boolean => {
+    const target = otherChargeCategories.find((c) => c.id === id);
+    if (!target) return false;
+    return updateOtherChargeCategory(id, { isDefault: true });
+  };
+
+  const openAddOtherChargeCategoryDrawer = () => {
+    setDrawerOtherChargeCategory(null);
+    setIsOtherChargeCategoryDrawerOpen(true);
+  };
+
+  const openEditOtherChargeCategoryDrawer = (category: OtherChargeCategoryItem) => {
+    setDrawerOtherChargeCategory(category);
+    setIsOtherChargeCategoryDrawerOpen(true);
+  };
+
+  const closeOtherChargeCategoryDrawer = () => {
+    setIsOtherChargeCategoryDrawerOpen(false);
+    setDrawerOtherChargeCategory(null);
+  };
+
+  const openDeleteOtherChargeCategoryDialog = (category: OtherChargeCategoryItem) => {
+    setDeleteTargetOtherChargeCategory(category);
+    setIsDeleteOtherChargeCategoryDialogOpen(true);
+  };
+
+  const closeDeleteOtherChargeCategoryDialog = () => {
+    setIsDeleteOtherChargeCategoryDialogOpen(false);
+    setDeleteTargetOtherChargeCategory(null);
+  };
+
+  // Other Charges (Configuration) CRUD & Actions
+  const addOtherCharge = (data: Omit<OtherChargeItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const newCharge: OtherChargeItem = {
+      ...data,
+      id: `oc-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newCharge, ...otherCharges];
+    setOtherCharges(updated);
+    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'CREATE',
+      module: 'Other Charges',
+      details: `Created charge: ${newCharge.name} (${newCharge.shortName}) in ${newCharge.category}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Charge "${newCharge.name}" created successfully`, 'success');
+    return true;
+  };
+
+  const updateOtherCharge = (id: string, updates: Partial<OtherChargeItem>): boolean => {
+    const updated = otherCharges.map((c) =>
+      c.id === id
+        ? {
+            ...c,
+            ...updates,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : c
+    );
+    setOtherCharges(updated);
+    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+
+    const target = otherCharges.find((c) => c.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'UPDATE',
+      module: 'Other Charges',
+      details: `Updated charge: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Charge updated successfully`, 'success');
+    return true;
+  };
+
+  const deleteOtherCharge = (id: string): boolean => {
+    const target = otherCharges.find((c) => c.id === id);
+    const updated = otherCharges.filter((c) => c.id !== id);
+    setOtherCharges(updated);
+    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'DELETE',
+      module: 'Other Charges',
+      details: `Deleted charge: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Charge "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const openAddOtherChargeDrawer = () => {
+    setDrawerOtherCharge(null);
+    setIsOtherChargeDrawerOpen(true);
+  };
+
+  const openEditOtherChargeDrawer = (charge: OtherChargeItem) => {
+    setDrawerOtherCharge(charge);
+    setIsOtherChargeDrawerOpen(true);
+  };
+
+  const closeOtherChargeDrawer = () => {
+    setIsOtherChargeDrawerOpen(false);
+    setDrawerOtherCharge(null);
+  };
+
+  const openDeleteOtherChargeDialog = (charge: OtherChargeItem) => {
+    setDeleteTargetOtherCharge(charge);
+    setIsDeleteOtherChargeDialogOpen(true);
+  };
+
+  const closeDeleteOtherChargeDialog = () => {
+    setIsDeleteOtherChargeDialogOpen(false);
+    setDeleteTargetOtherCharge(null);
+  };
+
   // Rooms CRUD
   const isRoomNameUnique = (name: string, excludeId?: string): boolean => {
     const trimmed = name.trim().toLowerCase();
@@ -1573,6 +2018,54 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteTargetRateType,
         openDeleteRateTypeDialog,
         closeDeleteRateTypeDialog,
+        documentTypes,
+        editingDocumentTypeId,
+        setEditingDocumentTypeId,
+        addDocumentType,
+        updateDocumentType,
+        deleteDocumentType,
+        toggleDocumentTypeStatus,
+        setDefaultDocumentType,
+        isDocumentTypeDrawerOpen,
+        drawerDocumentType,
+        openAddDocumentTypeDrawer,
+        openEditDocumentTypeDrawer,
+        closeDocumentTypeDrawer,
+        isDeleteDocumentTypeDialogOpen,
+        deleteTargetDocumentType,
+        openDeleteDocumentTypeDialog,
+        closeDeleteDocumentTypeDialog,
+        otherChargeCategories,
+        editingOtherChargeCategoryId,
+        setEditingOtherChargeCategoryId,
+        addOtherChargeCategory,
+        updateOtherChargeCategory,
+        deleteOtherChargeCategory,
+        setDefaultOtherChargeCategory,
+        isOtherChargeCategoryDrawerOpen,
+        drawerOtherChargeCategory,
+        openAddOtherChargeCategoryDrawer,
+        openEditOtherChargeCategoryDrawer,
+        closeOtherChargeCategoryDrawer,
+        isDeleteOtherChargeCategoryDialogOpen,
+        deleteTargetOtherChargeCategory,
+        openDeleteOtherChargeCategoryDialog,
+        closeDeleteOtherChargeCategoryDialog,
+        otherCharges,
+        editingOtherChargeId,
+        setEditingOtherChargeId,
+        addOtherCharge,
+        updateOtherCharge,
+        deleteOtherCharge,
+        isOtherChargeDrawerOpen,
+        drawerOtherCharge,
+        openAddOtherChargeDrawer,
+        openEditOtherChargeDrawer,
+        closeOtherChargeDrawer,
+        isDeleteOtherChargeDialogOpen,
+        deleteTargetOtherCharge,
+        openDeleteOtherChargeDialog,
+        closeDeleteOtherChargeDialog,
         rooms,
         selectedRoomId,
         setSelectedRoomId,

@@ -34,6 +34,10 @@ import { TaxConfigurationView } from './components/TaxConfigurationView';
 import { AddTaxView } from './components/AddTaxView';
 import { AddTaxRateView } from './components/AddTaxRateView';
 import { RateTypesView } from './components/RateTypesView';
+import { DocumentTypesView } from './components/DocumentTypesView';
+import { AddDocumentTypeView } from './components/AddDocumentTypeView';
+import { OtherChargesCategoriesView } from './components/OtherChargesCategoriesView';
+import { AddOtherChargeCategoryView } from './components/AddOtherChargeCategoryView';
 import { TaxDrawer } from './components/TaxDrawer';
 import { TaxRuleDrawer } from './components/TaxRuleDrawer';
 import { TaxConfigDrawer } from './components/TaxConfigDrawer';
@@ -83,6 +87,16 @@ const MainLayout: React.FC = () => {
         return <AmenitiesView />;
       case 'rates-packages':
         return <RateTypesView />;
+      case 'document-types':
+        return <DocumentTypesView />;
+      case 'add-document-type':
+      case 'edit-document-type':
+        return <AddDocumentTypeView />;
+      case 'other-charges-categories':
+        return <OtherChargesCategoriesView />;
+      case 'add-other-charge-category':
+      case 'edit-other-charge-category':
+        return <AddOtherChargeCategoryView />;
       case 'taxes':
         return <TaxesView />;
       case 'tax-configuration':

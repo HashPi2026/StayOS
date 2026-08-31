@@ -136,6 +136,22 @@ export const GlobalSearchModal: React.FC = () => {
       description: 'Manage standard and derived rate types, binding discounts, and CRS synchronization.',
     },
     {
+      id: 'opt-document-types',
+      title: 'Document Types',
+      category: 'Configuration',
+      icon: 'badge',
+      path: 'document-types',
+      description: 'Manage property document classifications, identity rules, and default settings.',
+    },
+    {
+      id: 'opt-other-charges',
+      title: 'Other Charges Categories',
+      category: 'Configuration',
+      icon: 'category',
+      path: 'other-charges-categories',
+      description: 'Manage classifications and defaults for non-room charges across the property.',
+    },
+    {
       id: 'opt-taxes',
       title: 'Taxes',
       category: 'Property',

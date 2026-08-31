@@ -20,6 +20,15 @@ export type NavigationPath =
   | 'add-tax-rate'
   | 'edit-tax-rate'
   | 'rates-packages'
+  | 'document-types'
+  | 'add-document-type'
+  | 'edit-document-type'
+  | 'other-charges-categories'
+  | 'add-other-charge-category'
+  | 'edit-other-charge-category'
+  | 'other-charges'
+  | 'add-other-charge'
+  | 'edit-other-charge'
   | 'policies'
   | 'user-management'
   | 'integrations'
@@ -212,6 +221,49 @@ export interface RateTypeItem {
   isHourly: boolean;
   isCrsTaxInclusive: boolean;
   isCrsEnabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type DocumentCategory = 'Identity' | 'Visa' | 'Voucher' | 'Health' | 'Business' | 'Other';
+
+export interface DocumentTypeItem {
+  id: string;
+  shortName: string;
+  name: string;
+  category: DocumentCategory;
+  description?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface OtherChargeCategoryItem {
+  id: string;
+  shortName: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface OtherChargeItem {
+  id: string;
+  shortName: string;
+  name: string;
+  category: string;
+  price?: number;
+  taxable: boolean;
+  alwaysCharge: boolean;
+  reoccur: boolean;
+  reoccurFrequency?: 'Daily' | 'Weekly' | 'Monthly';
+  crsCharge: boolean;
+  callLoggingCharge: boolean;
+  posCharge: boolean;
+  forecastingRevenue: boolean;
+  description?: string;
   createdAt?: string;
   updatedAt?: string;
 }

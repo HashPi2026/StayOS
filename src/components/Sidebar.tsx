@@ -21,20 +21,25 @@ export const Sidebar: React.FC = () => {
       title: 'Property',
       items: [
         { id: 'overview', label: 'Overview', icon: 'analytics' },
-        { id: 'room-types', label: 'Room Types', icon: 'bedroom_parent' },
-        { id: 'rooms', label: 'Rooms', icon: 'meeting_room' },
-        { id: 'amenities', label: 'Amenities', icon: 'pool' },
-        { id: 'taxes', label: 'Taxes', icon: 'account_balance_wallet' },
-        { id: 'tax-configuration', label: 'Tax Configuration', icon: 'tune' },
         { id: 'buildings', label: 'Buildings', icon: 'domain' },
         { id: 'floors', label: 'Floors', icon: 'layers' },
-        { id: 'room-status', label: 'Room Status', icon: 'fact_check' },
+        { id: 'room-types', label: 'Room Types', icon: 'bedroom_parent' },
+        { id: 'rooms', label: 'Rooms', icon: 'meeting_room' },
+         { id: 'room-status', label: 'Room Status', icon: 'fact_check' },
+        // { id: 'amenities', label: 'Amenities', icon: 'pool' },
+        { id: 'taxes', label: 'Taxes', icon: 'account_balance_wallet' },
+        { id: 'tax-configuration', label: 'Tax Configuration', icon: 'tune' }
+        
+       
       ],
     },
     {
       title: 'Configuration',
       items: [
         { id: 'rates-packages', label: 'Rates', icon: 'sell' },
+        { id: 'document-types', label: 'Document Types', icon: 'badge' },
+        { id: 'other-charges-categories', label: 'Other Charges Category', icon: 'category' },
+        { id: 'other-charges', label: 'Other Charges', icon: 'receipt_long' },
         { id: 'policies', label: 'Policies', icon: 'policy' },
       ],
     },
@@ -68,6 +73,15 @@ export const Sidebar: React.FC = () => {
       return true;
     }
     if (itemId === 'taxes' && (activePath === 'taxes' || activePath === 'add-tax' || activePath === 'edit-tax')) {
+      return true;
+    }
+    if (itemId === 'document-types' && (activePath === 'document-types' || activePath === 'add-document-type' || activePath === 'edit-document-type')) {
+      return true;
+    }
+    if (itemId === 'other-charges-categories' && (activePath === 'other-charges-categories' || activePath === 'add-other-charge-category' || activePath === 'edit-other-charge-category')) {
+      return true;
+    }
+    if (itemId === 'other-charges' && (activePath === 'other-charges' || activePath === 'add-other-charge' || activePath === 'edit-other-charge')) {
       return true;
     }
     return false;
