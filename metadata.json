@@ -1,6 +1,6 @@
 {
   "name": "StayOS",
-  "description": "Enterprise hospitality management and property configuration system featuring Property Master, Buildings, Floors, Room Types, and Rooms inventory management.",
+  "description": "Enterprise hospitality management and property configuration system featuring Property Master, Buildings, Floors, Room Types, Rooms inventory, Taxes, Document Types, Other Charges, Measurement Units, Payment Types, Exchange Rates, and Users & Permissions.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

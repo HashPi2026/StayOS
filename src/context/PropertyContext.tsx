@@ -13,9 +13,19 @@ import {
   DocumentTypeItem,
   OtherChargeCategoryItem,
   OtherChargeItem,
+  MeasurementUnitItem,
+  PaymentTypeItem,
+  ExchangeRateItem,
   Amenity,
   AuditLog,
   NotificationItem,
+  RoleItem,
+  UserAccountItem,
+  EmailTemplateItem,
+  PolicyItem,
+  GuestCategoryItem,
+  GeneralSettingsState,
+  GeneralSettingsTab,
 } from '../types';
 import {
   INITIAL_PROPERTIES,
@@ -29,10 +39,19 @@ import {
   INITIAL_DOCUMENT_TYPES,
   INITIAL_OTHER_CHARGE_CATEGORIES,
   INITIAL_OTHER_CHARGES,
+  INITIAL_MEASUREMENT_UNITS,
+  INITIAL_PAYMENT_TYPES,
+  INITIAL_EXCHANGE_RATES,
   INITIAL_AMENITIES,
   INITIAL_AUDIT_LOGS,
   INITIAL_NOTIFICATIONS,
+  INITIAL_ROLES,
+  INITIAL_USERS,
+  INITIAL_EMAIL_TEMPLATES,
+  INITIAL_POLICIES,
+  INITIAL_GUEST_CATEGORIES,
 } from '../data/mockData';
+import { INITIAL_GENERAL_SETTINGS } from '../data/generalSettingsData';
 
 export interface ToastItem {
   id: string;
@@ -193,6 +212,41 @@ interface PropertyContextType {
   openDeleteRateTypeDialog: (rateType: RateTypeItem) => void;
   closeDeleteRateTypeDialog: () => void;
 
+  // Policies (Configuration)
+  policies: PolicyItem[];
+  editingPolicyId: string | null;
+  setEditingPolicyId: (id: string | null) => void;
+  addPolicy: (data: Omit<PolicyItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updatePolicy: (id: string, updates: Partial<PolicyItem>) => boolean;
+  deletePolicy: (id: string) => boolean;
+  isPolicyDrawerOpen: boolean;
+  drawerPolicy: PolicyItem | null;
+  openAddPolicyDrawer: () => void;
+  openEditPolicyDrawer: (policy: PolicyItem) => void;
+  closePolicyDrawer: () => void;
+  isDeletePolicyDialogOpen: boolean;
+  deleteTargetPolicy: PolicyItem | null;
+  openDeletePolicyDialog: (policy: PolicyItem) => void;
+  closeDeletePolicyDialog: () => void;
+
+  // Guest Categories (Configuration)
+  guestCategories: GuestCategoryItem[];
+  editingGuestCategoryId: string | null;
+  setEditingGuestCategoryId: (id: string | null) => void;
+  addGuestCategory: (data: Omit<GuestCategoryItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateGuestCategory: (id: string, updates: Partial<GuestCategoryItem>) => boolean;
+  deleteGuestCategory: (id: string) => boolean;
+  toggleGuestCategoryStatus: (id: string) => boolean;
+  isGuestCategoryDrawerOpen: boolean;
+  drawerGuestCategory: GuestCategoryItem | null;
+  openAddGuestCategoryDrawer: () => void;
+  openEditGuestCategoryDrawer: (category: GuestCategoryItem) => void;
+  closeGuestCategoryDrawer: () => void;
+  isDeleteGuestCategoryDialogOpen: boolean;
+  deleteTargetGuestCategory: GuestCategoryItem | null;
+  openDeleteGuestCategoryDialog: (category: GuestCategoryItem) => void;
+  closeDeleteGuestCategoryDialog: () => void;
+
   // Document Types
   documentTypes: DocumentTypeItem[];
   editingDocumentTypeId: string | null;
@@ -247,6 +301,117 @@ interface PropertyContextType {
   openDeleteOtherChargeDialog: (charge: OtherChargeItem) => void;
   closeDeleteOtherChargeDialog: () => void;
 
+  // Measurement Units (Configuration)
+  measurementUnits: MeasurementUnitItem[];
+  editingMeasurementUnitId: string | null;
+  setEditingMeasurementUnitId: (id: string | null) => void;
+  addMeasurementUnit: (data: Omit<MeasurementUnitItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateMeasurementUnit: (id: string, updates: Partial<MeasurementUnitItem>) => boolean;
+  deleteMeasurementUnit: (id: string) => boolean;
+  isMeasurementUnitNameUnique: (name: string, excludeId?: string) => boolean;
+  isMeasurementUnitShortNameUnique: (shortName: string, excludeId?: string) => boolean;
+  isMeasurementUnitDrawerOpen: boolean;
+  drawerMeasurementUnit: MeasurementUnitItem | null;
+  openAddMeasurementUnitDrawer: () => void;
+  openEditMeasurementUnitDrawer: (unit: MeasurementUnitItem) => void;
+  closeMeasurementUnitDrawer: () => void;
+  isDeleteMeasurementUnitDialogOpen: boolean;
+  deleteTargetMeasurementUnit: MeasurementUnitItem | null;
+  openDeleteMeasurementUnitDialog: (unit: MeasurementUnitItem) => void;
+  closeDeleteMeasurementUnitDialog: () => void;
+
+  // Payment Types (Configuration)
+  paymentTypes: PaymentTypeItem[];
+  editingPaymentTypeId: string | null;
+  setEditingPaymentTypeId: (id: string | null) => void;
+  addPaymentType: (data: Omit<PaymentTypeItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updatePaymentType: (id: string, updates: Partial<PaymentTypeItem>) => boolean;
+  deletePaymentType: (id: string) => boolean;
+  bulkDeletePaymentTypes: (ids: string[]) => boolean;
+  togglePaymentTypeStatus: (id: string) => void;
+  isPaymentTypeNameUnique: (name: string, excludeId?: string) => boolean;
+  isPaymentTypeShortNameUnique: (shortName: string, excludeId?: string) => boolean;
+  isPaymentTypeDrawerOpen: boolean;
+  drawerPaymentType: PaymentTypeItem | null;
+  openAddPaymentTypeDrawer: () => void;
+  openEditPaymentTypeDrawer: (paymentType: PaymentTypeItem) => void;
+  closePaymentTypeDrawer: () => void;
+  isDeletePaymentTypeDialogOpen: boolean;
+  deleteTargetPaymentType: PaymentTypeItem | null;
+  openDeletePaymentTypeDialog: (paymentType: PaymentTypeItem) => void;
+  closeDeletePaymentTypeDialog: () => void;
+
+  // Exchange Rates (Configuration)
+  exchangeRates: ExchangeRateItem[];
+  editingExchangeRateId: string | null;
+  setEditingExchangeRateId: (id: string | null) => void;
+  addExchangeRate: (data: Omit<ExchangeRateItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateExchangeRate: (id: string, updates: Partial<ExchangeRateItem>) => boolean;
+  deleteExchangeRate: (id: string) => boolean;
+  setBaseExchangeRate: (id: string) => boolean;
+  isCountryExchangeRateUnique: (country: string, excludeId?: string) => boolean;
+  isExchangeRateDrawerOpen: boolean;
+  drawerExchangeRate: ExchangeRateItem | null;
+  openAddExchangeRateDrawer: () => void;
+  openEditExchangeRateDrawer: (exchangeRate: ExchangeRateItem) => void;
+  closeExchangeRateDrawer: () => void;
+  isDeleteExchangeRateDialogOpen: boolean;
+  deleteTargetExchangeRate: ExchangeRateItem | null;
+  openDeleteExchangeRateDialog: (exchangeRate: ExchangeRateItem) => void;
+  closeDeleteExchangeRateDialog: () => void;
+
+  // Roles & Privileges (Configuration / User Management)
+  roles: RoleItem[];
+  editingRoleId: string | null;
+  setEditingRoleId: (id: string | null) => void;
+  addRole: (data: Omit<RoleItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateRole: (id: string, updates: Partial<RoleItem>) => boolean;
+  deleteRole: (id: string) => boolean;
+  bulkDeleteRoles: (ids: string[]) => boolean;
+  isRoleNameUnique: (name: string, excludeId?: string) => boolean;
+  isRoleCodeUnique: (code: string, excludeId?: string) => boolean;
+  isRoleDrawerOpen: boolean;
+  drawerRole: RoleItem | null;
+  openAddRoleDrawer: () => void;
+  openEditRoleDrawer: (role: RoleItem) => void;
+  closeRoleDrawer: () => void;
+  isDeleteRoleDialogOpen: boolean;
+  deleteTargetRole: RoleItem | null;
+  openDeleteRoleDialog: (role: RoleItem) => void;
+  closeDeleteRoleDialog: () => void;
+
+  // Users & Permissions (Settings / User Management)
+  users: UserAccountItem[];
+  editingUserId: string | null;
+  setEditingUserId: (id: string | null) => void;
+  addUser: (data: Omit<UserAccountItem, 'id' | 'createdAt'>) => boolean;
+  updateUser: (id: string, updates: Partial<UserAccountItem>) => boolean;
+  deleteUser: (id: string) => boolean;
+  toggleUserStatus: (id: string) => void;
+  isInviteUserModalOpen: boolean;
+  drawerUser: UserAccountItem | null;
+  openInviteUserModal: (user?: UserAccountItem) => void;
+  closeInviteUserModal: () => void;
+
+  // Email Templates (Configuration / Communications)
+  emailTemplates: EmailTemplateItem[];
+  editingEmailTemplateId: string | null;
+  setEditingEmailTemplateId: (id: string | null) => void;
+  addEmailTemplate: (data: Omit<EmailTemplateItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updateEmailTemplate: (id: string, updates: Partial<EmailTemplateItem>) => boolean;
+  deleteEmailTemplate: (id: string) => boolean;
+  duplicateEmailTemplate: (id: string) => boolean;
+  toggleEmailTemplateStatus: (id: string) => boolean;
+  isEmailTemplateDrawerOpen: boolean;
+  drawerEmailTemplate: EmailTemplateItem | null;
+  openAddEmailTemplateDrawer: () => void;
+  openEditEmailTemplateDrawer: (template: EmailTemplateItem) => void;
+  closeEmailTemplateDrawer: () => void;
+  isDeleteEmailTemplateDialogOpen: boolean;
+  deleteTargetEmailTemplate: EmailTemplateItem | null;
+  openDeleteEmailTemplateDialog: (template: EmailTemplateItem) => void;
+  closeDeleteEmailTemplateDialog: () => void;
+
   // Search Modal
   isSearchModalOpen: boolean;
   setSearchModalOpen: (open: boolean) => void;
@@ -257,6 +422,21 @@ interface PropertyContextType {
   notifications: NotificationItem[];
   markNotificationAsRead: (id: string) => void;
   clearAllNotifications: () => void;
+
+  // General Settings (Settings Menu)
+  generalSettings: GeneralSettingsState;
+  activeGeneralSettingsTab: GeneralSettingsTab;
+  setActiveGeneralSettingsTab: (tab: GeneralSettingsTab) => void;
+  updateGeneralSettingsSection: <K extends keyof GeneralSettingsState>(
+    section: K,
+    updates: Partial<GeneralSettingsState[K]>
+  ) => void;
+  updateGuestMandatoryField: (
+    fieldId: string,
+    updates: { enabled?: boolean; required?: boolean }
+  ) => void;
+  resetGeneralSettingsSection: (section: keyof GeneralSettingsState) => void;
+  saveGeneralSettings: () => void;
 
   // Toasts
   toasts: ToastItem[];
@@ -377,6 +557,28 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isDeleteRateTypeDialogOpen, setIsDeleteRateTypeDialogOpen] = useState(false);
   const [deleteTargetRateType, setDeleteTargetRateType] = useState<RateTypeItem | null>(null);
 
+  // Policies State
+  const [policies, setPolicies] = useState<PolicyItem[]>(() => {
+    const saved = localStorage.getItem('stayos_policies');
+    return saved ? JSON.parse(saved) : INITIAL_POLICIES;
+  });
+  const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
+  const [isPolicyDrawerOpen, setIsPolicyDrawerOpen] = useState(false);
+  const [drawerPolicy, setDrawerPolicy] = useState<PolicyItem | null>(null);
+  const [isDeletePolicyDialogOpen, setIsDeletePolicyDialogOpen] = useState(false);
+  const [deleteTargetPolicy, setDeleteTargetPolicy] = useState<PolicyItem | null>(null);
+
+  // Guest Categories State
+  const [guestCategories, setGuestCategories] = useState<GuestCategoryItem[]>(() => {
+    const saved = localStorage.getItem('stayos_guest_categories');
+    return saved ? JSON.parse(saved) : INITIAL_GUEST_CATEGORIES;
+  });
+  const [editingGuestCategoryId, setEditingGuestCategoryId] = useState<string | null>(null);
+  const [isGuestCategoryDrawerOpen, setIsGuestCategoryDrawerOpen] = useState(false);
+  const [drawerGuestCategory, setDrawerGuestCategory] = useState<GuestCategoryItem | null>(null);
+  const [isDeleteGuestCategoryDialogOpen, setIsDeleteGuestCategoryDialogOpen] = useState(false);
+  const [deleteTargetGuestCategory, setDeleteTargetGuestCategory] = useState<GuestCategoryItem | null>(null);
+
   // Document Types State
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeItem[]>(() => {
     const saved = localStorage.getItem('stayos_document_types');
@@ -410,9 +612,184 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isDeleteOtherChargeDialogOpen, setIsDeleteOtherChargeDialogOpen] = useState(false);
   const [deleteTargetOtherCharge, setDeleteTargetOtherCharge] = useState<OtherChargeItem | null>(null);
 
+  // Measurement Units State
+  const [measurementUnits, setMeasurementUnits] = useState<MeasurementUnitItem[]>(() => {
+    const saved = localStorage.getItem('stayos_measurement_units');
+    return saved ? JSON.parse(saved) : INITIAL_MEASUREMENT_UNITS;
+  });
+  const [editingMeasurementUnitId, setEditingMeasurementUnitId] = useState<string | null>(null);
+  const [isMeasurementUnitDrawerOpen, setIsMeasurementUnitDrawerOpen] = useState(false);
+  const [drawerMeasurementUnit, setDrawerMeasurementUnit] = useState<MeasurementUnitItem | null>(null);
+  const [isDeleteMeasurementUnitDialogOpen, setIsDeleteMeasurementUnitDialogOpen] = useState(false);
+  const [deleteTargetMeasurementUnit, setDeleteTargetMeasurementUnit] = useState<MeasurementUnitItem | null>(null);
+
+  // Payment Types State
+  const [paymentTypes, setPaymentTypes] = useState<PaymentTypeItem[]>(() => {
+    const saved = localStorage.getItem('stayos_payment_types');
+    return saved ? JSON.parse(saved) : INITIAL_PAYMENT_TYPES;
+  });
+  const [editingPaymentTypeId, setEditingPaymentTypeId] = useState<string | null>(null);
+  const [isPaymentTypeDrawerOpen, setIsPaymentTypeDrawerOpen] = useState(false);
+  const [drawerPaymentType, setDrawerPaymentType] = useState<PaymentTypeItem | null>(null);
+  const [isDeletePaymentTypeDialogOpen, setIsDeletePaymentTypeDialogOpen] = useState(false);
+  const [deleteTargetPaymentType, setDeleteTargetPaymentType] = useState<PaymentTypeItem | null>(null);
+
+  // Exchange Rates State
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRateItem[]>(() => {
+    const saved = localStorage.getItem('stayos_exchange_rates');
+    return saved ? JSON.parse(saved) : INITIAL_EXCHANGE_RATES;
+  });
+  const [editingExchangeRateId, setEditingExchangeRateId] = useState<string | null>(null);
+  const [isExchangeRateDrawerOpen, setIsExchangeRateDrawerOpen] = useState(false);
+  const [drawerExchangeRate, setDrawerExchangeRate] = useState<ExchangeRateItem | null>(null);
+  const [isDeleteExchangeRateDialogOpen, setIsDeleteExchangeRateDialogOpen] = useState(false);
+  const [deleteTargetExchangeRate, setDeleteTargetExchangeRate] = useState<ExchangeRateItem | null>(null);
+
+  // Roles & Privileges State
+  const [roles, setRoles] = useState<RoleItem[]>(() => {
+    const saved = localStorage.getItem('stayos_roles');
+    return saved ? JSON.parse(saved) : INITIAL_ROLES;
+  });
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [isRoleDrawerOpen, setIsRoleDrawerOpen] = useState(false);
+  const [drawerRole, setDrawerRole] = useState<RoleItem | null>(null);
+  const [isDeleteRoleDialogOpen, setIsDeleteRoleDialogOpen] = useState(false);
+  const [deleteTargetRole, setDeleteTargetRole] = useState<RoleItem | null>(null);
+
+  // Users & Permissions State
+  const [users, setUsers] = useState<UserAccountItem[]>(() => {
+    const saved = localStorage.getItem('stayos_users');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
+  });
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false);
+  const [drawerUser, setDrawerUser] = useState<UserAccountItem | null>(null);
+
+  // Email Templates State
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateItem[]>(() => {
+    const saved = localStorage.getItem('stayos_email_templates');
+    return saved ? JSON.parse(saved) : INITIAL_EMAIL_TEMPLATES;
+  });
+  const [editingEmailTemplateId, setEditingEmailTemplateId] = useState<string | null>(null);
+  const [isEmailTemplateDrawerOpen, setIsEmailTemplateDrawerOpen] = useState(false);
+  const [drawerEmailTemplate, setDrawerEmailTemplate] = useState<EmailTemplateItem | null>(null);
+  const [isDeleteEmailTemplateDialogOpen, setIsDeleteEmailTemplateDialogOpen] = useState(false);
+  const [deleteTargetEmailTemplate, setDeleteTargetEmailTemplate] = useState<EmailTemplateItem | null>(null);
+
   const [isVerifyPinOpen, setVerifyPinOpen] = useState(false);
   const [isSearchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // General Settings State
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettingsState>(() => {
+    const saved = localStorage.getItem('stayos_general_settings');
+    if (!saved) return INITIAL_GENERAL_SETTINGS;
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        ...INITIAL_GENERAL_SETTINGS,
+        ...parsed,
+        rental: { ...INITIAL_GENERAL_SETTINGS.rental, ...(parsed.rental || {}) },
+        feature: { ...INITIAL_GENERAL_SETTINGS.feature, ...(parsed.feature || {}) },
+        nightAudits: {
+          ...INITIAL_GENERAL_SETTINGS.nightAudits,
+          ...(parsed.nightAudits || {}),
+          automatedReports: {
+            ...INITIAL_GENERAL_SETTINGS.nightAudits.automatedReports,
+            ...(parsed.nightAudits?.automatedReports || {}),
+          },
+          globalDistributionList: parsed.nightAudits?.globalDistributionList || INITIAL_GENERAL_SETTINGS.nightAudits.globalDistributionList,
+        },
+        localization: {
+          ...INITIAL_GENERAL_SETTINGS.localization,
+          ...(parsed.localization || {}),
+          customLabels: {
+            ...INITIAL_GENERAL_SETTINGS.localization.customLabels,
+            ...(parsed.localization?.customLabels || {}),
+          },
+          weekendDays: parsed.localization?.weekendDays || INITIAL_GENERAL_SETTINGS.localization.weekendDays,
+        },
+        display: { ...INITIAL_GENERAL_SETTINGS.display, ...(parsed.display || {}) },
+        folios: {
+          ...INITIAL_GENERAL_SETTINGS.folios,
+          ...(parsed.folios || {}),
+          numberingSeries: parsed.folios?.numberingSeries || INITIAL_GENERAL_SETTINGS.folios.numberingSeries,
+        },
+        creditCards: { ...INITIAL_GENERAL_SETTINGS.creditCards, ...(parsed.creditCards || {}) },
+        emails: { ...INITIAL_GENERAL_SETTINGS.emails, ...(parsed.emails || {}) },
+      };
+    } catch {
+      return INITIAL_GENERAL_SETTINGS;
+    }
+  });
+  const [activeGeneralSettingsTab, setActiveGeneralSettingsTab] = useState<GeneralSettingsTab>('rental');
+
+  const updateGeneralSettingsSection = <K extends keyof GeneralSettingsState>(
+    section: K,
+    updates: Partial<GeneralSettingsState[K]>
+  ) => {
+    setGeneralSettings((prev) => {
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          ...updates,
+        },
+      };
+      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const updateGuestMandatoryField = (
+    fieldId: string,
+    updates: { enabled?: boolean; required?: boolean }
+  ) => {
+    setGeneralSettings((prev) => {
+      const updatedFields = prev.guestMandatoryData.fields.map((f) => {
+        if (f.id === fieldId) {
+          return { ...f, ...updates };
+        }
+        return f;
+      });
+      const updated: GeneralSettingsState = {
+        ...prev,
+        guestMandatoryData: {
+          ...prev.guestMandatoryData,
+          fields: updatedFields,
+        },
+      };
+      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const resetGeneralSettingsSection = (section: keyof GeneralSettingsState) => {
+    setGeneralSettings((prev) => {
+      const updated: GeneralSettingsState = {
+        ...prev,
+        [section]: INITIAL_GENERAL_SETTINGS[section],
+      };
+      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      return updated;
+    });
+    addToast(`Reset ${section} settings to factory defaults`, 'info');
+  };
+
+  const saveGeneralSettings = () => {
+    localStorage.setItem('stayos_general_settings', JSON.stringify(generalSettings));
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
+      user: 'Jane Smith (JS)',
+      action: 'UPDATE',
+      module: 'General Settings',
+      details: `Updated ${activeGeneralSettingsTab.toUpperCase()} configuration parameters`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+    addToast('General settings saved successfully', 'success');
+  };
 
   // Toast System
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -447,6 +824,24 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSelectedBuildingId(entityId);
     } else if (path === 'edit-room-type' || path === 'room-types') {
       setSelectedRoomTypeId(entityId);
+    } else if (path === 'general-settings-rental') {
+      setActiveGeneralSettingsTab('rental');
+    } else if (path === 'general-settings-feature') {
+      setActiveGeneralSettingsTab('feature');
+    } else if (path === 'general-settings-night-audits') {
+      setActiveGeneralSettingsTab('night-audits');
+    } else if (path === 'general-settings-localization') {
+      setActiveGeneralSettingsTab('localization');
+    } else if (path === 'general-settings-display') {
+      setActiveGeneralSettingsTab('display');
+    } else if (path === 'general-settings-folios') {
+      setActiveGeneralSettingsTab('folios');
+    } else if (path === 'general-settings-credit-cards') {
+      setActiveGeneralSettingsTab('credit-cards');
+    } else if (path === 'general-settings-emails') {
+      setActiveGeneralSettingsTab('emails');
+    } else if (path === 'general-settings-guest-mandatory-data') {
+      setActiveGeneralSettingsTab('guest-mandatory-data');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1321,6 +1716,233 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDeleteTargetRateType(null);
   };
 
+  // Policies CRUD & Actions
+  const addPolicy = (data: Omit<PolicyItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const newPolicy: PolicyItem = {
+      ...data,
+      id: `pol-${Date.now()}`,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    const updated = [newPolicy, ...policies];
+    setPolicies(updated);
+    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'CREATE',
+      module: 'Policies',
+      details: `Created policy for ${newPolicy.roomTypeName} - ${newPolicy.rateTypeName}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Policy for "${newPolicy.roomTypeName} (${newPolicy.rateTypeName})" added successfully`, 'success');
+    return true;
+  };
+
+  const updatePolicy = (id: string, updates: Partial<PolicyItem>): boolean => {
+    const target = policies.find((p) => p.id === id);
+    if (!target) return false;
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const updated = policies.map((p) =>
+      p.id === id
+        ? {
+            ...p,
+            ...updates,
+            updatedAt: nowStr,
+          }
+        : p
+    );
+    setPolicies(updated);
+    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'UPDATE',
+      module: 'Policies',
+      details: `Updated policy: ${updates.roomTypeName || target.roomTypeName} - ${updates.rateTypeName || target.rateTypeName}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Policy updated successfully`, 'success');
+    return true;
+  };
+
+  const deletePolicy = (id: string): boolean => {
+    const target = policies.find((p) => p.id === id);
+    if (!target) return false;
+
+    const updated = policies.filter((p) => p.id !== id);
+    setPolicies(updated);
+    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'DELETE',
+      module: 'Policies',
+      details: `Deleted policy: ${target.roomTypeName} - ${target.rateTypeName}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Policy for "${target.roomTypeName}" deleted`, 'info');
+    return true;
+  };
+
+  const openAddPolicyDrawer = () => {
+    setDrawerPolicy(null);
+    setEditingPolicyId(null);
+    setIsPolicyDrawerOpen(true);
+  };
+
+  const openEditPolicyDrawer = (policy: PolicyItem) => {
+    setDrawerPolicy(policy);
+    setEditingPolicyId(policy.id);
+    setIsPolicyDrawerOpen(true);
+  };
+
+  const closePolicyDrawer = () => {
+    setIsPolicyDrawerOpen(false);
+    setDrawerPolicy(null);
+  };
+
+  const openDeletePolicyDialog = (policy: PolicyItem) => {
+    setDeleteTargetPolicy(policy);
+    setIsDeletePolicyDialogOpen(true);
+  };
+
+  const closeDeletePolicyDialog = () => {
+    setIsDeletePolicyDialogOpen(false);
+    setDeleteTargetPolicy(null);
+  };
+
+  // Guest Categories CRUD & Actions
+  const addGuestCategory = (data: Omit<GuestCategoryItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const newCategory: GuestCategoryItem = {
+      ...data,
+      id: `gcat-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newCategory, ...guestCategories];
+    setGuestCategories(updated);
+    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'CREATE',
+      module: 'Guest Categories',
+      details: `Added guest category: ${newCategory.name} (${newCategory.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Guest category "${newCategory.name}" created successfully`, 'success');
+    return true;
+  };
+
+  const updateGuestCategory = (id: string, updates: Partial<GuestCategoryItem>): boolean => {
+    const existing = guestCategories.find((c) => c.id === id);
+    if (!existing) return false;
+
+    const updatedCategory: GuestCategoryItem = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = guestCategories.map((c) => (c.id === id ? updatedCategory : c));
+    setGuestCategories(updated);
+    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'UPDATE',
+      module: 'Guest Categories',
+      details: `Updated guest category: ${updatedCategory.name}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Guest category "${updatedCategory.name}" updated successfully`, 'success');
+    return true;
+  };
+
+  const deleteGuestCategory = (id: string): boolean => {
+    const target = guestCategories.find((c) => c.id === id);
+    if (!target) return false;
+
+    const updated = guestCategories.filter((c) => c.id !== id);
+    setGuestCategories(updated);
+    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'DELETE',
+      module: 'Guest Categories',
+      details: `Deleted guest category: ${target.name} (${target.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Guest category "${target.name}" deleted`, 'info');
+    return true;
+  };
+
+  const toggleGuestCategoryStatus = (id: string): boolean => {
+    const target = guestCategories.find((c) => c.id === id);
+    if (!target) return false;
+
+    const newStatus = target.status === 'active' ? 'inactive' : 'active';
+    return updateGuestCategory(id, { status: newStatus });
+  };
+
+  const openAddGuestCategoryDrawer = () => {
+    setDrawerGuestCategory(null);
+    setEditingGuestCategoryId(null);
+    setIsGuestCategoryDrawerOpen(true);
+  };
+
+  const openEditGuestCategoryDrawer = (category: GuestCategoryItem) => {
+    setDrawerGuestCategory(category);
+    setEditingGuestCategoryId(category.id);
+    setIsGuestCategoryDrawerOpen(true);
+  };
+
+  const closeGuestCategoryDrawer = () => {
+    setIsGuestCategoryDrawerOpen(false);
+    setDrawerGuestCategory(null);
+    setEditingGuestCategoryId(null);
+  };
+
+  const openDeleteGuestCategoryDialog = (category: GuestCategoryItem) => {
+    setDeleteTargetGuestCategory(category);
+    setIsDeleteGuestCategoryDialogOpen(true);
+  };
+
+  const closeDeleteGuestCategoryDialog = () => {
+    setIsDeleteGuestCategoryDialogOpen(false);
+    setDeleteTargetGuestCategory(null);
+  };
+
   // Document Types CRUD & Actions
   const addDocumentType = (data: Omit<DocumentTypeItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
     const newDocType: DocumentTypeItem = {
@@ -1673,6 +2295,963 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDeleteTargetOtherCharge(null);
   };
 
+  // Measurement Units (Configuration) CRUD & Actions
+  const isMeasurementUnitNameUnique = (name: string, excludeId?: string): boolean => {
+    const trimmed = name.trim().toLowerCase();
+    return !measurementUnits.some(
+      (m) => m.name.trim().toLowerCase() === trimmed && (!excludeId || m.id !== excludeId)
+    );
+  };
+
+  const isMeasurementUnitShortNameUnique = (shortName: string, excludeId?: string): boolean => {
+    const trimmed = shortName.trim().toUpperCase();
+    return !measurementUnits.some(
+      (m) => m.shortName.trim().toUpperCase() === trimmed && (!excludeId || m.id !== excludeId)
+    );
+  };
+
+  const addMeasurementUnit = (data: Omit<MeasurementUnitItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    if (!isMeasurementUnitNameUnique(data.name)) {
+      addToast(`A measurement unit with name "${data.name}" already exists`, 'error');
+      return false;
+    }
+    if (!isMeasurementUnitShortNameUnique(data.shortName)) {
+      addToast(`A measurement unit with short name "${data.shortName}" already exists`, 'error');
+      return false;
+    }
+
+    const newUnit: MeasurementUnitItem = {
+      ...data,
+      id: `mu-${Date.now()}`,
+      shortName: data.shortName.trim().toUpperCase(),
+      name: data.name.trim(),
+      description: data.description?.trim() || '',
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newUnit, ...measurementUnits];
+    setMeasurementUnits(updated);
+    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'CREATE',
+      module: 'Measurement Units',
+      details: `Created measurement unit: ${newUnit.name} (${newUnit.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Measurement Unit "${newUnit.name}" added successfully`, 'success');
+    return true;
+  };
+
+  const updateMeasurementUnit = (id: string, updates: Partial<MeasurementUnitItem>): boolean => {
+    if (updates.name && !isMeasurementUnitNameUnique(updates.name, id)) {
+      addToast(`A measurement unit with name "${updates.name}" already exists`, 'error');
+      return false;
+    }
+    if (updates.shortName && !isMeasurementUnitShortNameUnique(updates.shortName, id)) {
+      addToast(`A measurement unit with short name "${updates.shortName}" already exists`, 'error');
+      return false;
+    }
+
+    const updated = measurementUnits.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            ...updates,
+            shortName: updates.shortName ? updates.shortName.trim().toUpperCase() : m.shortName,
+            name: updates.name ? updates.name.trim() : m.name,
+            description: updates.description !== undefined ? updates.description.trim() : m.description,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : m
+    );
+    setMeasurementUnits(updated);
+    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+
+    const target = measurementUnits.find((m) => m.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'UPDATE',
+      module: 'Measurement Units',
+      details: `Updated measurement unit: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Measurement unit updated successfully`, 'success');
+    return true;
+  };
+
+  const deleteMeasurementUnit = (id: string): boolean => {
+    const target = measurementUnits.find((m) => m.id === id);
+    const updated = measurementUnits.filter((m) => m.id !== id);
+    setMeasurementUnits(updated);
+    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'DELETE',
+      module: 'Measurement Units',
+      details: `Deleted measurement unit: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Measurement unit "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const openAddMeasurementUnitDrawer = () => {
+    setDrawerMeasurementUnit(null);
+    setIsMeasurementUnitDrawerOpen(true);
+  };
+
+  const openEditMeasurementUnitDrawer = (unit: MeasurementUnitItem) => {
+    setDrawerMeasurementUnit(unit);
+    setIsMeasurementUnitDrawerOpen(true);
+  };
+
+  const closeMeasurementUnitDrawer = () => {
+    setIsMeasurementUnitDrawerOpen(false);
+    setDrawerMeasurementUnit(null);
+  };
+
+  const openDeleteMeasurementUnitDialog = (unit: MeasurementUnitItem) => {
+    setDeleteTargetMeasurementUnit(unit);
+    setIsDeleteMeasurementUnitDialogOpen(true);
+  };
+
+  const closeDeleteMeasurementUnitDialog = () => {
+    setIsDeleteMeasurementUnitDialogOpen(false);
+    setDeleteTargetMeasurementUnit(null);
+  };
+
+  // Payment Types (Configuration) CRUD & Actions
+  const isPaymentTypeNameUnique = (name: string, excludeId?: string): boolean => {
+    const trimmed = name.trim().toLowerCase();
+    return !paymentTypes.some(
+      (p) => p.name.trim().toLowerCase() === trimmed && (!excludeId || p.id !== excludeId)
+    );
+  };
+
+  const isPaymentTypeShortNameUnique = (shortName: string, excludeId?: string): boolean => {
+    const trimmed = shortName.trim().toUpperCase();
+    return !paymentTypes.some(
+      (p) => p.shortName.trim().toUpperCase() === trimmed && (!excludeId || p.id !== excludeId)
+    );
+  };
+
+  const addPaymentType = (data: Omit<PaymentTypeItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    if (!isPaymentTypeNameUnique(data.name)) {
+      addToast(`A payment type with name "${data.name}" already exists`, 'error');
+      return false;
+    }
+    if (!isPaymentTypeShortNameUnique(data.shortName)) {
+      addToast(`A payment type with short name "${data.shortName}" already exists`, 'error');
+      return false;
+    }
+
+    const newPaymentType: PaymentTypeItem = {
+      ...data,
+      id: `pt-${Date.now()}`,
+      shortName: data.shortName.trim().toUpperCase(),
+      name: data.name.trim(),
+      description: data.description?.trim() || '',
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newPaymentType, ...paymentTypes];
+    setPaymentTypes(updated);
+    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'CREATE',
+      module: 'Payment Types',
+      details: `Created payment type: ${newPaymentType.name} (${newPaymentType.shortName})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Payment type "${newPaymentType.name}" added successfully`, 'success');
+    return true;
+  };
+
+  const updatePaymentType = (id: string, updates: Partial<PaymentTypeItem>): boolean => {
+    if (updates.name && !isPaymentTypeNameUnique(updates.name, id)) {
+      addToast(`A payment type with name "${updates.name}" already exists`, 'error');
+      return false;
+    }
+    if (updates.shortName && !isPaymentTypeShortNameUnique(updates.shortName, id)) {
+      addToast(`A payment type with short name "${updates.shortName}" already exists`, 'error');
+      return false;
+    }
+
+    const updated = paymentTypes.map((p) =>
+      p.id === id
+        ? {
+            ...p,
+            ...updates,
+            shortName: updates.shortName ? updates.shortName.trim().toUpperCase() : p.shortName,
+            name: updates.name ? updates.name.trim() : p.name,
+            description: updates.description !== undefined ? updates.description.trim() : p.description,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : p
+    );
+    setPaymentTypes(updated);
+    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+
+    const target = paymentTypes.find((p) => p.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'UPDATE',
+      module: 'Payment Types',
+      details: `Updated payment type: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Payment type updated successfully`, 'success');
+    return true;
+  };
+
+  const togglePaymentTypeStatus = (id: string) => {
+    const target = paymentTypes.find((p) => p.id === id);
+    if (!target) return;
+    const newStatus = target.status === 'Active' ? 'Inactive' : 'Active';
+    updatePaymentType(id, { status: newStatus });
+  };
+
+  const deletePaymentType = (id: string): boolean => {
+    const target = paymentTypes.find((p) => p.id === id);
+    const updated = paymentTypes.filter((p) => p.id !== id);
+    setPaymentTypes(updated);
+    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'DELETE',
+      module: 'Payment Types',
+      details: `Deleted payment type: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Payment type "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const bulkDeletePaymentTypes = (ids: string[]): boolean => {
+    const updated = paymentTypes.filter((p) => !ids.includes(p.id));
+    setPaymentTypes(updated);
+    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'DELETE',
+      module: 'Payment Types',
+      details: `Bulk deleted ${ids.length} payment types`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`${ids.length} payment types deleted`, 'info');
+    return true;
+  };
+
+  const openAddPaymentTypeDrawer = () => {
+    setDrawerPaymentType(null);
+    setIsPaymentTypeDrawerOpen(true);
+  };
+
+  const openEditPaymentTypeDrawer = (paymentType: PaymentTypeItem) => {
+    setDrawerPaymentType(paymentType);
+    setIsPaymentTypeDrawerOpen(true);
+  };
+
+  const closePaymentTypeDrawer = () => {
+    setIsPaymentTypeDrawerOpen(false);
+    setDrawerPaymentType(null);
+  };
+
+  const openDeletePaymentTypeDialog = (paymentType: PaymentTypeItem) => {
+    setDeleteTargetPaymentType(paymentType);
+    setIsDeletePaymentTypeDialogOpen(true);
+  };
+
+  const closeDeletePaymentTypeDialog = () => {
+    setIsDeletePaymentTypeDialogOpen(false);
+    setDeleteTargetPaymentType(null);
+  };
+
+  // Exchange Rates CRUD
+  const isCountryExchangeRateUnique = (country: string, excludeId?: string): boolean => {
+    const trimmed = country.trim().toLowerCase();
+    return !exchangeRates.some(
+      (xr) => xr.country.trim().toLowerCase() === trimmed && (!excludeId || xr.id !== excludeId)
+    );
+  };
+
+  const addExchangeRate = (data: Omit<ExchangeRateItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    if (!isCountryExchangeRateUnique(data.country)) {
+      addToast(`An exchange rate for "${data.country}" already exists`, 'error');
+      return false;
+    }
+
+    const isBase = Boolean(data.isBaseRate);
+    const newRate: ExchangeRateItem = {
+      ...data,
+      id: `xr-${Date.now()}`,
+      country: data.country.trim(),
+      currency: data.currency.trim(),
+      sign: data.sign.trim(),
+      rate: isBase ? 1.0000 : Number(data.rate) || 1.0000,
+      isBaseRate: isBase,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    let updated: ExchangeRateItem[];
+    if (isBase) {
+      updated = [newRate, ...exchangeRates.map((xr) => ({ ...xr, isBaseRate: false }))];
+    } else {
+      updated = [...exchangeRates, newRate];
+    }
+
+    setExchangeRates(updated);
+    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'CREATE',
+      module: 'Exchange Rates',
+      details: `Added exchange rate for ${newRate.country} (${newRate.currency}): ${newRate.rate}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Exchange rate for "${newRate.country}" added successfully`, 'success');
+    return true;
+  };
+
+  const updateExchangeRate = (id: string, updates: Partial<ExchangeRateItem>): boolean => {
+    if (updates.country && !isCountryExchangeRateUnique(updates.country, id)) {
+      addToast(`An exchange rate for "${updates.country}" already exists`, 'error');
+      return false;
+    }
+
+    const isBase = Boolean(updates.isBaseRate);
+
+    const updated = exchangeRates.map((xr) => {
+      if (xr.id === id) {
+        return {
+          ...xr,
+          ...updates,
+          country: updates.country !== undefined ? updates.country.trim() : xr.country,
+          currency: updates.currency !== undefined ? updates.currency.trim() : xr.currency,
+          sign: updates.sign !== undefined ? updates.sign.trim() : xr.sign,
+          rate: isBase ? 1.0000 : updates.rate !== undefined ? Number(updates.rate) : xr.rate,
+          isBaseRate: updates.isBaseRate !== undefined ? isBase : xr.isBaseRate,
+          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        };
+      }
+      if (isBase) {
+        return { ...xr, isBaseRate: false };
+      }
+      return xr;
+    });
+
+    setExchangeRates(updated);
+    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+
+    const target = exchangeRates.find((xr) => xr.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'UPDATE',
+      module: 'Exchange Rates',
+      details: `Updated exchange rate for ${target?.country || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Exchange rate updated successfully`, 'success');
+    return true;
+  };
+
+  const setBaseExchangeRate = (id: string): boolean => {
+    const target = exchangeRates.find((xr) => xr.id === id);
+    if (!target) return false;
+
+    const updated = exchangeRates.map((xr) => ({
+      ...xr,
+      isBaseRate: xr.id === id,
+      rate: xr.id === id ? 1.0000 : xr.rate,
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    }));
+
+    setExchangeRates(updated);
+    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'UPDATE',
+      module: 'Exchange Rates',
+      details: `Designated ${target.currency} (${target.country}) as Base Currency Rate`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`${target.currency} (${target.country}) is now designated as Base Rate`, 'success');
+    return true;
+  };
+
+  const deleteExchangeRate = (id: string): boolean => {
+    const target = exchangeRates.find((xr) => xr.id === id);
+    if (!target) return false;
+
+    if (target.isBaseRate) {
+      addToast('Cannot delete the Base Rate currency. Please designate another base currency first.', 'error');
+      return false;
+    }
+
+    const updated = exchangeRates.filter((xr) => xr.id !== id);
+    setExchangeRates(updated);
+    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Alex Rivera',
+      action: 'DELETE',
+      module: 'Exchange Rates',
+      details: `Deleted exchange rate for ${target.country} (${target.currency})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Exchange rate for "${target.country}" deleted`, 'info');
+    return true;
+  };
+
+  const openAddExchangeRateDrawer = () => {
+    setDrawerExchangeRate(null);
+    setIsExchangeRateDrawerOpen(true);
+  };
+
+  const openEditExchangeRateDrawer = (exchangeRate: ExchangeRateItem) => {
+    setDrawerExchangeRate(exchangeRate);
+    setIsExchangeRateDrawerOpen(true);
+  };
+
+  const closeExchangeRateDrawer = () => {
+    setIsExchangeRateDrawerOpen(false);
+    setDrawerExchangeRate(null);
+  };
+
+  const openDeleteExchangeRateDialog = (exchangeRate: ExchangeRateItem) => {
+    setDeleteTargetExchangeRate(exchangeRate);
+    setIsDeleteExchangeRateDialogOpen(true);
+  };
+
+  const closeDeleteExchangeRateDialog = () => {
+    setIsDeleteExchangeRateDialogOpen(false);
+    setDeleteTargetExchangeRate(null);
+  };
+
+  // Roles & Privileges CRUD
+  const isRoleNameUnique = (name: string, excludeId?: string): boolean => {
+    const trimmed = name.trim().toLowerCase();
+    return !roles.some(
+      (r) => r.name.trim().toLowerCase() === trimmed && (!excludeId || r.id !== excludeId)
+    );
+  };
+
+  const isRoleCodeUnique = (code: string, excludeId?: string): boolean => {
+    const trimmed = code.trim().toLowerCase();
+    return !roles.some(
+      (r) => r.code.trim().toLowerCase() === trimmed && (!excludeId || r.id !== excludeId)
+    );
+  };
+
+  const addRole = (data: Omit<RoleItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    if (!isRoleNameUnique(data.name)) {
+      addToast(`A role named "${data.name}" already exists`, 'error');
+      return false;
+    }
+    if (!isRoleCodeUnique(data.code)) {
+      addToast(`A role with code "${data.code}" already exists`, 'error');
+      return false;
+    }
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const newRole: RoleItem = {
+      ...data,
+      id: `role-${Date.now()}`,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    const updated = [newRole, ...roles];
+    setRoles(updated);
+    localStorage.setItem('stayos_roles', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Jane Smith (JS)',
+      action: 'CREATE',
+      module: 'Roles & Privileges',
+      details: `Created new role "${newRole.name}" (${newRole.code})`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Role "${newRole.name}" successfully created`, 'success');
+    return true;
+  };
+
+  const updateRole = (id: string, updates: Partial<RoleItem>): boolean => {
+    const target = roles.find((r) => r.id === id);
+    if (!target) return false;
+
+    if (updates.name && !isRoleNameUnique(updates.name, id)) {
+      addToast(`A role named "${updates.name}" already exists`, 'error');
+      return false;
+    }
+    if (updates.code && !isRoleCodeUnique(updates.code, id)) {
+      addToast(`A role with code "${updates.code}" already exists`, 'error');
+      return false;
+    }
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const updated = roles.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            ...updates,
+            updatedAt: nowStr,
+          }
+        : r
+    );
+    setRoles(updated);
+    localStorage.setItem('stayos_roles', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Jane Smith (JS)',
+      action: 'UPDATE',
+      module: 'Roles & Privileges',
+      details: `Updated role "${updates.name || target.name}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Role "${updates.name || target.name}" updated`, 'success');
+    return true;
+  };
+
+  const deleteRole = (id: string): boolean => {
+    const target = roles.find((r) => r.id === id);
+    if (!target) return false;
+
+    if (target.isSystem) {
+      addToast('Cannot delete system-critical role "System Administrator"', 'error');
+      return false;
+    }
+
+    if (target.usersCount > 0) {
+      addToast(`Cannot delete role "${target.name}" because it is currently assigned to ${target.usersCount} active users`, 'error');
+      return false;
+    }
+
+    const filtered = roles.filter((r) => r.id !== id);
+    setRoles(filtered);
+    localStorage.setItem('stayos_roles', JSON.stringify(filtered));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Jane Smith (JS)',
+      action: 'DELETE',
+      module: 'Roles & Privileges',
+      details: `Deleted role "${target.name}" (${target.code})`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Role "${target.name}" deleted`, 'info');
+    return true;
+  };
+
+  const bulkDeleteRoles = (ids: string[]): boolean => {
+    const nonDeletable = roles.filter((r) => ids.includes(r.id) && (r.isSystem || r.usersCount > 0));
+    if (nonDeletable.length > 0) {
+      addToast(`Cannot delete system roles or roles with assigned users (${nonDeletable.map((r) => r.name).join(', ')})`, 'error');
+      return false;
+    }
+
+    const filtered = roles.filter((r) => !ids.includes(r.id));
+    setRoles(filtered);
+    localStorage.setItem('stayos_roles', JSON.stringify(filtered));
+    addToast(`Deleted ${ids.length} roles`, 'info');
+    return true;
+  };
+
+  const openAddRoleDrawer = () => {
+    setDrawerRole(null);
+    setIsRoleDrawerOpen(true);
+  };
+
+  const openEditRoleDrawer = (role: RoleItem) => {
+    setDrawerRole(role);
+    setIsRoleDrawerOpen(true);
+  };
+
+  const closeRoleDrawer = () => {
+    setIsRoleDrawerOpen(false);
+    setDrawerRole(null);
+  };
+
+  const openDeleteRoleDialog = (role: RoleItem) => {
+    setDeleteTargetRole(role);
+    setIsDeleteRoleDialogOpen(true);
+  };
+
+  const closeDeleteRoleDialog = () => {
+    setIsDeleteRoleDialogOpen(false);
+    setDeleteTargetRole(null);
+  };
+
+  // User Management CRUD
+  const addUser = (data: Omit<UserAccountItem, 'id' | 'createdAt'>): boolean => {
+    const existing = users.find((u) => u.email.trim().toLowerCase() === data.email.trim().toLowerCase());
+    if (existing) {
+      addToast(`A user with email "${data.email}" already exists`, 'error');
+      return false;
+    }
+
+    const newUser: UserAccountItem = {
+      ...data,
+      id: `usr-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newUser, ...users];
+    setUsers(updated);
+    localStorage.setItem('stayos_users', JSON.stringify(updated));
+
+    // Update role usersCount
+    setRoles((prev) =>
+      prev.map((r) => (r.id === data.roleId ? { ...r, usersCount: (r.usersCount || 0) + 1 } : r))
+    );
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'CREATE',
+      module: 'User Management',
+      details: `Invited/created user "${newUser.name}" (${newUser.email}) with role "${newUser.roleName}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Invitation sent to "${newUser.name}"`, 'success');
+    return true;
+  };
+
+  const updateUser = (id: string, updates: Partial<UserAccountItem>): boolean => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return false;
+
+    if (updates.email && updates.email.trim().toLowerCase() !== target.email.toLowerCase()) {
+      const existing = users.find(
+        (u) => u.email.trim().toLowerCase() === updates.email!.trim().toLowerCase() && u.id !== id
+      );
+      if (existing) {
+        addToast(`A user with email "${updates.email}" already exists`, 'error');
+        return false;
+      }
+    }
+
+    const oldRoleId = target.roleId;
+    const newRoleId = updates.roleId;
+
+    const updated = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
+    setUsers(updated);
+    localStorage.setItem('stayos_users', JSON.stringify(updated));
+
+    // If role changed, adjust usersCount on roles
+    if (newRoleId && newRoleId !== oldRoleId) {
+      setRoles((prev) =>
+        prev.map((r) => {
+          if (r.id === oldRoleId) return { ...r, usersCount: Math.max(0, (r.usersCount || 1) - 1) };
+          if (r.id === newRoleId) return { ...r, usersCount: (r.usersCount || 0) + 1 };
+          return r;
+        })
+      );
+    }
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'UPDATE',
+      module: 'User Management',
+      details: `Updated user profile and role assignment for "${updates.name || target.name}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`User "${updates.name || target.name}" updated`, 'success');
+    return true;
+  };
+
+  const deleteUser = (id: string): boolean => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return false;
+
+    const filtered = users.filter((u) => u.id !== id);
+    setUsers(filtered);
+    localStorage.setItem('stayos_users', JSON.stringify(filtered));
+
+    // Decrement role usersCount
+    setRoles((prev) =>
+      prev.map((r) => (r.id === target.roleId ? { ...r, usersCount: Math.max(0, (r.usersCount || 1) - 1) } : r))
+    );
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'DELETE',
+      module: 'User Management',
+      details: `Removed user account "${target.name}" (${target.email})`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`User "${target.name}" removed`, 'info');
+    return true;
+  };
+
+  const toggleUserStatus = (id: string) => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
+    const nextStatus = target.status === 'active' ? 'inactive' : 'active';
+    updateUser(id, { status: nextStatus });
+  };
+
+  const openInviteUserModal = (user?: UserAccountItem) => {
+    if (user) {
+      setDrawerUser(user);
+      setEditingUserId(user.id);
+    } else {
+      setDrawerUser(null);
+      setEditingUserId(null);
+    }
+    setIsInviteUserModalOpen(true);
+  };
+
+  const closeInviteUserModal = () => {
+    setIsInviteUserModalOpen(false);
+    setDrawerUser(null);
+    setEditingUserId(null);
+  };
+
+  // Email Templates CRUD
+  const addEmailTemplate = (data: Omit<EmailTemplateItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const existing = emailTemplates.find(
+      (t) => t.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    );
+    if (existing) {
+      addToast(`An email template named "${data.name}" already exists`, 'error');
+      return false;
+    }
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const newTemplate: EmailTemplateItem = {
+      ...data,
+      id: `tmpl-${Date.now()}`,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    const updated = [newTemplate, ...emailTemplates];
+    setEmailTemplates(updated);
+    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'CREATE',
+      module: 'Communications',
+      details: `Created new email template "${newTemplate.name}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Template "${newTemplate.name}" saved successfully`, 'success');
+    return true;
+  };
+
+  const updateEmailTemplate = (id: string, updates: Partial<EmailTemplateItem>): boolean => {
+    const target = emailTemplates.find((t) => t.id === id);
+    if (!target) return false;
+
+    if (updates.name && updates.name.trim().toLowerCase() !== target.name.toLowerCase()) {
+      const existing = emailTemplates.find(
+        (t) => t.name.trim().toLowerCase() === updates.name!.trim().toLowerCase() && t.id !== id
+      );
+      if (existing) {
+        addToast(`An email template named "${updates.name}" already exists`, 'error');
+        return false;
+      }
+    }
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const updated = emailTemplates.map((t) =>
+      t.id === id
+        ? {
+            ...t,
+            ...updates,
+            updatedAt: nowStr,
+          }
+        : t
+    );
+    setEmailTemplates(updated);
+    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'UPDATE',
+      module: 'Communications',
+      details: `Updated email template "${updates.name || target.name}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Template "${updates.name || target.name}" updated`, 'success');
+    return true;
+  };
+
+  const deleteEmailTemplate = (id: string): boolean => {
+    const target = emailTemplates.find((t) => t.id === id);
+    if (!target) return false;
+
+    const filtered = emailTemplates.filter((t) => t.id !== id);
+    setEmailTemplates(filtered);
+    localStorage.setItem('stayos_email_templates', JSON.stringify(filtered));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Sarah Jenkins (Admin)',
+      action: 'DELETE',
+      module: 'Communications',
+      details: `Deleted email template "${target.name}"`,
+      ipAddress: '192.168.1.104',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Template "${target.name}" deleted`, 'info');
+    return true;
+  };
+
+  const duplicateEmailTemplate = (id: string): boolean => {
+    const target = emailTemplates.find((t) => t.id === id);
+    if (!target) return false;
+
+    const baseName = `${target.name} (Copy)`;
+    let finalName = baseName;
+    let counter = 1;
+    while (emailTemplates.some((t) => t.name.toLowerCase() === finalName.toLowerCase())) {
+      counter++;
+      finalName = `${target.name} (Copy ${counter})`;
+    }
+
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const copy: EmailTemplateItem = {
+      ...target,
+      id: `tmpl-${Date.now()}`,
+      name: finalName,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    const updated = [copy, ...emailTemplates];
+    setEmailTemplates(updated);
+    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+
+    addToast(`Duplicated template as "${finalName}"`, 'success');
+    return true;
+  };
+
+  const toggleEmailTemplateStatus = (id: string): boolean => {
+    const target = emailTemplates.find((t) => t.id === id);
+    if (!target) return false;
+    const nextStatus = target.status === 'active' ? 'inactive' : 'active';
+    return updateEmailTemplate(id, { status: nextStatus });
+  };
+
+  const openAddEmailTemplateDrawer = () => {
+    setDrawerEmailTemplate(null);
+    setEditingEmailTemplateId(null);
+    setIsEmailTemplateDrawerOpen(true);
+  };
+
+  const openEditEmailTemplateDrawer = (template: EmailTemplateItem) => {
+    setDrawerEmailTemplate(template);
+    setEditingEmailTemplateId(template.id);
+    setIsEmailTemplateDrawerOpen(true);
+  };
+
+  const closeEmailTemplateDrawer = () => {
+    setIsEmailTemplateDrawerOpen(false);
+    setDrawerEmailTemplate(null);
+    setEditingEmailTemplateId(null);
+  };
+
+  const openDeleteEmailTemplateDialog = (template: EmailTemplateItem) => {
+    setDeleteTargetEmailTemplate(template);
+    setIsDeleteEmailTemplateDialogOpen(true);
+  };
+
+  const closeDeleteEmailTemplateDialog = () => {
+    setIsDeleteEmailTemplateDialogOpen(false);
+    setDeleteTargetEmailTemplate(null);
+  };
+
   // Rooms CRUD
   const isRoomNameUnique = (name: string, excludeId?: string): boolean => {
     const trimmed = name.trim().toLowerCase();
@@ -2018,6 +3597,37 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteTargetRateType,
         openDeleteRateTypeDialog,
         closeDeleteRateTypeDialog,
+        policies,
+        editingPolicyId,
+        setEditingPolicyId,
+        addPolicy,
+        updatePolicy,
+        deletePolicy,
+        isPolicyDrawerOpen,
+        drawerPolicy,
+        openAddPolicyDrawer,
+        openEditPolicyDrawer,
+        closePolicyDrawer,
+        isDeletePolicyDialogOpen,
+        deleteTargetPolicy,
+        openDeletePolicyDialog,
+        closeDeletePolicyDialog,
+        guestCategories,
+        editingGuestCategoryId,
+        setEditingGuestCategoryId,
+        addGuestCategory,
+        updateGuestCategory,
+        deleteGuestCategory,
+        toggleGuestCategoryStatus,
+        isGuestCategoryDrawerOpen,
+        drawerGuestCategory,
+        openAddGuestCategoryDrawer,
+        openEditGuestCategoryDrawer,
+        closeGuestCategoryDrawer,
+        isDeleteGuestCategoryDialogOpen,
+        deleteTargetGuestCategory,
+        openDeleteGuestCategoryDialog,
+        closeDeleteGuestCategoryDialog,
         documentTypes,
         editingDocumentTypeId,
         setEditingDocumentTypeId,
@@ -2066,6 +3676,105 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteTargetOtherCharge,
         openDeleteOtherChargeDialog,
         closeDeleteOtherChargeDialog,
+        measurementUnits,
+        editingMeasurementUnitId,
+        setEditingMeasurementUnitId,
+        addMeasurementUnit,
+        updateMeasurementUnit,
+        deleteMeasurementUnit,
+        isMeasurementUnitNameUnique,
+        isMeasurementUnitShortNameUnique,
+        isMeasurementUnitDrawerOpen,
+        drawerMeasurementUnit,
+        openAddMeasurementUnitDrawer,
+        openEditMeasurementUnitDrawer,
+        closeMeasurementUnitDrawer,
+        isDeleteMeasurementUnitDialogOpen,
+        deleteTargetMeasurementUnit,
+        openDeleteMeasurementUnitDialog,
+        closeDeleteMeasurementUnitDialog,
+        paymentTypes,
+        editingPaymentTypeId,
+        setEditingPaymentTypeId,
+        addPaymentType,
+        updatePaymentType,
+        deletePaymentType,
+        bulkDeletePaymentTypes,
+        togglePaymentTypeStatus,
+        isPaymentTypeNameUnique,
+        isPaymentTypeShortNameUnique,
+        isPaymentTypeDrawerOpen,
+        drawerPaymentType,
+        openAddPaymentTypeDrawer,
+        openEditPaymentTypeDrawer,
+        closePaymentTypeDrawer,
+        isDeletePaymentTypeDialogOpen,
+        deleteTargetPaymentType,
+        openDeletePaymentTypeDialog,
+        closeDeletePaymentTypeDialog,
+        exchangeRates,
+        editingExchangeRateId,
+        setEditingExchangeRateId,
+        addExchangeRate,
+        updateExchangeRate,
+        deleteExchangeRate,
+        setBaseExchangeRate,
+        isCountryExchangeRateUnique,
+        isExchangeRateDrawerOpen,
+        drawerExchangeRate,
+        openAddExchangeRateDrawer,
+        openEditExchangeRateDrawer,
+        closeExchangeRateDrawer,
+        isDeleteExchangeRateDialogOpen,
+        deleteTargetExchangeRate,
+        openDeleteExchangeRateDialog,
+        closeDeleteExchangeRateDialog,
+        roles,
+        editingRoleId,
+        setEditingRoleId,
+        addRole,
+        updateRole,
+        deleteRole,
+        bulkDeleteRoles,
+        isRoleNameUnique,
+        isRoleCodeUnique,
+        isRoleDrawerOpen,
+        drawerRole,
+        openAddRoleDrawer,
+        openEditRoleDrawer,
+        closeRoleDrawer,
+        isDeleteRoleDialogOpen,
+        deleteTargetRole,
+        openDeleteRoleDialog,
+        closeDeleteRoleDialog,
+        users,
+        editingUserId,
+        setEditingUserId,
+        addUser,
+        updateUser,
+        deleteUser,
+        toggleUserStatus,
+        isInviteUserModalOpen,
+        drawerUser,
+        openInviteUserModal,
+        closeInviteUserModal,
+        emailTemplates,
+        editingEmailTemplateId,
+        setEditingEmailTemplateId,
+        addEmailTemplate,
+        updateEmailTemplate,
+        deleteEmailTemplate,
+        duplicateEmailTemplate,
+        toggleEmailTemplateStatus,
+        isEmailTemplateDrawerOpen,
+        drawerEmailTemplate,
+        openAddEmailTemplateDrawer,
+        openEditEmailTemplateDrawer,
+        closeEmailTemplateDrawer,
+        isDeleteEmailTemplateDialogOpen,
+        deleteTargetEmailTemplate,
+        openDeleteEmailTemplateDialog,
+        closeDeleteEmailTemplateDialog,
         rooms,
         selectedRoomId,
         setSelectedRoomId,
@@ -2093,6 +3802,13 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeToast,
         amenities,
         auditLogs,
+        generalSettings,
+        activeGeneralSettingsTab,
+        setActiveGeneralSettingsTab,
+        updateGeneralSettingsSection,
+        updateGuestMandatoryField,
+        resetGeneralSettingsSection,
+        saveGeneralSettings,
       }}
     >
       {children}

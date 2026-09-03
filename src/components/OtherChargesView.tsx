@@ -6,6 +6,8 @@ export const OtherChargesView: React.FC = () => {
   const {
     otherCharges,
     otherChargeCategories,
+    editingOtherChargeId,
+    setEditingOtherChargeId,
     openAddOtherChargeDrawer,
     openEditOtherChargeDrawer,
     openDeleteOtherChargeDialog,
@@ -111,8 +113,12 @@ export const OtherChargesView: React.FC = () => {
 
           {/* Add Charge Button */}
           <button
-            onClick={openAddOtherChargeDrawer}
-            className="bg-[#000000] text-white text-[14px] font-medium px-4 py-2 rounded shadow-sm hover:bg-[#1a1a1a] transition-colors flex items-center gap-2"
+            id="btn-add-charge"
+            onClick={() => {
+              setEditingOtherChargeId(null);
+              navigate('add-other-charge');
+            }}
+            className="bg-[#000000] text-white text-[14px] font-medium px-4 py-2 rounded shadow-sm hover:bg-[#1a1a1a] transition-colors flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Add Charge
@@ -462,8 +468,11 @@ export const OtherChargesView: React.FC = () => {
                       <div className="flex items-center justify-end gap-1 relative">
                         {/* Quick Edit Icon */}
                         <button
-                          onClick={() => openEditOtherChargeDrawer(charge)}
-                          className="p-1 text-[#45464d] hover:text-[#0058be] opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-[#eceef0]"
+                          onClick={() => {
+                            setEditingOtherChargeId(charge.id);
+                            navigate('edit-other-charge');
+                          }}
+                          className="p-1 text-[#45464d] hover:text-[#0058be] opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-[#eceef0] cursor-pointer"
                           title="Edit charge"
                         >
                           <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -475,7 +484,7 @@ export const OtherChargesView: React.FC = () => {
                             onClick={() =>
                               setActiveMenuId(activeMenuId === charge.id ? null : charge.id)
                             }
-                            className="p-1 text-[#76777d] hover:text-[#191c1e] rounded hover:bg-[#eceef0] transition-colors"
+                            className="p-1 text-[#76777d] hover:text-[#191c1e] rounded hover:bg-[#eceef0] transition-colors cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-[20px]">more_vert</span>
                           </button>
@@ -485,10 +494,11 @@ export const OtherChargesView: React.FC = () => {
                             <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-md shadow-lg border border-[#c6c6cd]/50 py-1 z-30 animate-in fade-in duration-100">
                               <button
                                 onClick={() => {
-                                  openEditOtherChargeDrawer(charge);
+                                  setEditingOtherChargeId(charge.id);
+                                  navigate('edit-other-charge');
                                   setActiveMenuId(null);
                                 }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-[#191c1e] hover:bg-[#f2f4f6] flex items-center gap-2"
+                                className="w-full text-left px-3 py-1.5 text-xs text-[#191c1e] hover:bg-[#f2f4f6] flex items-center gap-2 cursor-pointer"
                               >
                                 <span className="material-symbols-outlined text-[16px] text-[#0058be]">
                                   edit

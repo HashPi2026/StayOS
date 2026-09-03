@@ -21,7 +21,13 @@ export const GlobalSearchModal: React.FC = () => {
     roomTypes,
     rooms,
     taxes,
+    otherCharges,
+    measurementUnits,
+    paymentTypes,
+    exchangeRates,
+    roles,
     navigate,
+    openEditRoleDrawer,
     openEditFloorDrawer,
   } = useProperty();
 
@@ -144,12 +150,44 @@ export const GlobalSearchModal: React.FC = () => {
       description: 'Manage property document classifications, identity rules, and default settings.',
     },
     {
-      id: 'opt-other-charges',
-      title: 'Other Charges Categories',
+      id: 'opt-other-charges-categories',
+      title: 'Other Charges Category',
       category: 'Configuration',
       icon: 'category',
       path: 'other-charges-categories',
       description: 'Manage classifications and defaults for non-room charges across the property.',
+    },
+    {
+      id: 'opt-other-charges',
+      title: 'Other Charges',
+      category: 'Configuration',
+      icon: 'receipt_long',
+      path: 'other-charges',
+      description: 'Manage auxiliary fees, POS items, breakfast, parking, and recurring services.',
+    },
+    {
+      id: 'opt-measurement-units',
+      title: 'Measurement Units',
+      category: 'Configuration',
+      icon: 'scale',
+      path: 'measurement-units',
+      description: 'Manage units of measure used across the property for inventory, food & beverage, and laundry tracking.',
+    },
+    {
+      id: 'opt-payment-types',
+      title: 'Payment Types',
+      category: 'Configuration',
+      icon: 'credit_card',
+      path: 'payment-types',
+      description: 'Manage accepted payment methods (Credit Cards, Cash, Digital Wallets, Bank Transfers) and CC processing.',
+    },
+    {
+      id: 'opt-exchange-rates',
+      title: 'Exchange Rates',
+      category: 'Configuration',
+      icon: 'currency_exchange',
+      path: 'exchange-rates',
+      description: 'Configure multi-currency conversion factors, base currency designation, and currency symbols.',
     },
     {
       id: 'opt-taxes',
@@ -187,9 +225,65 @@ export const GlobalSearchModal: React.FC = () => {
       id: 'opt-policies',
       title: 'Policies & Cancellation',
       category: 'Configuration',
-      icon: 'policy',
+      icon: 'gavel',
       path: 'policies',
       description: 'Check-in rules, deposit requirements, and cancellation terms.',
+    },
+    {
+      id: 'opt-add-policy',
+      title: 'Add New Policy',
+      category: 'Configuration',
+      icon: 'add_circle',
+      path: 'add-policy',
+      description: 'Define cancellation, payment, or general booking rules with live preview.',
+    },
+    {
+      id: 'opt-guest-categories',
+      title: 'Guest Categories',
+      category: 'Configuration',
+      icon: 'person_pin',
+      path: 'guest-categories',
+      description: 'Manage segmentations to identify and cater to VIP, Corporate, and custom guest types.',
+    },
+    {
+      id: 'opt-roles-privileges',
+      title: 'Roles & Privileges',
+      category: 'Configuration',
+      icon: 'admin_panel_settings',
+      path: 'roles-privileges',
+      description: 'Manage staff roles, operational scopes, and access permissions matrix.',
+    },
+    {
+      id: 'opt-email-templates',
+      title: 'E-mail Templates',
+      category: 'Configuration',
+      icon: 'mail',
+      path: 'email-templates',
+      description: 'Customize guest transactional email templates, lifecycle trigger events, and dynamic merge variables.',
+    },
+    {
+      id: 'opt-add-email-template',
+      title: 'Add E-mail Template',
+      category: 'Configuration',
+      icon: 'mark_email_unread',
+      path: 'add-email-template',
+      description: 'Compose a new guest transactional email template with lifecycle triggers.',
+    },
+    {
+      id: 'opt-add-role',
+      title: 'Add New Role',
+      category: 'Configuration',
+      icon: 'add_moderator',
+      path: 'add-role',
+      description: 'Create a new operational role and define module permission levels.',
+    },
+    {
+      id: 'opt-policies',
+      title: 'Policies',
+      category: 'Configuration',
+      icon: 'gavel',
+      path: 'policies',
+      description: 'Manage cancellation and deposit rules across room and rate types.',
     },
     {
       id: 'opt-audit',
@@ -264,7 +358,74 @@ export const GlobalSearchModal: React.FC = () => {
     description: `${t.taxType} • ${t.calculationStrategy === 'per-day' ? 'Per Day' : 'Per Stay'} • ${t.isActive ? 'Active' : 'Inactive'} • ${t.description || ''}`,
   }));
 
-  const allOptions = [...baseOptions, ...buildingOptions, ...floorOptions, ...roomTypeOptions, ...roomOptions, ...taxOptions];
+  // Dynamic other charges options
+  const otherChargeOptions: SearchOption[] = otherCharges.map((c) => ({
+    id: `opt-charge-${c.id}`,
+    title: `Charge: ${c.name} (${c.shortName})`,
+    category: 'Other Charges',
+    icon: 'receipt_long',
+    path: 'other-charges',
+    targetId: c.id,
+    description: `${c.category} • ${c.price !== undefined ? `$${c.price.toFixed(2)}` : 'Dynamic rate'} • ${c.taxable ? 'Taxable' : 'Non-taxable'} • ${c.reoccur ? `Reoccurring (${c.reoccurFrequency || 'Daily'})` : 'One-time'}`,
+  }));
+
+  // Dynamic measurement units options
+  const measurementUnitOptions: SearchOption[] = measurementUnits.map((m) => ({
+    id: `opt-mu-${m.id}`,
+    title: `Unit: ${m.name} (${m.shortName})`,
+    category: 'Measurement Units',
+    icon: m.icon || 'scale',
+    path: 'measurement-units',
+    targetId: m.id,
+    description: `${m.description || 'Unit of measure used in inventory and billing.'}`,
+  }));
+
+  // Dynamic payment types options
+  const paymentTypeOptions: SearchOption[] = paymentTypes.map((pt) => ({
+    id: `opt-pt-${pt.id}`,
+    title: `Payment Type: ${pt.name} (${pt.shortName})`,
+    category: 'Payment Types',
+    icon: 'credit_card',
+    path: 'payment-types',
+    targetId: pt.id,
+    description: `${pt.category} • CC Processing: ${pt.ccProcessing ? 'Enabled' : 'Disabled'} • Status: ${pt.status} • ${pt.description || ''}`,
+  }));
+
+  // Dynamic exchange rate options
+  const exchangeRateOptions: SearchOption[] = exchangeRates.map((xr) => ({
+    id: `opt-xr-${xr.id}`,
+    title: `Exchange Rate: ${xr.country} (${xr.currency} - ${xr.sign})`,
+    category: 'Exchange Rates',
+    icon: 'currency_exchange',
+    path: 'exchange-rates',
+    targetId: xr.id,
+    description: `Rate: ${xr.rate.toFixed(4)} • ${xr.isBaseRate ? '★ Designated Base Currency' : 'Converted Currency'}`,
+  }));
+
+  // Dynamic roles options
+  const roleOptions: SearchOption[] = roles.map((r) => ({
+    id: `opt-role-${r.id}`,
+    title: `Role: ${r.name} (${r.code})`,
+    category: 'Roles & Privileges',
+    icon: 'admin_panel_settings',
+    path: 'roles-privileges',
+    targetId: r.id,
+    description: `Type: ${r.type} • ${r.usersCount} users • ${r.description || 'Access privileges configuration'}`,
+  }));
+
+  const allOptions = [
+    ...baseOptions,
+    ...buildingOptions,
+    ...floorOptions,
+    ...roomTypeOptions,
+    ...roomOptions,
+    ...taxOptions,
+    ...otherChargeOptions,
+    ...measurementUnitOptions,
+    ...paymentTypeOptions,
+    ...exchangeRateOptions,
+    ...roleOptions,
+  ];
 
   const filtered = query.trim()
     ? allOptions.filter(

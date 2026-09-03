@@ -182,17 +182,27 @@ export const OtherChargesCategoriesView: React.FC = () => {
                 Manage classifications for non-room charges across the property.
               </p>
             </div>
-            <button
-              id="btn-add-category"
-              onClick={() => {
-                setEditingOtherChargeCategoryId(null);
-                navigate('add-other-charge-category');
-              }}
-              className="h-10 px-4 bg-[#000000] text-white hover:bg-[#2d3133] active:scale-[0.98] transition-all rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer self-start sm:self-auto"
-            >
-              <span className="material-symbols-outlined text-[20px]">add</span>
-              <span>Add Category</span>
-            </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                onClick={() => navigate('other-charges')}
+                className="h-10 px-3.5 bg-[#f2f4f6] text-[#45464d] hover:text-[#191c1e] hover:bg-[#e6e8ea] border border-[#c6c6cd]/60 transition-all rounded-lg text-[13px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                title="View All Other Charges"
+              >
+                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                <span>Other Charges</span>
+              </button>
+              <button
+                id="btn-add-category"
+                onClick={() => {
+                  setEditingOtherChargeCategoryId(null);
+                  navigate('add-other-charge-category');
+                }}
+                className="h-10 px-4 bg-[#000000] text-white hover:bg-[#2d3133] active:scale-[0.98] transition-all rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                <span>Add Category</span>
+              </button>
+            </div>
           </div>
         </div>
 

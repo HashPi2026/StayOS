@@ -38,6 +38,39 @@ import { DocumentTypesView } from './components/DocumentTypesView';
 import { AddDocumentTypeView } from './components/AddDocumentTypeView';
 import { OtherChargesCategoriesView } from './components/OtherChargesCategoriesView';
 import { AddOtherChargeCategoryView } from './components/AddOtherChargeCategoryView';
+import { OtherChargesView } from './components/OtherChargesView';
+import { AddOtherChargeView } from './components/AddOtherChargeView';
+import { OtherChargeDrawer } from './components/OtherChargeDrawer';
+import { DeleteOtherChargeDialog } from './components/DeleteOtherChargeDialog';
+import { MeasurementUnitsView } from './components/MeasurementUnitsView';
+import { AddMeasurementUnitView } from './components/AddMeasurementUnitView';
+import { MeasurementUnitDrawer } from './components/MeasurementUnitDrawer';
+import { DeleteMeasurementUnitDialog } from './components/DeleteMeasurementUnitDialog';
+import { PaymentTypesView } from './components/PaymentTypesView';
+import { AddPaymentTypeView } from './components/AddPaymentTypeView';
+import { PaymentTypeDrawer } from './components/PaymentTypeDrawer';
+import { DeletePaymentTypeDialog } from './components/DeletePaymentTypeDialog';
+import { ExchangeRatesView } from './components/ExchangeRatesView';
+import { AddExchangeRateView } from './components/AddExchangeRateView';
+import { ExchangeRateDrawer } from './components/ExchangeRateDrawer';
+import { DeleteExchangeRateDialog } from './components/DeleteExchangeRateDialog';
+import { RolesPrivilegesView } from './components/RolesPrivilegesView';
+import { RoleDrawer } from './components/RoleDrawer';
+import { DeleteRoleDialog } from './components/DeleteRoleDialog';
+import { PoliciesView } from './components/PoliciesView';
+import { AddPolicyView } from './components/AddPolicyView';
+import { DeletePolicyDialog } from './components/DeletePolicyDialog';
+import { GuestCategoriesView } from './components/GuestCategoriesView';
+import { AddGuestCategoryView } from './components/AddGuestCategoryView';
+import { DeleteGuestCategoryDialog } from './components/DeleteGuestCategoryDialog';
+import { EmailTemplatesView } from './components/EmailTemplatesView';
+import { AddEmailTemplateView } from './components/AddEmailTemplateView';
+import { EmailTemplateDrawer } from './components/EmailTemplateDrawer';
+import { DeleteEmailTemplateDialog } from './components/DeleteEmailTemplateDialog';
+import { UserManagementView } from './components/UserManagementView';
+import { AddUserView } from './components/AddUserView';
+import { GeneralSettingsView } from './components/GeneralSettings/GeneralSettingsView';
+import { InviteUserModal } from './components/InviteUserModal';
 import { TaxDrawer } from './components/TaxDrawer';
 import { TaxRuleDrawer } from './components/TaxRuleDrawer';
 import { TaxConfigDrawer } from './components/TaxConfigDrawer';
@@ -97,6 +130,35 @@ const MainLayout: React.FC = () => {
       case 'add-other-charge-category':
       case 'edit-other-charge-category':
         return <AddOtherChargeCategoryView />;
+      case 'other-charges':
+        return <OtherChargesView />;
+      case 'add-other-charge':
+      case 'edit-other-charge':
+        return <AddOtherChargeView />;
+      case 'measurement-units':
+        return <MeasurementUnitsView />;
+      case 'add-measurement-unit':
+      case 'edit-measurement-unit':
+        return <AddMeasurementUnitView />;
+      case 'payment-types':
+        return <PaymentTypesView />;
+      case 'add-payment-type':
+      case 'edit-payment-type':
+        return <AddPaymentTypeView />;
+      case 'exchange-rates':
+        return <ExchangeRatesView />;
+      case 'add-exchange-rate':
+      case 'edit-exchange-rate':
+        return <AddExchangeRateView />;
+      case 'email-templates':
+        return <EmailTemplatesView />;
+      case 'add-email-template':
+      case 'edit-email-template':
+        return <AddEmailTemplateView />;
+      case 'roles-privileges':
+      case 'add-role':
+      case 'edit-role':
+        return <RolesPrivilegesView />;
       case 'taxes':
         return <TaxesView />;
       case 'tax-configuration':
@@ -110,21 +172,33 @@ const MainLayout: React.FC = () => {
       case 'edit-tax-rate':
         return <AddTaxRateView isEdit />;
       case 'policies':
-        return (
-          <GenericSettingsView
-            title="Policies & Compliance"
-            subtitle="Configure check-in/out policies, deposits, and cancellation terms."
-            category="Configuration"
-          />
-        );
+        return <PoliciesView />;
+      case 'add-policy':
+        return <AddPolicyView />;
+      case 'edit-policy':
+        return <AddPolicyView isEdit />;
+      case 'guest-categories':
+        return <GuestCategoriesView />;
+      case 'add-guest-category':
+        return <AddGuestCategoryView />;
+      case 'edit-guest-category':
+        return <AddGuestCategoryView isEdit />;
       case 'user-management':
-        return (
-          <GenericSettingsView
-            title="User Management"
-            subtitle="Manage staff accounts, hotel managers, and role-based permissions."
-            category="Settings"
-          />
-        );
+        return <UserManagementView />;
+      case 'add-user':
+      case 'edit-user':
+        return <AddUserView />;
+      case 'general-settings':
+      case 'general-settings-rental':
+      case 'general-settings-feature':
+      case 'general-settings-night-audits':
+      case 'general-settings-localization':
+      case 'general-settings-display':
+      case 'general-settings-folios':
+      case 'general-settings-credit-cards':
+      case 'general-settings-emails':
+      case 'general-settings-guest-mandatory-data':
+        return <GeneralSettingsView />;
       case 'integrations':
         return (
           <GenericSettingsView
@@ -177,6 +251,21 @@ const MainLayout: React.FC = () => {
       <TaxRuleDrawer />
       <TaxConfigDrawer />
       <DeleteTaxDialog />
+      <OtherChargeDrawer />
+      <DeleteOtherChargeDialog />
+      <MeasurementUnitDrawer />
+      <DeleteMeasurementUnitDialog />
+      <PaymentTypeDrawer />
+      <DeletePaymentTypeDialog />
+      <ExchangeRateDrawer />
+      <DeleteExchangeRateDialog />
+      <EmailTemplateDrawer />
+      <DeleteEmailTemplateDialog />
+      <DeletePolicyDialog />
+      <DeleteGuestCategoryDialog />
+      <RoleDrawer />
+      <DeleteRoleDialog />
+      <InviteUserModal />
       <VerifyPinModal />
       <GlobalSearchModal />
       <ToastContainer />

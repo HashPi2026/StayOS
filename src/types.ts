@@ -29,8 +29,40 @@ export type NavigationPath =
   | 'other-charges'
   | 'add-other-charge'
   | 'edit-other-charge'
+  | 'measurement-units'
+  | 'add-measurement-unit'
+  | 'edit-measurement-unit'
+  | 'payment-types'
+  | 'add-payment-type'
+  | 'edit-payment-type'
+  | 'exchange-rates'
+  | 'add-exchange-rate'
+  | 'edit-exchange-rate'
   | 'policies'
+  | 'add-policy'
+  | 'edit-policy'
+  | 'guest-categories'
+  | 'add-guest-category'
+  | 'edit-guest-category'
   | 'user-management'
+  | 'add-user'
+  | 'edit-user'
+  | 'email-templates'
+  | 'add-email-template'
+  | 'edit-email-template'
+  | 'roles-privileges'
+  | 'add-role'
+  | 'edit-role'
+  | 'general-settings'
+  | 'general-settings-rental'
+  | 'general-settings-feature'
+  | 'general-settings-night-audits'
+  | 'general-settings-localization'
+  | 'general-settings-display'
+  | 'general-settings-folios'
+  | 'general-settings-credit-cards'
+  | 'general-settings-emails'
+  | 'general-settings-guest-mandatory-data'
   | 'integrations'
   | 'notifications'
   | 'audit-logs'
@@ -268,6 +300,41 @@ export interface OtherChargeItem {
   updatedAt?: string;
 }
 
+export interface MeasurementUnitItem {
+  id: string;
+  name: string;
+  shortName: string;
+  description?: string;
+  icon?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PaymentTypeItem {
+  id: string;
+  shortName: string;
+  name: string;
+  category: 'Credit Card' | 'Cash' | 'Bank Transfer' | 'Digital Wallet' | 'Check' | 'Other';
+  ccProcessing: boolean;
+  status: 'Active' | 'Inactive';
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ExchangeRateItem {
+  id: string;
+  country: string;
+  countryCode?: string;
+  currency: string;
+  sign: string;
+  rate: number;
+  isBaseRate: boolean;
+  flagUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Amenity {
   id: string;
   name: string;
@@ -296,3 +363,433 @@ export interface NotificationItem {
   type: 'info' | 'warning' | 'success' | 'alert';
   read: boolean;
 }
+
+export type RoleType =
+  | 'FrontOffice'
+  | 'Operations'
+  | 'SuperAdmin'
+  | 'Finance'
+  | 'Management'
+  | 'Sales'
+  | 'Housekeeping'
+  | 'Security';
+
+export interface PermissionActionSet {
+  view: boolean;
+  add: boolean;
+  edit: boolean;
+  delete: boolean;
+}
+
+export interface PermissionModuleDef {
+  id: string;
+  name: string;
+  group: 'Reservations' | 'Operations' | 'Finance & Routing' | 'Configuration' | 'User Management & System';
+  subtext?: string;
+  icon?: string;
+  disabledActions?: {
+    view?: boolean;
+    add?: boolean;
+    edit?: boolean;
+    delete?: boolean;
+  };
+}
+
+export interface RoleItem {
+  id: string;
+  name: string;
+  code: string;
+  type: RoleType;
+  description: string;
+  usersCount: number;
+  isSystem?: boolean;
+  isCritical?: boolean;
+  permissions: Record<string, PermissionActionSet>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserAccountItem {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  initials?: string;
+  roleId: string;
+  roleName: string;
+  roleType: RoleType;
+  lastLogin: string;
+  status: 'active' | 'inactive';
+  phone?: string;
+  department?: string;
+  description?: string;
+  createdAt?: string;
+}
+
+export interface EmailTemplateTriggers {
+  created: boolean;
+  updated: boolean;
+  cancelled: boolean;
+  dob: boolean;
+  beforeCheckIn: boolean;
+  beforeCheckInDays: number;
+  atCheckIn: boolean;
+  afterCheckIn: boolean;
+  afterCheckInDays: number;
+  beforeCheckOut: boolean;
+  beforeCheckOutDays: number;
+  atCheckOut: boolean;
+  afterCheckOut: boolean;
+  afterCheckOutDays: number;
+}
+
+export interface EmailTemplateItem {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  senderName?: string;
+  replyTo?: string;
+  triggers: EmailTemplateTriggers;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PolicyItem {
+  id: string;
+  roomTypeId: string; // 'all' or roomType.id
+  roomTypeName: string; // 'All Room Types' or roomType.name
+  rateTypeId: string; // 'all' or rateType.id
+  rateTypeName: string; // 'All Rate Types' or rateType.name
+  content: string;
+  policyType?: 'cancellation' | 'deposit' | 'general' | 'no-show';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuestCategoryItem {
+  id: string;
+  name: string;
+  shortName: string;
+  color: string;
+  description: string;
+  isHighlight: boolean;
+  highlightIcon?: 'star' | 'warning' | 'verified' | 'favorite' | 'flag' | 'none';
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ==========================================
+// GENERAL SETTINGS TYPES
+// ==========================================
+
+export type GeneralSettingsTab =
+  | 'rental'
+  | 'feature'
+  | 'night-audits'
+  | 'localization'
+  | 'display'
+  | 'folios'
+  | 'credit-cards'
+  | 'emails'
+  | 'guest-mandatory-data';
+
+export interface RentalSettings {
+  checkInTime: string;
+  checkOutTime: string;
+  minStayNights: number;
+  maxStayNights: number;
+  earlyCheckInGraceMinutes: number;
+  lateCheckOutGraceMinutes: number;
+  earlyCheckInChargeType: 'free' | 'hourly' | 'fixed' | 'full_day';
+  earlyCheckInAmount: number;
+  lateCheckOutChargeType: 'free' | 'hourly' | 'fixed' | 'full_day';
+  lateCheckOutAmount: number;
+  defaultBookingMode: 'daily' | 'hourly' | 'weekly' | 'monthly';
+  autoRoomAssignment: boolean;
+  allowOverbooking: boolean;
+  overbookingThresholdPercent: number;
+  dayUseAllowed: boolean;
+  dayUseRatePercent: number;
+  // Checkout & Balance fields
+  autoCheckoutAtEndStay: boolean;
+  restrictCheckoutOutstandingBalance: boolean;
+  autoApplyDefaultDiscounts: boolean;
+  // Room Status Transitions
+  postCheckoutRoomStatus: 'dirty' | 'inspection' | 'ooo' | 'clean';
+  postMaintenanceRoomStatus: 'clean' | 'dirty' | 'inspection';
+  // No-show Policies
+  autoCancelNoShows: boolean;
+  noShowCancellationTime: string;
+  noShowFeeApplication: 'none' | 'first_night' | 'full_stay';
+  // Overbooking fields
+  overbookingNotificationTrigger: 'none' | 'manager' | 'all';
+}
+
+export interface FeatureSettings {
+  // Core Features
+  enableGroupBooking: boolean;
+  enableMultiCurrency: boolean;
+  enableMultiRoomSelection: boolean;
+  enableDeposits: boolean;
+  enableExpressCheckInOut: boolean;
+  enableRateThreshold: boolean;
+  enablePosInterface: boolean;
+
+  // Default Values
+  defaultCheckInTime: string;
+  defaultCheckOutTime: string;
+  defaultRateType: 'bar' | 'corp' | 'walk';
+  defaultStayDays: number;
+
+  // Advanced Operational Modules
+  enableHousekeeping: boolean;
+  enableMaintenance: boolean;
+  enableKeycardIntegration: boolean;
+  keycardProvider: 'assa_abloy' | 'salto' | 'dormakaba' | 'generic';
+  enableMinibarBilling: boolean;
+  enableSelfCheckInKiosk: boolean;
+  enableChannelManagerSync: boolean;
+  enableLostAndFound: boolean;
+  enablePackageHandling: boolean;
+  enableBanquetAndEvents: boolean;
+  enableSpaAndWellness: boolean;
+  enableLoyaltyProgram: boolean;
+}
+
+export interface NightAuditSettings {
+  // Primary Audit Configuration
+  auditClockTime: string;
+  promptBehavior: 'manual' | 'auto' | 'notify';
+  autoRoomStatusChange: boolean;
+
+  // Report Automation
+  globalDistributionList: string[];
+  automatedReports: {
+    dailySummary: boolean;
+    taxReport: boolean;
+    collectionReport: boolean;
+    ledgerReport: boolean;
+    forecastReport: boolean;
+    guestInHouse: boolean;
+    arrivalDepartureList: boolean;
+    noShowReport: boolean;
+  };
+
+  // Legacy & Advanced Operations
+  autoAuditEnabled?: boolean;
+  auditScheduleTime?: string;
+  autoPostRoomAndTax?: boolean;
+  autoProcessNoShows?: boolean;
+  noShowCutoffTime?: string;
+  noShowBillingPolicy?: 'charge_first_night' | 'charge_full' | 'forfeit_deposit' | 'no_charge';
+  autoRolloverBusinessDate?: boolean;
+  requirePinForManualAudit?: boolean;
+  emailEodReports?: boolean;
+  eodReportRecipients?: string;
+  generateTrialBalance?: boolean;
+  lockTransactionsAfterAudit?: boolean;
+}
+
+export interface LocalizationSettings {
+  // Region & Currency
+  country: string;
+  currency: string;
+  currencySymbol: string;
+  secondaryCurrencyEnabled?: boolean;
+  secondaryCurrency?: string;
+
+  // Formatting & Display
+  dateFormat: string;
+  timeFormat: '12h' | '24h';
+  numberFormat: 'in' | 'us' | 'eu';
+  timezone?: string;
+  language?: string;
+  decimalSeparator?: '.' | ',';
+  thousandsSeparator?: ',' | '.' | ' ';
+  firstDayOfWeek?: 'sunday' | 'monday';
+
+  // Custom Field Labels
+  customLabels: {
+    stateField: string;
+    zipField: string;
+    roomTerminology: string;
+    rateTerminology: string;
+    guestTitles: string;
+  };
+
+  // Fiscal Timeline
+  fiscalStartDate: string;
+  fiscalEndDate: string;
+
+  // Weekend Days
+  weekendDays: string[];
+}
+
+export interface DisplaySettings {
+  // Record Visibility
+  showDeletedRecords?: boolean;
+
+  // Visual Indicators
+  highContrastBadges?: boolean;
+  statusRowHighlighting?: boolean;
+  statusIndicatorStyle?: 'Solid' | 'Bordered' | 'Text-only';
+
+  // Guest Display
+  guestNameCasing?: 'Sentence Case (John Doe)' | 'ALL CAPS (JOHN DOE)' | 'Proper Case (John Doe)';
+
+  // Printing & Reports
+  defaultPrintLayout?: 'Standard Layout' | 'Compact Layout' | 'Extended Layout';
+  includePropertyLogoOnReports?: boolean;
+  enablePageNumberingPdf?: boolean;
+
+  // Lifecycle Messages
+  checkInWelcomeMessage?: string;
+  checkOutThankYouMessage?: string;
+  noShowNotificationFooter?: string;
+
+  // Document Storage
+  documentStorageTarget?: 'Internal Cloud' | 'Amazon S3' | 'Google Cloud Storage';
+  storagePathPrefix?: string;
+
+  // Room Grid & UI Defaults
+  gridDefaultView?: 'day' | '3day' | '7day' | '14day' | '30day';
+  gridCellDensity?: 'compact' | 'normal' | 'spacious';
+  roomSorting?: 'building_floor' | 'room_type' | 'room_number';
+  showGuestNameOnGrid?: boolean;
+  showRoomStatusIcon?: boolean;
+  showChannelBadge?: boolean;
+  showRateOnCard?: boolean;
+  themeMode?: 'light' | 'dark' | 'system';
+  accentColor?: string;
+}
+
+export interface FolioNumberingItem {
+  id: string;
+  documentType: string;
+  type: 'Automatic' | 'Manual';
+  prefix: string;
+  startValue: number;
+  currentValue: number;
+  icon: string;
+}
+
+export interface FoliosSettings {
+  // Numbering series
+  numberingSeries?: FolioNumberingItem[];
+
+  // Action settings
+  printOnCheckout?: boolean;
+  emailOnGeneration?: boolean;
+  printReceiptsAutomatically?: boolean;
+  ccCorporateOnInvoice?: boolean;
+
+  // Existing/Legacy fields
+  invoicePrefix?: string;
+  receiptPrefix?: string;
+  nextInvoiceNumber?: number;
+  taxIdNumber?: string;
+  showTaxBreakdown?: boolean;
+  autoCloseZeroBalanceFolios?: boolean;
+  allowNegativePostings?: boolean;
+  requireSupervisorPinForRefunds?: boolean;
+  defaultSplitFolioRouting?: 'single' | 'room_tax_split' | 'separate_incidentals';
+  invoiceDisclaimer?: string;
+  includePropertyLogo?: boolean;
+}
+
+export interface CreditCardsSettings {
+  enableGatewayProcessing?: boolean;
+  enableTokenization?: boolean;
+  pgApiKey?: string;
+  merchantId?: string;
+  preAuthAtCheckIn?: boolean;
+  preAuthPercentage?: number;
+  gdsCrmRouting?: boolean;
+  defaultChargeMethod?: 'auth_capture' | 'auth_only' | 'manual';
+  nightAuditAutoRelease?: boolean;
+  nightAuditAutoRefund?: boolean;
+  nightAuditAutoCollection?: boolean;
+
+  // Legacy/supporting properties
+  gatewayProvider?: 'stripe' | 'adyen' | 'shift4' | 'authorize_net' | 'manual';
+  preAuthCalculation?: 'room_plus_fixed' | 'percentage' | 'first_night';
+  preAuthIncidentalsPerNight?: number;
+  autoReleasePreAuthOnCheckout?: boolean;
+  requireCvvForManualEntry?: boolean;
+  acceptedCards?: {
+    visa: boolean;
+    mastercard: boolean;
+    amex: boolean;
+    discover: boolean;
+    jcb: boolean;
+    diners: boolean;
+  };
+  surchargeEnabled?: boolean;
+  amexSurchargePercent?: number;
+}
+
+export interface EmailsSettings {
+  // SMTP Configuration
+  smtpServer?: string;
+  smtpPort?: number;
+  domain?: string;
+  enableSslTls?: boolean;
+  smtpUsername?: string;
+  smtpPassword?: string;
+  smtpStatus?: 'connected' | 'failed' | 'testing';
+
+  // Sender & Recipients
+  fromAddress?: string;
+  replyToAddress?: string;
+  fromName?: string;
+  defaultAdminRecipient?: string;
+  globalBccAddress?: string;
+
+  // Legacy / supporting properties
+  senderName?: string;
+  senderEmail?: string;
+  replyToEmail?: string;
+  smtpHost?: string;
+  smtpEncryption?: 'tls' | 'ssl' | 'none';
+  ccFrontDesk?: boolean;
+  frontDeskInbox?: string;
+  autoSendBookingConfirmation?: boolean;
+  autoSendPreArrivalEmail?: boolean;
+  preArrivalHoursBefore?: number;
+  autoSendDepartureInvoice?: boolean;
+  autoSendCancellationNotice?: boolean;
+  autoSendPaymentReceipt?: boolean;
+}
+
+export interface FieldRequirementConfig {
+  id: string;
+  label: string;
+  category: 'personal' | 'contact' | 'identification' | 'address' | 'other';
+  enabled: boolean;
+  required: boolean;
+  locked?: boolean; // e.g. First & Last Name always locked as required
+  hint?: string;
+}
+
+export interface GuestMandatoryDataSettings {
+  fields: FieldRequirementConfig[];
+}
+
+export interface GeneralSettingsState {
+  rental: RentalSettings;
+  feature: FeatureSettings;
+  nightAudits: NightAuditSettings;
+  localization: LocalizationSettings;
+  display: DisplaySettings;
+  folios: FoliosSettings;
+  creditCards: CreditCardsSettings;
+  emails: EmailsSettings;
+  guestMandatoryData: GuestMandatoryDataSettings;
+}
+
+
+
+
