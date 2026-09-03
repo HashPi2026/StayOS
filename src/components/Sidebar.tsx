@@ -16,7 +16,17 @@ interface NavSection {
 
 export const Sidebar: React.FC = () => {
   const { activePath, navigate } = useProperty();
-  const [generalSettingsOpen, setGeneralSettingsOpen] = React.useState(true);
+  const [openSubMenus, setOpenSubMenus] = React.useState<Record<string, boolean>>({
+    'general-settings': true,
+    'device-configuration': true,
+  });
+
+  const toggleSubMenu = (menuId: string) => {
+    setOpenSubMenus((prev) => ({
+      ...prev,
+      [menuId]: !prev[menuId],
+    }));
+  };
 
   const sections: NavSection[] = [
     {
@@ -65,7 +75,18 @@ export const Sidebar: React.FC = () => {
             { id: 'general-settings-folios', label: 'Folio', icon: 'receipt_long' },
             { id: 'general-settings-credit-cards', label: 'Credit Card', icon: 'credit_card' },
             { id: 'general-settings-emails', label: 'Emails', icon: 'mail' },
-            { id: 'general-settings-guest-mandatory-data', label: 'Guest Mandatory Data Configuration', icon: 'how_to_reg' },
+          ],
+        },
+        { id: 'guest-mandatory-data', label: 'Guest Mandatory Data', icon: 'how_to_reg' },
+        { id: 'crs-tax-exempt', label: 'CRS Tax Exempt', icon: 'account_balance' },
+        {
+          id: 'device-configuration',
+          label: 'Device Configuration',
+          icon: 'devices',
+          subItems: [
+            { id: 'device-configuration-payment-gateway', label: 'Payment Gateway', icon: 'point_of_sale' },
+            { id: 'device-configuration-doorlock', label: 'Doorlock Configuration', icon: 'sensor_door' },
+            { id: 'device-configuration-scanner', label: 'Scanner Configuration', icon: 'document_scanner' },
           ],
         },
         { id: 'integrations', label: 'Integrations', icon: 'extension' },
@@ -93,8 +114,31 @@ export const Sidebar: React.FC = () => {
       activePath === 'general-settings-display' ||
       activePath === 'general-settings-folios' ||
       activePath === 'general-settings-credit-cards' ||
-      activePath === 'general-settings-emails' ||
+      activePath === 'general-settings-emails'
+    )) {
+      return true;
+    }
+    if (itemId === 'guest-mandatory-data' && (
+      activePath === 'guest-mandatory-data' ||
       activePath === 'general-settings-guest-mandatory-data'
+    )) {
+      return true;
+    }
+    if (itemId === 'crs-tax-exempt' && (
+      activePath === 'crs-tax-exempt' ||
+      activePath === 'add-crs-tax-exempt' ||
+      activePath === 'edit-crs-tax-exempt'
+    )) {
+      return true;
+    }
+    if (itemId === 'device-configuration' && (
+      activePath === 'device-configuration' ||
+      activePath === 'device-configuration-payment-gateway' ||
+      activePath === 'device-configuration-doorlock' ||
+      activePath === 'device-configuration-scanner' ||
+      activePath === 'payment-gateway' ||
+      activePath === 'doorlock-configuration' ||
+      activePath === 'scanner-configuration'
     )) {
       return true;
     }
@@ -182,7 +226,7 @@ export const Sidebar: React.FC = () => {
                       onClick={() => {
                         navigate(item.id);
                         if (hasSubItems) {
-                          setGeneralSettingsOpen(true);
+                          setOpenSubMenus((prev) => ({ ...prev, [item.id]: true }));
                         }
                       }}
                     >
@@ -206,11 +250,11 @@ export const Sidebar: React.FC = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setGeneralSettingsOpen(!generalSettingsOpen);
+                            toggleSubMenu(item.id);
                           }}
                           className="p-0.5 hover:bg-black/5 rounded text-[#75859d]"
                         >
-                          <span className={`material-symbols-outlined text-[16px] transition-transform ${generalSettingsOpen ? 'rotate-180' : ''}`}>
+                          <span className={`material-symbols-outlined text-[16px] transition-transform ${openSubMenus[item.id] ? 'rotate-180' : ''}`}>
                             expand_more
                           </span>
                         </button>
@@ -218,10 +262,14 @@ export const Sidebar: React.FC = () => {
                     </div>
 
                     {/* Sub-Items list */}
-                    {hasSubItems && generalSettingsOpen && (
+                    {hasSubItems && openSubMenus[item.id] && (
                       <div className="pl-4 pr-1 py-1 space-y-[2px] border-l-2 border-[#dae2fd] ml-4 my-1">
                         {item.subItems!.map((sub) => {
-                          const isSubActive = activePath === sub.id;
+                          const isSubActive =
+                            activePath === sub.id ||
+                            (sub.id === 'device-configuration-payment-gateway' && activePath === 'payment-gateway') ||
+                            (sub.id === 'device-configuration-doorlock' && activePath === 'doorlock-configuration') ||
+                            (sub.id === 'device-configuration-scanner' && activePath === 'scanner-configuration');
                           return (
                             <button
                               key={sub.id}

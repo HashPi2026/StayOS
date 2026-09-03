@@ -161,6 +161,14 @@ export const TaxConfigurationView: React.FC = () => {
         {/* Top Header Actions */}
         <div className="relative z-10 flex items-center gap-3 w-full sm:w-auto">
           <button
+            id="btn-nav-crs-from-config"
+            onClick={() => navigate('crs-tax-exempt')}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-white rounded-lg text-[12px] font-semibold uppercase tracking-wider text-[#0058be] hover:bg-[#d8e2ff]/30 transition-colors cursor-pointer border border-[#0058be]/30 shadow-xs"
+          >
+            <span className="material-symbols-outlined text-[18px]">rule_folder</span>
+            CRS Tax Exempt
+          </button>
+          <button
             id="btn-export-tax-config"
             onClick={handleExport}
             className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#eceef0] rounded-lg text-[12px] font-semibold uppercase tracking-wider text-[#191c1e] hover:bg-[#e0e3e5] transition-colors cursor-pointer border border-[#c6c6cd]/50 shadow-xs"

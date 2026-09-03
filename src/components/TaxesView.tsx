@@ -197,15 +197,25 @@ export const TaxesView: React.FC = () => {
               </div>
             </div>
 
-            {/* Add Tax Button */}
-            <button
-              id="btn-add-tax-master"
-              onClick={openAddTaxDrawer}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#000000] text-white rounded-lg text-[13px] font-semibold hover:bg-[#333333] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Add Tax
-            </button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-nav-crs-tax-exempt"
+                onClick={() => navigate('crs-tax-exempt')}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-[#c6c6cd] text-[#191c1e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] transition-all shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px] text-[#0058be]">rule_folder</span>
+                CRS Tax Exempt
+              </button>
+              <button
+                id="btn-add-tax-master"
+                onClick={openAddTaxDrawer}
+                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#000000] text-white rounded-lg text-[13px] font-semibold hover:bg-[#333333] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Add Tax
+              </button>
+            </div>
           </div>
 
           {/* Data Table */}

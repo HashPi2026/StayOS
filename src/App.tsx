@@ -70,6 +70,9 @@ import { DeleteEmailTemplateDialog } from './components/DeleteEmailTemplateDialo
 import { UserManagementView } from './components/UserManagementView';
 import { AddUserView } from './components/AddUserView';
 import { GeneralSettingsView } from './components/GeneralSettings/GeneralSettingsView';
+import { GuestMandatoryDataView } from './components/GuestMandatoryDataView';
+import { DeviceConfigurationView } from './components/DeviceConfiguration/DeviceConfigurationView';
+import { CrsTaxExemptView } from './components/CrsTaxExempt/CrsTaxExemptView';
 import { InviteUserModal } from './components/InviteUserModal';
 import { TaxDrawer } from './components/TaxDrawer';
 import { TaxRuleDrawer } from './components/TaxRuleDrawer';
@@ -197,8 +200,22 @@ const MainLayout: React.FC = () => {
       case 'general-settings-folios':
       case 'general-settings-credit-cards':
       case 'general-settings-emails':
-      case 'general-settings-guest-mandatory-data':
         return <GeneralSettingsView />;
+      case 'guest-mandatory-data':
+      case 'general-settings-guest-mandatory-data':
+        return <GuestMandatoryDataView />;
+      case 'device-configuration':
+      case 'device-configuration-payment-gateway':
+      case 'payment-gateway':
+      case 'device-configuration-doorlock':
+      case 'doorlock-configuration':
+      case 'device-configuration-scanner':
+      case 'scanner-configuration':
+        return <DeviceConfigurationView />;
+      case 'crs-tax-exempt':
+      case 'add-crs-tax-exempt':
+      case 'edit-crs-tax-exempt':
+        return <CrsTaxExemptView />;
       case 'integrations':
         return (
           <GenericSettingsView

@@ -1,6 +1,6 @@
-import React from 'react';
-import { useProperty } from '../../context/PropertyContext';
-import { FieldRequirementConfig } from '../../types';
+import React, { useState } from 'react';
+import { useProperty } from '../context/PropertyContext';
+import { FieldRequirementConfig } from '../types';
 
 interface SectionDefinition {
   title: string;
@@ -97,9 +97,10 @@ const SECTIONS: SectionDefinition[] = [
   },
 ];
 
-export const GuestMandatoryDataTab: React.FC = () => {
-  const { generalSettings, updateGuestMandatoryField, addToast } = useProperty();
-  const configuredFields = generalSettings.guestMandatoryData.fields || [];
+export const GuestMandatoryDataView: React.FC = () => {
+  const { generalSettings, updateGuestMandatoryField, addToast, saveGeneralSettings } = useProperty();
+  const configuredFields = generalSettings.guestMandatoryData?.fields || [];
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const getFieldState = (fieldDef: { id: string; defaultRequired?: boolean; locked?: boolean }) => {
     const existing = configuredFields.find((f: FieldRequirementConfig) => f.id === fieldDef.id);
@@ -124,21 +125,34 @@ export const GuestMandatoryDataTab: React.FC = () => {
       required: !currentRequired,
       enabled: true,
     });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleCancel = () => {
+    // Re-read or notify
+    addToast('Changes discarded', 'info');
+    setHasUnsavedChanges(false);
+  };
+
+  const handleSave = () => {
+    saveGeneralSettings();
+    addToast('Guest mandatory data configuration saved successfully', 'success');
+    setHasUnsavedChanges(false);
   };
 
   return (
-    <div className="flex flex-col w-full pb-8">
-      <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
+    <div className="flex flex-col w-full pb-32">
+      <div className="px-6 py-8 max-w-4xl mx-auto w-full flex flex-col gap-6">
         {/* Top Info Banner */}
-        <div className="bg-[#131b2e] text-[#eff1f3] p-4 sm:p-5 rounded-xl shadow-sm flex items-start gap-4 border border-[#131b2e]">
+        <div className="bg-[#131b2e] text-[#ffffff] p-5 rounded-xl shadow-md flex items-start gap-4">
           <span className="material-symbols-outlined text-[#dae2fd] text-[22px] mt-0.5 shrink-0">
             info
           </span>
           <div className="flex flex-col gap-1">
-            <h3 className="text-[16px] font-semibold text-[#ffffff] tracking-tight">
+            <h3 className="text-[17px] font-semibold text-[#ffffff] tracking-tight">
               Mandatory Field Configuration
             </h3>
-            <p className="text-[14px] text-[#7c839b] leading-relaxed">
+            <p className="text-[14px] text-[#eff1f3]/80 leading-relaxed">
               Selected fields will be strictly required during the Reservation creation and Check-in processes. Please ensure compliance with local data collection regulations.
             </p>
           </div>
@@ -149,7 +163,7 @@ export const GuestMandatoryDataTab: React.FC = () => {
           {SECTIONS.map((section) => (
             <div
               key={section.title}
-              className="bg-[#ffffff] rounded-xl shadow-xs p-6 flex flex-col gap-4 border border-[#c6c6cd]/50"
+              className="bg-[#ffffff] rounded-xl shadow-xs p-6 flex flex-col gap-4 border border-[#e0e3e5]"
             >
               <h4 className="text-[17px] font-semibold text-[#191c1e] flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-[#45464d] text-[20px]">
@@ -203,6 +217,25 @@ export const GuestMandatoryDataTab: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Sticky Footer */}
+      <div className="fixed bottom-0 left-0 md:left-[240px] right-0 bg-[#ffffff]/90 backdrop-blur-md border-t border-[#eceef0] px-8 py-3.5 flex justify-end gap-3 z-40 shadow-sm">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="px-5 py-2 rounded-lg text-[14px] font-semibold text-[#000000] hover:bg-[#eceef0] transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          className="px-5 py-2 rounded-lg text-[14px] font-semibold bg-[#000000] text-[#ffffff] shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-98"
+        >
+          <span className="material-symbols-outlined text-[20px]">save</span>
+          Save Changes
+        </button>
       </div>
     </div>
   );

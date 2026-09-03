@@ -46,7 +46,7 @@ export const GeneralSettingsView: React.FC = () => {
   return (
     <div className="flex flex-col w-full h-full max-w-[1200px] mx-auto gap-6 pb-28 px-4 sm:px-6">
       {/* Page Header (rendered only for tabs without their own top-level heading) */}
-      {!['rental', 'feature', 'night-audits', 'localization', 'display', 'folios', 'credit-cards', 'emails'].includes(activeGeneralSettingsTab) && (
+      {!['rental', 'feature', 'night-audits', 'localization', 'display', 'folios', 'credit-cards', 'emails', 'guest-mandatory-data'].includes(activeGeneralSettingsTab) && (
         <div className="flex items-baseline justify-between w-full mb-2">
           <div>
             <h1 className="text-[28px] sm:text-[30px] font-bold text-[#191c1e] tracking-tight">
@@ -76,7 +76,7 @@ export const GeneralSettingsView: React.FC = () => {
             <span className="material-symbols-outlined text-[16px] text-[#76777d]">history</span>
             <span>Last updated: Today, 09:41 AM by Alex Rivera</span>
           </div>
-        ) : activeGeneralSettingsTab === 'display' ? (
+        ) : activeGeneralSettingsTab === 'display' || activeGeneralSettingsTab === 'guest-mandatory-data' ? (
           <div />
         ) : activeGeneralSettingsTab === 'folios' ? (
           <button

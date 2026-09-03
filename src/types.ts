@@ -63,6 +63,17 @@ export type NavigationPath =
   | 'general-settings-credit-cards'
   | 'general-settings-emails'
   | 'general-settings-guest-mandatory-data'
+  | 'guest-mandatory-data'
+  | 'device-configuration'
+  | 'device-configuration-payment-gateway'
+  | 'device-configuration-doorlock'
+  | 'device-configuration-scanner'
+  | 'payment-gateway'
+  | 'doorlock-configuration'
+  | 'scanner-configuration'
+  | 'crs-tax-exempt'
+  | 'add-crs-tax-exempt'
+  | 'edit-crs-tax-exempt'
   | 'integrations'
   | 'notifications'
   | 'audit-logs'
@@ -767,11 +778,12 @@ export interface EmailsSettings {
 export interface FieldRequirementConfig {
   id: string;
   label: string;
-  category: 'personal' | 'contact' | 'identification' | 'address' | 'other';
-  enabled: boolean;
+  category?: 'personal' | 'contact' | 'identification' | 'address' | 'other' | string;
+  enabled?: boolean;
   required: boolean;
   locked?: boolean; // e.g. First & Last Name always locked as required
   hint?: string;
+  description?: string;
 }
 
 export interface GuestMandatoryDataSettings {
@@ -789,6 +801,134 @@ export interface GeneralSettingsState {
   emails: EmailsSettings;
   guestMandatoryData: GuestMandatoryDataSettings;
 }
+
+// Device Configuration Types
+export interface PaymentTerminalDevice {
+  id: string;
+  terminalId?: string;
+  name: string;
+  gatewayProvider?: string;
+  location?: string;
+  locationId?: string;
+  model?: string;
+  serialNumber: string;
+  ipAddress: string;
+  port: number;
+  readerId?: string;
+  networkType?: 'router' | 'wifi' | 'lan';
+  status: 'Online' | 'Offline' | 'Busy';
+  batteryLevel?: number;
+  lastPing?: string;
+}
+
+export interface PaymentGatewayConfig {
+  provider: 'stripe' | 'adyen' | 'clover' | 'worldpay' | 'square' | 'pax' | 'verifone' | 'authorize_net';
+  environment: 'production' | 'sandbox';
+  apiKey: string;
+  merchantId: string;
+  terminalTimeoutSeconds: number;
+  autoPreAuthAtCheckin: boolean;
+  preAuthAmountType: 'fixed' | 'percentage';
+  preAuthFixedAmount: number;
+  preAuthPercentage: number;
+  autoCaptureAtCheckout: boolean;
+  allowManualKeyIn: boolean;
+  requireSupervisorPinForRefund: boolean;
+  terminals: PaymentTerminalDevice[];
+}
+
+export interface KeycardEncoderDevice {
+  id: string;
+  name: string;
+  station: string;
+  encoderType: 'usb' | 'tcp_ip';
+  ipAddress?: string;
+  port?: number;
+  status: 'Online' | 'Offline' | 'Standby';
+  firmwareVersion?: string;
+}
+
+export interface DoorlockTerminalDevice {
+  id: string;
+  name: string;
+  doorlockId: string;
+  ipAddress: string;
+  port: number;
+  macAddress?: string;
+  status: 'Online' | 'Offline' | 'Standby';
+  lastPing?: string;
+}
+
+export interface DoorlockSystemItem {
+  id: string;
+  doorlockId: string; // e.g. "DL-001"
+  name: string;
+  keyCards: number;
+  status: 'Active' | 'Inactive' | 'Fault';
+  terminals: DoorlockTerminalDevice[];
+}
+
+export interface DoorlockConfig {
+  provider: 'assa_abloy' | 'salto' | 'dormakaba' | 'onity' | 'hotek' | 'generic_tcp';
+  serverAddress: string;
+  serverPort: number;
+  systemOperatorId: string;
+  siteCode: string;
+  apiToken: string;
+  defaultKeyExpiryTime: string;
+  invalidateOldKeyOnNewCheckin: boolean;
+  allowDuplicateGuestKeys: boolean;
+  enableMobileKeyBle: boolean;
+  commonAreas: {
+    id: string;
+    name: string;
+    enabled: boolean;
+  }[];
+  encoders: KeycardEncoderDevice[];
+  doorlockSystems?: DoorlockSystemItem[];
+}
+
+export interface ScannerDevice {
+  id: string;
+  name: string;
+  station: string;
+  model: string;
+  connectionType: 'USB' | 'WebSocket' | 'Network';
+  status: 'Online' | 'Offline' | 'Ready';
+  lastUsed?: string;
+  ipAddress?: string;
+  port?: number;
+}
+
+export interface ScannerConfig {
+  provider: 'regula' | 'plustek' | 'honeywell' | 'zebra' | 'camera_ocr';
+  driverPort: number;
+  autoFillGuestProfile: boolean;
+  autoCropGuestPhoto: boolean;
+  autoSaveDocumentImages: boolean;
+  verifyAuthenticityUv: boolean;
+  alertOnExpiredDocument: boolean;
+  enableFastCheckinQr: boolean;
+  beepOnScan: boolean;
+  scanners: ScannerDevice[];
+}
+
+export interface DeviceConfigurationState {
+  paymentGateway: PaymentGatewayConfig;
+  doorlock: DoorlockConfig;
+  scanner: ScannerConfig;
+}
+
+export interface CrsTaxExemptMapping {
+  id: string;
+  engineName: string; // e.g. 'Expedia' | 'Booking.com' | 'Direct Web' | 'Agoda' | 'Trip.com'
+  marketSource: string; // e.g. 'Mobile App' | 'B2B' | 'Social Media' | 'GDS' | 'Corporate' | 'Wholesaler'
+  taxName: string; // e.g. 'City Tax' | 'Service Charge' | 'VAT' | 'Stay Tax'
+  status: 'Active' | 'Inactive';
+  createdAt?: string;
+  notes?: string;
+}
+
 
 
 
