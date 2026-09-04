@@ -1,2 +1,2 @@
-export { DocumentTypesView } from './DocumentTypesView';
-export { AddDocumentTypeView } from './AddDocumentTypeView';
+export { DocumentTypesView } from './components/DocumentTypesView';
+export { AddDocumentTypeView } from './forms/AddDocumentTypeView';

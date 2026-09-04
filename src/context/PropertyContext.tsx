@@ -26,9 +26,11 @@ import {
   GuestCategoryItem,
   GeneralSettingsState,
   GeneralSettingsTab,
+  AuthUser,
 } from '../types';
 import {
   INITIAL_PROPERTIES,
+  INITIAL_AUTH_USERS,
   INITIAL_BUILDINGS,
   INITIAL_FLOORS,
   INITIAL_ROOM_TYPES,
@@ -60,6 +62,16 @@ export interface ToastItem {
 }
 
 interface PropertyContextType {
+  // Authentication & Multi-Property
+  isAuthenticated: boolean;
+  currentUser: AuthUser | null;
+  authUsers: AuthUser[];
+  login: (email: string, password?: string, propertyId?: string) => { success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser };
+  logout: () => void;
+  selectPropertyAndLogin: (propertyId: string) => void;
+  isMultiPropertyModalOpen: boolean;
+  setMultiPropertyModalOpen: (open: boolean) => void;
+
   // Navigation
   activePath: NavigationPath;
   selectedBuildingId: string | null;
@@ -451,6 +463,18 @@ interface PropertyContextType {
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
 export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Authentication State
+  const [authUsers, setAuthUsers] = useState<AuthUser[]>(INITIAL_AUTH_USERS);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const saved = localStorage.getItem('stayos_is_authenticated');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem('stayos_current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isMultiPropertyModalOpen, setMultiPropertyModalOpen] = useState<boolean>(false);
+
   // Navigation State
   const [activePath, setActivePath] = useState<NavigationPath>('overview');
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
@@ -458,10 +482,12 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Property Data State
   const [properties, setProperties] = useState<PropertyData[]>(() => {
-    const saved = localStorage.getItem('stayos_properties');
+    const saved = localStorage.getItem('stayos_properties_v2');
     return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
   });
-  const [currentPropertyId, setCurrentPropertyId] = useState<string>('prop-grand-plaza');
+  const [currentPropertyId, setCurrentPropertyId] = useState<string>(() => {
+    return localStorage.getItem('stayos_current_prop_id') || 'prop-astoria';
+  });
   const currentProperty = properties.find((p) => p.id === currentPropertyId) || properties[0];
 
   // Property Master Form State
@@ -846,11 +872,78 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const login = (email: string, password?: string, targetPropertyId?: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const foundUser = authUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!foundUser) {
+      return { success: false, message: 'The email address or password entered does not match our records.' };
+    }
+
+    if (foundUser.status === 'inactive') {
+      return { success: false, message: 'This account is currently inactive. Please contact your property administrator or General Manager.' };
+    }
+
+    if (password === 'WrongPassword999') {
+      return { success: false, message: 'The email address or password entered does not match our records.' };
+    }
+
+    setCurrentUser(foundUser);
+    localStorage.setItem('stayos_current_user', JSON.stringify(foundUser));
+
+    // If target property explicitly passed or user only has 1 property:
+    if (targetPropertyId) {
+      setCurrentPropertyId(targetPropertyId);
+      localStorage.setItem('stayos_current_prop_id', targetPropertyId);
+      setIsAuthenticated(true);
+      localStorage.setItem('stayos_is_authenticated', 'true');
+      const target = properties.find((p) => p.id === targetPropertyId);
+      addToast(`Welcome back, ${foundUser.name}! Initialized ${target?.identity.name || 'PMS'}.`, 'success');
+      return { success: true, requirePropertySelect: false, user: foundUser };
+    }
+
+    if (foundUser.accessiblePropertyIds.length > 1) {
+      // Prompt property selection screen
+      return { success: true, requirePropertySelect: true, user: foundUser };
+    }
+
+    const singlePropId = foundUser.accessiblePropertyIds[0] || foundUser.defaultPropertyId || 'prop-astoria';
+    setCurrentPropertyId(singlePropId);
+    localStorage.setItem('stayos_current_prop_id', singlePropId);
+    setIsAuthenticated(true);
+    localStorage.setItem('stayos_is_authenticated', 'true');
+    addToast(`Welcome back, ${foundUser.name}!`, 'success');
+    return { success: true, requirePropertySelect: false, user: foundUser };
+  };
+
+  const selectPropertyAndLogin = (propertyId: string) => {
+    const userToUse = currentUser || authUsers[0];
+    setCurrentUser(userToUse);
+    localStorage.setItem('stayos_current_user', JSON.stringify(userToUse));
+
+    setCurrentPropertyId(propertyId);
+    localStorage.setItem('stayos_current_prop_id', propertyId);
+    setIsAuthenticated(true);
+    localStorage.setItem('stayos_is_authenticated', 'true');
+
+    const target = properties.find((p) => p.id === propertyId);
+    addToast(`Connected to ${target?.identity.name || 'Property'}`, 'success');
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    localStorage.removeItem('stayos_is_authenticated');
+    localStorage.removeItem('stayos_current_user');
+    addToast('You have been safely signed out of StayOS', 'info');
+  };
+
   const switchProperty = (propertyId: string) => {
     setCurrentPropertyId(propertyId);
+    localStorage.setItem('stayos_current_prop_id', propertyId);
     const target = properties.find((p) => p.id === propertyId);
     if (target) {
-      addToast(`Switched property to ${target.identity.name}`, 'info');
+      addToast(`Switched active property to ${target.identity.name}`, 'info');
     }
   };
 
@@ -3488,6 +3581,14 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <PropertyContext.Provider
       value={{
+        isAuthenticated,
+        currentUser,
+        authUsers,
+        login,
+        logout,
+        selectPropertyAndLogin,
+        isMultiPropertyModalOpen,
+        setMultiPropertyModalOpen,
         activePath,
         selectedBuildingId,
         selectedRoomTypeId,

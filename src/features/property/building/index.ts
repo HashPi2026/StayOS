@@ -1,5 +1,5 @@
-export { BuildingsListView as BuildingList, BuildingsListView } from './BuildingList/BuildingList';
-export { AddBuildingView } from './BuildingForm/AddBuildingView';
-export { EditBuildingView } from './BuildingForm/EditBuildingView';
-export { BuildingDrawer } from './BuildingDrawer/BuildingDrawer';
+export { BuildingsListView as BuildingList, BuildingsListView } from './components/BuildingList';
+export { BuildingDrawer } from './components/BuildingDrawer';
+export { AddBuildingView } from './forms/AddBuildingView';
+export { EditBuildingView } from './forms/EditBuildingView';
 export { DeleteBuildingDialog } from './dialogs/DeleteBuildingDialog';

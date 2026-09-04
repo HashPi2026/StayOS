@@ -1,3 +1,3 @@
-export { UserManagementView } from './UserManagementView';
-export { AddUserView } from './AddUserView';
-export { InviteUserModal } from './InviteUserModal';
+export { UserManagementView } from './components/UserManagementView';
+export { AddUserView } from './forms/AddUserView';
+export { InviteUserModal } from './components/InviteUserModal';

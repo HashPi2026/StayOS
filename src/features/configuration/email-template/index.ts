@@ -1,4 +1,4 @@
-export { EmailTemplatesView } from './EmailTemplatesView';
-export { AddEmailTemplateView } from './AddEmailTemplateView';
-export { EmailTemplateDrawer } from './EmailTemplateDrawer';
+export { EmailTemplatesView } from './components/EmailTemplatesView';
+export { AddEmailTemplateView } from './forms/AddEmailTemplateView';
+export { EmailTemplateDrawer } from './components/EmailTemplateDrawer';
 export { DeleteEmailTemplateDialog } from './dialogs/DeleteEmailTemplateDialog';

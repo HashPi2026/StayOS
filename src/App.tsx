@@ -51,6 +51,8 @@ import {
   DeleteTaxDialog,
 } from './features/property/tax';
 import { PropertyMasterView } from './features/property/property-master';
+import { MultiPropertyModal } from './features/property';
+import { Login } from './features/auth';
 
 // Configuration Features
 import { RateTypesView } from './features/configuration/rate-type';
@@ -123,7 +125,11 @@ import {
 } from './features/miscellaneous';
 
 const MainLayout: React.FC = () => {
-  const { activePath } = useProperty();
+  const { activePath, isAuthenticated } = useProperty();
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   const renderActiveScreen = () => {
     switch (activePath) {
@@ -319,6 +325,7 @@ const MainLayout: React.FC = () => {
       <InviteUserModal />
       <VerifyPinModal />
       <GlobalSearchModal />
+      <MultiPropertyModal />
       <ToastContainer />
     </div>
   );

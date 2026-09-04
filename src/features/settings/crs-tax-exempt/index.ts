@@ -1,3 +1,3 @@
-export { CrsTaxExemptView } from './CrsTaxExemptView';
-export { CrsTaxExemptDrawer } from './CrsTaxExemptDrawer';
-export { CrsTaxExemptFormView } from './CrsTaxExemptFormView';
+export { CrsTaxExemptView } from './components/CrsTaxExemptView';
+export { CrsTaxExemptDrawer } from './components/CrsTaxExemptDrawer';
+export { CrsTaxExemptFormView } from './forms/CrsTaxExemptFormView';

@@ -1,1 +1,1 @@
-export { RateTypesView } from './RateTypesView';
+export { RateTypesView } from './components/RateTypesView';

@@ -1,0 +1,41 @@
+export type RoomCategory = 'Standard' | 'Deluxe' | 'Suite' | 'Executive' | 'Villa' | 'Penthouse';
+export type RoomTypeStatus = 'active' | 'inactive' | 'renovation';
+
+export interface RoomType {
+  id: string;
+  name: string;
+  code: string;
+  shortName?: string;
+  color?: string;
+  category: RoomCategory;
+  baseRate: number;
+  extraAdultRate?: number;
+  extraChildRate?: number;
+  capacity: number;
+  maxAdults?: number;
+  maxChildren?: number;
+  bedType: string;
+  bedCount?: number;
+  extraBedAllowed?: boolean;
+  maxExtraBeds?: number;
+  sizeSqm?: number;
+  sizeSqft?: number;
+  viewType?: string;
+  smokingPolicy?: 'non-smoking' | 'smoking' | 'designated';
+  isAccessible?: boolean;
+  description?: string;
+  amenities?: string[];
+  totalUnits: number;
+  status: RoomTypeStatus;
+  buildingId?: string;
+  buildingName?: string;
+  floorId?: string;
+  floorName?: string;
+  buildingIds?: string[];
+  overBookingLimit?: number;
+  isCrs?: boolean;
+  allowInOccupancy?: boolean;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

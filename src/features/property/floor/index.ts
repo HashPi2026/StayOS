@@ -1,3 +1,3 @@
-export { FloorsListView as FloorList, FloorsListView } from './FloorList/FloorList';
-export { FloorDrawer } from './FloorDrawer/FloorDrawer';
+export { FloorsListView as FloorList, FloorsListView } from './components/FloorList';
+export { FloorDrawer } from './components/FloorDrawer';
 export { DeleteFloorDialog } from './dialogs/DeleteFloorDialog';

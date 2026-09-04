@@ -1,4 +1,4 @@
-export { ExchangeRatesView } from './ExchangeRatesView';
-export { AddExchangeRateView } from './AddExchangeRateView';
-export { ExchangeRateDrawer } from './ExchangeRateDrawer';
+export { ExchangeRatesView } from './components/ExchangeRatesView';
+export { AddExchangeRateView } from './forms/AddExchangeRateView';
+export { ExchangeRateDrawer } from './components/ExchangeRateDrawer';
 export { DeleteExchangeRateDialog } from './dialogs/DeleteExchangeRateDialog';

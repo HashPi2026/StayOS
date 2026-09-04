@@ -11,6 +11,9 @@ export const Header: React.FC = () => {
     markNotificationAsRead,
     clearAllNotifications,
     navigate,
+    currentUser,
+    logout,
+    setMultiPropertyModalOpen,
   } = useProperty();
 
   const [isPropDropdownOpen, setIsPropDropdownOpen] = useState(false);
@@ -47,40 +50,85 @@ export const Header: React.FC = () => {
         <div className="relative" ref={propDropdownRef}>
           <button
             onClick={() => setIsPropDropdownOpen(!isPropDropdownOpen)}
-            className="flex items-center gap-2 bg-[#eceef0] px-3.5 py-1.5 rounded-lg cursor-pointer hover:bg-[#e6e8ea] transition-colors border border-transparent hover:border-[#c6c6cd]/40"
+            className="flex items-center gap-2.5 bg-[#eceef0] px-3 py-1.5 rounded-xl cursor-pointer hover:bg-[#e2e5e8] transition-colors border border-transparent hover:border-[#c6c6cd]/40 group"
           >
-            <span className="material-symbols-outlined text-[19px] text-[#45464d]">hotel</span>
-            <span className="text-[14px] font-semibold text-[#191c1e] max-w-[200px] truncate">
-              {currentProperty.identity.name}
+            <div className="w-6 h-6 rounded-md bg-[#0058be] text-white flex items-center justify-center text-[12px] font-bold">
+              <span className="material-symbols-outlined text-[15px]">hotel</span>
+            </div>
+            <div className="text-left flex flex-col">
+              <span className="text-[13px] font-bold text-[#191c1e] max-w-[210px] truncate leading-tight">
+                {currentProperty.identity.name}
+              </span>
+              <span className="text-[10px] text-[#75859d] leading-none mt-0.5">
+                {currentProperty.meta?.code || currentProperty.identity.clientId} • {currentProperty.location.city}
+              </span>
+            </div>
+            <span className="material-symbols-outlined text-[18px] text-[#75859d] group-hover:text-[#191c1e]">
+              expand_more
             </span>
-            <span className="material-symbols-outlined text-[18px] text-[#45464d]">expand_more</span>
           </button>
 
           {isPropDropdownOpen && (
-            <div className="absolute left-0 top-full mt-2 w-72 bg-[#ffffff] rounded-xl shadow-xl border border-[#c6c6cd]/60 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-              <div className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#75859d]">
-                Select Property
-              </div>
-              {properties.map((prop) => (
+            <div className="absolute left-0 top-full mt-2 w-80 bg-[#ffffff] rounded-2xl shadow-xl border border-[#c6c6cd]/60 py-2.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-4 py-1 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#75859d]">
+                  Switch Property ({properties.length})
+                </span>
                 <button
-                  key={prop.id}
                   onClick={() => {
-                    switchProperty(prop.id);
                     setIsPropDropdownOpen(false);
+                    setMultiPropertyModalOpen(true);
                   }}
-                  className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between hover:bg-[#f2f4f6] transition-colors text-[13px] ${
-                    prop.id === currentProperty.id ? 'bg-[#f2f4f6] font-semibold text-[#0058be]' : 'text-[#191c1e]'
-                  }`}
+                  className="text-[11px] font-semibold text-[#0058be] hover:underline"
                 >
-                  <div className="flex flex-col">
-                    <span>{prop.identity.name}</span>
-                    <span className="text-[11px] text-[#75859d]">{prop.location.city}, {prop.location.country}</span>
-                  </div>
-                  {prop.id === currentProperty.id && (
-                    <span className="material-symbols-outlined text-[18px] text-[#0058be]">check</span>
-                  )}
+                  View All Hub
                 </button>
-              ))}
+              </div>
+
+              <div className="max-h-72 overflow-y-auto mt-1 divide-y divide-[#eceef0]/60">
+                {properties.map((prop) => (
+                  <button
+                    key={prop.id}
+                    onClick={() => {
+                      switchProperty(prop.id);
+                      setIsPropDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-[#f2f4f6] transition-colors text-[13px] ${
+                      prop.id === currentProperty.id ? 'bg-[#f0f5ff] font-semibold text-[#0058be]' : 'text-[#191c1e]'
+                    }`}
+                  >
+                    <div className="flex flex-col min-w-0 pr-2">
+                      <span className="truncate font-semibold text-[13px]">{prop.identity.name}</span>
+                      <span className="text-[11px] text-[#75859d] truncate">
+                        {prop.meta?.code || prop.identity.clientId} • {prop.location.city}, {prop.location.country}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {prop.meta?.occupancyRate && (
+                        <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                          {prop.meta.occupancyRate}%
+                        </span>
+                      )}
+                      {prop.id === currentProperty.id && (
+                        <span className="material-symbols-outlined text-[18px] text-[#0058be]">check</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-2 px-3 border-t border-[#eceef0] mt-1">
+                <button
+                  onClick={() => {
+                    setIsPropDropdownOpen(false);
+                    setMultiPropertyModalOpen(true);
+                  }}
+                  className="w-full py-2 bg-[#f7f9fb] hover:bg-[#eef2f6] text-[#0058be] text-[12px] font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">domain</span>
+                  <span>Open Multi-Property Cluster Hub</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -179,38 +227,71 @@ export const Header: React.FC = () => {
             <div className="relative" ref={userDropdownRef}>
               <div
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="w-8 h-8 rounded-full bg-[#000000] flex items-center justify-center ml-1 cursor-pointer hover:ring-2 hover:ring-[#0058be]/30 transition-all text-white font-medium text-[12px]"
-                title="Jane Smith"
+                className="w-8 h-8 rounded-full bg-[#191c1e] flex items-center justify-center ml-1 cursor-pointer hover:ring-2 hover:ring-[#0058be]/30 transition-all text-white font-semibold text-[12px]"
+                title={currentUser?.name || 'Marcus Vance'}
               >
-                JS
+                {currentUser?.initials || 'MV'}
               </div>
 
               {isUserDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-[#ffffff] rounded-xl shadow-xl border border-[#c6c6cd]/60 py-2 z-50">
-                  <div className="px-3.5 py-2 border-b border-[#eceef0]">
-                    <div className="text-[13px] font-semibold text-[#191c1e]">Jane Smith</div>
-                    <div className="text-[11px] text-[#75859d]">General Manager (Admin)</div>
+                <div className="absolute right-0 top-full mt-2 w-64 bg-[#ffffff] rounded-2xl shadow-xl border border-[#c6c6cd]/60 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="px-4 py-2.5 border-b border-[#eceef0]">
+                    <div className="text-[13px] font-bold text-[#191c1e] leading-tight">
+                      {currentUser?.name || 'Marcus Vance'}
+                    </div>
+                    <div className="text-[11px] text-[#0058be] font-semibold mt-0.5">
+                      {currentUser?.role || 'Front Office Director'}
+                    </div>
+                    <div className="text-[11px] text-[#75859d] truncate mt-0.5">
+                      {currentUser?.email || 'marcus.vance@grandmetropole.com'}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigate('user-management');
-                      setIsUserDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3.5 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[16px] text-[#75859d]">manage_accounts</span>
-                    Account Settings
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate('audit-logs');
-                      setIsUserDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3.5 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[16px] text-[#75859d]">history</span>
-                    Activity Log
-                  </button>
+
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        setMultiPropertyModalOpen(true);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[17px] text-[#0058be]">domain</span>
+                      <span>Switch Hotel Property</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('user-management');
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[17px] text-[#75859d]">manage_accounts</span>
+                      <span>Account Settings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('audit-logs');
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[17px] text-[#75859d]">history</span>
+                      <span>Audit Logs</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-1 border-t border-[#eceef0]">
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-rose-50 text-[13px] text-rose-600 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[17px]">logout</span>
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

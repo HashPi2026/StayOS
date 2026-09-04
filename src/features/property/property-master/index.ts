@@ -1,1 +1,1 @@
-export { PropertyMasterView } from './PropertyForm/PropertyMasterView';
+export { PropertyMasterView } from './components/PropertyMasterView';

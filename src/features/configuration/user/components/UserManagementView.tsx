@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useProperty } from '@/src/context/PropertyContext';
 import { UserAccountItem, RoleType } from '@/src/types';
-import { RolesPrivilegesView } from '@/src/features/configuration/roles-privileges/RolesPrivilegesView';
+import { RolesPrivilegesView } from '@/src/features/configuration/roles-privileges';
 
 export const UserManagementView: React.FC = () => {
   const {
