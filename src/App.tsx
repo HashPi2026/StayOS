@@ -5,88 +5,122 @@
 
 import React from 'react';
 import { PropertyProvider, useProperty } from './context/PropertyContext';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { PropertyMasterView } from './components/PropertyMasterView';
-import { BuildingsListView } from './components/BuildingsListView';
-import { AddBuildingView } from './components/AddBuildingView';
-import { EditBuildingView } from './components/EditBuildingView';
-import { BuildingDrawer } from './components/BuildingDrawer';
-import { DeleteBuildingDialog } from './components/DeleteBuildingDialog';
-import { FloorsListView } from './components/FloorsListView';
-import { FloorDrawer } from './components/FloorDrawer';
-import { DeleteFloorDialog } from './components/DeleteFloorDialog';
-import { RoomTypesListView } from './components/RoomTypesListView';
-import { AddRoomTypeView } from './components/AddRoomTypeView';
-import { EditRoomTypeView } from './components/EditRoomTypeView';
-import { RoomTypeDrawer } from './components/RoomTypeDrawer';
-import { DeleteRoomTypeDialog } from './components/DeleteRoomTypeDialog';
-import { RoomsListView } from './components/RoomsListView';
-import { AddRoomView } from './components/AddRoomView';
-import { BulkAddRoomsView } from './components/BulkAddRoomsView';
-import { EditRoomView } from './components/EditRoomView';
-import { DeleteRoomDialog } from './components/DeleteRoomDialog';
-import { RoomStatusMasterView } from './components/RoomStatusMasterView';
-import { RoomStatusDrawer } from './components/RoomStatusDrawer';
-import { DeleteRoomStatusDialog } from './components/DeleteRoomStatusDialog';
-import { TaxesView } from './components/TaxesView';
-import { TaxConfigurationView } from './components/TaxConfigurationView';
-import { AddTaxView } from './components/AddTaxView';
-import { AddTaxRateView } from './components/AddTaxRateView';
-import { RateTypesView } from './components/RateTypesView';
-import { DocumentTypesView } from './components/DocumentTypesView';
-import { AddDocumentTypeView } from './components/AddDocumentTypeView';
-import { OtherChargesCategoriesView } from './components/OtherChargesCategoriesView';
-import { AddOtherChargeCategoryView } from './components/AddOtherChargeCategoryView';
-import { OtherChargesView } from './components/OtherChargesView';
-import { AddOtherChargeView } from './components/AddOtherChargeView';
-import { OtherChargeDrawer } from './components/OtherChargeDrawer';
-import { DeleteOtherChargeDialog } from './components/DeleteOtherChargeDialog';
-import { MeasurementUnitsView } from './components/MeasurementUnitsView';
-import { AddMeasurementUnitView } from './components/AddMeasurementUnitView';
-import { MeasurementUnitDrawer } from './components/MeasurementUnitDrawer';
-import { DeleteMeasurementUnitDialog } from './components/DeleteMeasurementUnitDialog';
-import { PaymentTypesView } from './components/PaymentTypesView';
-import { AddPaymentTypeView } from './components/AddPaymentTypeView';
-import { PaymentTypeDrawer } from './components/PaymentTypeDrawer';
-import { DeletePaymentTypeDialog } from './components/DeletePaymentTypeDialog';
-import { ExchangeRatesView } from './components/ExchangeRatesView';
-import { AddExchangeRateView } from './components/AddExchangeRateView';
-import { ExchangeRateDrawer } from './components/ExchangeRateDrawer';
-import { DeleteExchangeRateDialog } from './components/DeleteExchangeRateDialog';
-import { RolesPrivilegesView } from './components/RolesPrivilegesView';
-import { RoleDrawer } from './components/RoleDrawer';
-import { DeleteRoleDialog } from './components/DeleteRoleDialog';
-import { PoliciesView } from './components/PoliciesView';
-import { AddPolicyView } from './components/AddPolicyView';
-import { DeletePolicyDialog } from './components/DeletePolicyDialog';
-import { GuestCategoriesView } from './components/GuestCategoriesView';
-import { AddGuestCategoryView } from './components/AddGuestCategoryView';
-import { DeleteGuestCategoryDialog } from './components/DeleteGuestCategoryDialog';
-import { EmailTemplatesView } from './components/EmailTemplatesView';
-import { AddEmailTemplateView } from './components/AddEmailTemplateView';
-import { EmailTemplateDrawer } from './components/EmailTemplateDrawer';
-import { DeleteEmailTemplateDialog } from './components/DeleteEmailTemplateDialog';
-import { UserManagementView } from './components/UserManagementView';
-import { AddUserView } from './components/AddUserView';
-import { GeneralSettingsView } from './components/GeneralSettings/GeneralSettingsView';
-import { GuestMandatoryDataView } from './components/GuestMandatoryDataView';
-import { DeviceConfigurationView } from './components/DeviceConfiguration/DeviceConfigurationView';
-import { CrsTaxExemptView } from './components/CrsTaxExempt/CrsTaxExemptView';
-import { InviteUserModal } from './components/InviteUserModal';
-import { TaxDrawer } from './components/TaxDrawer';
-import { TaxRuleDrawer } from './components/TaxRuleDrawer';
-import { TaxConfigDrawer } from './components/TaxConfigDrawer';
-import { DeleteTaxDialog } from './components/DeleteTaxDialog';
-import { VerifyPinModal } from './components/VerifyPinModal';
-import { GlobalSearchModal } from './components/GlobalSearchModal';
-import { ToastContainer } from './components/ToastContainer';
+import { Sidebar, Header } from './components/layout';
+import { ToastContainer, GlobalSearchModal, VerifyPinModal } from './components/shared';
+
+// Property Features
+import {
+  BuildingsListView,
+  AddBuildingView,
+  EditBuildingView,
+  BuildingDrawer,
+  DeleteBuildingDialog,
+} from './features/property/building';
+import {
+  FloorsListView,
+  FloorDrawer,
+  DeleteFloorDialog,
+} from './features/property/floor';
+import {
+  RoomTypesListView,
+  AddRoomTypeView,
+  EditRoomTypeView,
+  RoomTypeDrawer,
+  DeleteRoomTypeDialog,
+} from './features/property/room-type';
+import {
+  RoomsListView,
+  AddRoomView,
+  EditRoomView,
+  BulkAddRoomsView,
+  DeleteRoomDialog,
+} from './features/property/room';
+import {
+  RoomStatusMasterView,
+  RoomStatusDrawer,
+  DeleteRoomStatusDialog,
+} from './features/property/room-status';
+import {
+  TaxesView,
+  TaxConfigurationView,
+  AddTaxView,
+  AddTaxRateView,
+  TaxDrawer,
+  TaxRuleDrawer,
+  TaxConfigDrawer,
+  DeleteTaxDialog,
+} from './features/property/tax';
+import { PropertyMasterView } from './features/property/property-master';
+
+// Configuration Features
+import { RateTypesView } from './features/configuration/rate-type';
+import { DocumentTypesView, AddDocumentTypeView } from './features/configuration/document-type';
+import { OtherChargesCategoriesView, AddOtherChargeCategoryView } from './features/configuration/other-charge-category';
+import {
+  OtherChargesView,
+  AddOtherChargeView,
+  OtherChargeDrawer,
+  DeleteOtherChargeDialog,
+} from './features/configuration/other-charge';
+import {
+  MeasurementUnitsView,
+  AddMeasurementUnitView,
+  MeasurementUnitDrawer,
+  DeleteMeasurementUnitDialog,
+} from './features/configuration/measurement-unit';
+import {
+  PaymentTypesView,
+  AddPaymentTypeView,
+  PaymentTypeDrawer,
+  DeletePaymentTypeDialog,
+} from './features/configuration/payment-type';
+import {
+  ExchangeRatesView,
+  AddExchangeRateView,
+  ExchangeRateDrawer,
+  DeleteExchangeRateDialog,
+} from './features/configuration/exchange-rate';
+import {
+  RolesPrivilegesView,
+  RoleDrawer,
+  DeleteRoleDialog,
+} from './features/configuration/roles-privileges';
+import {
+  PoliciesView,
+  AddPolicyView,
+  PolicyDrawer,
+  DeletePolicyDialog,
+} from './features/configuration/policy';
+import {
+  GuestCategoriesView,
+  AddGuestCategoryView,
+  DeleteGuestCategoryDialog,
+} from './features/configuration/guest-category';
+import {
+  EmailTemplatesView,
+  AddEmailTemplateView,
+  EmailTemplateDrawer,
+  DeleteEmailTemplateDialog,
+} from './features/configuration/email-template';
+import {
+  UserManagementView,
+  AddUserView,
+  InviteUserModal,
+} from './features/configuration/user';
+
+// Settings Features
+import { GeneralSettingsView } from './features/settings/general';
+import { GuestMandatoryDataView } from './features/settings/guest-mandatory-data';
+import { DeviceConfigurationView } from './features/settings/device-configuration';
+import { CrsTaxExemptView } from './features/settings/crs-tax-exempt';
+
+// Miscellaneous Views
 import {
   AmenitiesView,
   AuditLogsView,
   SystemHealthView,
   GenericSettingsView,
-} from './components/OtherViews';
+} from './features/miscellaneous';
 
 const MainLayout: React.FC = () => {
   const { activePath } = useProperty();
