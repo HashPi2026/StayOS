@@ -1,1 +1,0 @@
-export { DoorlockTerminalMappingTab } from './DoorlockTerminalMappingTab';

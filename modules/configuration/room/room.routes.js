@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { roomController } from './room.controller.js';
+import { validate } from '../../../middleware/validate.js';
+import { validateCreateRoom, validateUpdateRoom } from './room.validation.js';
+export const roomRouter = Router();
+roomRouter.get('/', roomController.list);
+roomRouter.get('/:id', roomController.getById);
+roomRouter.post('/', validate(validateCreateRoom), roomController.create);
+roomRouter.put('/:id', validate(validateUpdateRoom), roomController.update);
+roomRouter.delete('/:id', roomController.delete);
