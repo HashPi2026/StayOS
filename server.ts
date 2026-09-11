@@ -69,8 +69,12 @@ async function startServer() {
 
   // ==================== STATIC / VITE MIDDLEWARE ====================
   if (process.env.NODE_ENV !== 'production') {
+    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: isHmrDisabled ? false : undefined,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -86,10 +90,18 @@ async function startServer() {
   // Must be registered after all route handlers and middlewares
   app.use(errorHandler);
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[StayOS PMS Backend] Server listening on http://0.0.0.0:${PORT}`);
     console.log(`[StayOS PMS Backend] REST API available at http://0.0.0.0:${PORT}/api/v1/configuration`);
   });
+
+  const shutdown = () => {
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 startServer().catch((err) => {
