@@ -5,7 +5,7 @@
 import React from 'react';
 import { PropertyProvider, useProperty } from './context/PropertyContext';
 import { Sidebar, Header } from './components/layout';
-import { ToastContainer, GlobalSearchModal, VerifyPinModal, ErrorBoundary } from './components/shared';
+import { ToastContainer, GlobalSearchModal, VerifyPinModal } from './components/shared';
 // Property Features
 import { BuildingsListView, AddBuildingView, EditBuildingView, BuildingDrawer, DeleteBuildingDialog, } from './features/property/building';
 import { FloorsListView, FloorDrawer, DeleteFloorDialog, } from './features/property/floor';
@@ -226,11 +226,7 @@ const MainLayout = () => {
     </div>);
 };
 export default function App() {
-    return (
-      <ErrorBoundary>
-        <PropertyProvider>
-          <MainLayout />
-        </PropertyProvider>
-      </ErrorBoundary>
-    );
+    return (<PropertyProvider>
+      <MainLayout />
+    </PropertyProvider>);
 }

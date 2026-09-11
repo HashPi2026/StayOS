@@ -35,10 +35,10 @@ export const Header = () => {
             </div>
             <div className="text-left flex flex-col">
               <span className="text-[13px] font-bold text-[#191c1e] max-w-[210px] truncate leading-tight">
-                {currentProperty?.identity?.name || 'StayOS Property'}
+                {currentProperty.identity.name}
               </span>
               <span className="text-[10px] text-[#75859d] leading-none mt-0.5">
-                {currentProperty?.meta?.code || currentProperty?.identity?.clientId || 'MAIN'} • {currentProperty?.location?.city || 'Default'}
+                {currentProperty.meta?.code || currentProperty.identity.clientId} • {currentProperty.location.city}
               </span>
             </div>
             <span className="material-symbols-outlined text-[18px] text-[#75859d] group-hover:text-[#191c1e]">
