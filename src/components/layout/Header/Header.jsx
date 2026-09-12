@@ -92,7 +92,17 @@ export const Header = () => {
         </div>
 
         {/* Right: Search & User Controls */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          {/* Exit to Main PMS Button */}
+          <button
+            onClick={() => navigate('dashboard')}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0f172a] hover:bg-[#1e293b] text-white text-[12px] font-semibold rounded-lg shadow-2xs transition-all cursor-pointer"
+            title="Exit Configuration and return to Main PMS Dashboard"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Exit to PMS</span>
+          </button>
+
           {/* Search Trigger */}
           <div onClick={() => setSearchModalOpen(true)} className="relative flex items-center cursor-pointer group">
             <span className="material-symbols-outlined absolute left-3 text-[#75859d] text-[19px] group-hover:text-[#191c1e] transition-colors">

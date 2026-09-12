@@ -4,6 +4,8 @@ import { createServer as createViteServer } from 'vite';
 import { testConnection } from './db/pool';
 import { runMigrations } from './db/migrate';
 import { configurationRouter } from './modules/configuration';
+import { shellRouter } from './modules/shell';
+import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler';
 import { sendSuccess } from './utils/response';
 
@@ -63,9 +65,13 @@ async function startServer() {
   });
 
   // ==================== API ROUTING ====================
-  // Mount StayOS Configuration REST Modules
-  app.use('/api/v1/configuration', configurationRouter);
-  app.use('/api/configuration', configurationRouter); // Version-agnostic fallback
+  // Shell & Auth Endpoints (v1 & version-agnostic)
+  app.use('/api/v1', shellRouter);
+  app.use('/api', shellRouter);
+
+  // Mount StayOS Configuration REST Modules (guarded by role access)
+  app.use('/api/v1/configuration', requireModuleAccess('configuration'), configurationRouter);
+  app.use('/api/configuration', requireModuleAccess('configuration'), configurationRouter); // Version-agnostic fallback
 
   // ==================== STATIC / VITE MIDDLEWARE ====================
   if (process.env.NODE_ENV !== 'production') {

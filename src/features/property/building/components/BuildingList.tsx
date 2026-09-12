@@ -147,10 +147,10 @@ export const BuildingsListView: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 overflow-hidden flex flex-col">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[300px]">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#f2f4f6] border-b border-[#e0e3e5] text-label-uppercase text-[#45464d] text-[12px]">
+              <thead className="bg-[#f2f4f6] sticky top-0 z-10 shadow-xs border-b border-[#e0e3e5]">
+                <tr className="text-label-uppercase text-[#45464d] text-[12px]">
                   <th className="px-4 py-3 w-[25%] font-semibold">Building Name</th>
                   <th className="px-4 py-3 w-[38%] font-semibold">Description</th>
                   <th className="px-4 py-3 w-[15%] font-semibold">Status</th>

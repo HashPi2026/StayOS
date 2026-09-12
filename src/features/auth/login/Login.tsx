@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useProperty } from '@/src/context/PropertyContext';
 import { ForgotPasswordModal } from '../forgot-password/ForgotPasswordModal';
-import { PropertySelectionScreen } from '../property-select/PropertySelectionScreen';
 
 type AlertType = 'notice' | 'warning' | 'error' | 'success' | null;
 
@@ -11,7 +10,7 @@ interface AlertState {
 }
 
 export const Login: React.FC = () => {
-  const { login, properties, selectPropertyAndLogin } = useProperty();
+  const { login, properties } = useProperty();
 
   // Form State
   const [email, setEmail] = useState('marcus.vance@grandmetropole.com');
@@ -30,8 +29,6 @@ export const Login: React.FC = () => {
   // Modals & Flows
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [showPropertySelectScreen, setShowPropertySelectScreen] = useState(false);
-  const [targetPropertyId, setTargetPropertyId] = useState<string>('');
 
   // Active state chip indicator
   const [activeStateChip, setActiveStateChip] = useState<string>('default');
@@ -73,7 +70,7 @@ export const Login: React.FC = () => {
 
     // Simulate enterprise auth handshake
     setTimeout(() => {
-      const result = login(email, password, targetPropertyId || undefined);
+      const result = login(email, password);
       setIsLoading(false);
 
       if (!result.success) {
@@ -81,11 +78,8 @@ export const Login: React.FC = () => {
           type: 'error',
           message: result.message || 'Authentication failed. Please check your credentials.',
         });
-      } else if (result.requirePropertySelect) {
-        // Multi-property user! Proceed to Property Selection Screen
-        setShowPropertySelectScreen(true);
       }
-    }, 850);
+    }, 450);
   };
 
   // Google SSO handler
@@ -93,10 +87,9 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      // Log in with primary executive account
-      login('marcus.vance@grandmetropole.com', 'StayOS2026!Secure');
-      setShowPropertySelectScreen(true);
-    }, 800);
+      // Log in with Destin Inn & Suite single-property account
+      login('jaymistry.destin_admin@example.com', 'Destin@2026!');
+    }, 450);
   };
 
   // Test states from the toolbar in screen.png
@@ -108,7 +101,6 @@ export const Login: React.FC = () => {
       case 'default':
         setEmail('marcus.vance@grandmetropole.com');
         setPassword('StayOS2026!Secure');
-        setTargetPropertyId('');
         break;
       case 'invalid_email':
         setEmail('marcus.vance@invalid-domain');
@@ -147,17 +139,6 @@ export const Login: React.FC = () => {
         break;
     }
   };
-
-  // If user signed in and needs to choose property
-  if (showPropertySelectScreen) {
-    return (
-      <PropertySelectionScreen
-        onBackToLogin={() => {
-          setShowPropertySelectScreen(false);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#0a0f1d] text-slate-100 font-sans selection:bg-[#0058be]/30 selection:text-white">
@@ -429,25 +410,6 @@ export const Login: React.FC = () => {
               )}
             </div>
 
-            {/* Multi-Property Option: Pre-select target hotel (Optional Shortcut) */}
-            <div className="pt-0.5">
-              <label className="block text-[12px] font-semibold text-[#475569] mb-1">
-                Target Property Workspace
-              </label>
-              <select
-                value={targetPropertyId}
-                onChange={(e) => setTargetPropertyId(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#cbd5e1] rounded-xl text-[12px] text-[#0f172a] outline-none focus:border-[#0058be] focus:ring-2 focus:ring-[#0058be]/15"
-              >
-                <option value="">Prompt Property Selection after login (Default)</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.identity.name} ({p.location.city}, {p.location.country})
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Remember Me Checkbox */}
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 text-[13px] text-[#475569] cursor-pointer select-none">
@@ -525,62 +487,62 @@ export const Login: React.FC = () => {
           {/* Quick Demo Credentials Dropdown */}
           <div className="mt-5 p-3 bg-white rounded-xl border border-[#e2e8f0] text-[11px] text-[#64748b]">
             <div className="flex items-center justify-between font-semibold text-[#0f172a] mb-1.5">
-              <span>Quick Demo Accounts:</span>
+              <span>Single-Property Demo Accounts:</span>
               <span className="text-[10px] bg-blue-50 text-[#0058be] px-1.5 py-0.5 rounded font-mono">
-                Click to switch
+                Click to load
               </span>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('marcus.vance@grandmetropole.com');
-                  setPassword('StayOS2026!Secure');
+                  setEmail('jaymistry.destin_admin@example.com');
+                  setPassword('Destin@2026!');
                   handleClearErrors();
                 }}
                 className="p-1.5 text-left rounded-lg bg-[#f8fafc] hover:bg-[#eef2f6] transition-colors border border-[#e2e8f0] cursor-pointer truncate"
               >
-                <span className="font-semibold block text-[#0f172a] truncate">Marcus Vance</span>
-                <span className="text-[10px] text-[#64748b] block truncate">5 Hotels • Director</span>
+                <span className="font-semibold block text-[#0f172a] truncate">Jay Mistry (Admin)</span>
+                <span className="text-[10px] text-[#0058be] block truncate font-medium">Destin Inn & Suites</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('sarah.j@grandplaza.com');
-                  setPassword('StayOS2026!Secure');
+                  setEmail('sarah.j@destininn.com');
+                  setPassword('DestinFront@2026!');
                   handleClearErrors();
                 }}
                 className="p-1.5 text-left rounded-lg bg-[#f8fafc] hover:bg-[#eef2f6] transition-colors border border-[#e2e8f0] cursor-pointer truncate"
               >
-                <span className="font-semibold block text-[#0f172a] truncate">Sarah Jenkins</span>
-                <span className="text-[10px] text-[#64748b] block truncate">Super Admin</span>
+                <span className="font-semibold block text-[#0f172a] truncate">Sarah J. (Front Desk)</span>
+                <span className="text-[10px] text-[#0058be] block truncate font-medium">Destin Inn & Suites</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('d.chen@grandplaza.com');
-                  setPassword('StayOS2026!Secure');
+                  setEmail('rajesh.mehta@marriott.com');
+                  setPassword('Marriott@2026!');
                   handleClearErrors();
                 }}
                 className="p-1.5 text-left rounded-lg bg-[#f8fafc] hover:bg-[#eef2f6] transition-colors border border-[#e2e8f0] cursor-pointer truncate"
               >
-                <span className="font-semibold block text-[#0f172a] truncate">David Chen</span>
-                <span className="text-[10px] text-[#64748b] block truncate">General Manager</span>
+                <span className="font-semibold block text-[#0f172a] truncate">Rajesh Mehta (GM)</span>
+                <span className="text-[10px] text-[#0058be] block truncate font-medium">Surat Marriott Hotel</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('m.rodriguez@grandplaza.com');
-                  setPassword('StayOS2026!Secure');
+                  setEmail('priya.shah@marriott.com');
+                  setPassword('MarriottFront@2026!');
                   handleClearErrors();
                 }}
                 className="p-1.5 text-left rounded-lg bg-[#f8fafc] hover:bg-[#eef2f6] transition-colors border border-[#e2e8f0] cursor-pointer truncate"
               >
-                <span className="font-semibold block text-[#0f172a] truncate">Maria Rodriguez</span>
-                <span className="text-[10px] text-[#64748b] block truncate">Front Desk</span>
+                <span className="font-semibold block text-[#0f172a] truncate">Priya Shah (Front Office)</span>
+                <span className="text-[10px] text-[#0058be] block truncate font-medium">Surat Marriott Hotel</span>
               </button>
             </div>
           </div>

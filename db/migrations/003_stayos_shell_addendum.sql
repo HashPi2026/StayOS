@@ -10,7 +10,7 @@ BEGIN;
 -- Application-level constant table: one row per top-level PMS module.
 -- Not tenant-scoped (no client_id) — this is the same 11-module list for every
 -- property. is_built is flipped by an engineer once a module actually ships.
-CREATE TABLE module_registry (
+CREATE TABLE IF NOT EXISTS module_registry (
     module_key      VARCHAR(30) PRIMARY KEY,
     display_name    VARCHAR(50) NOT NULL,
     icon_key        VARCHAR(50),
@@ -29,13 +29,15 @@ INSERT INTO module_registry (module_key, display_name, icon_key, sort_order, is_
     ('housekeeping',       'Housekeeping',       'broom',            8, FALSE),
     ('utility',            'Utility',            'wrench',           9, FALSE),
     ('reports',            'Reports',            'bar-chart-2',     10, FALSE),
-    ('configuration',      'Configuration',      'settings',        11, TRUE);
-    -- Configuration is_built = TRUE: it's the one module already live
-    -- (as a separate app). Flip the others to TRUE as each ships.
+    ('configuration',      'Configuration',      'settings',        11, TRUE)
+ON CONFLICT (module_key) DO UPDATE SET
+    display_name = EXCLUDED.display_name,
+    icon_key = EXCLUDED.icon_key,
+    sort_order = EXCLUDED.sort_order;
 
 -- Role -> Module visibility. Deny-by-default: a role with no row for a given
 -- module_key is treated as locked/hidden, not visible (see Backend Workflow doc).
-CREATE TABLE role_module_access (
+CREATE TABLE IF NOT EXISTS role_module_access (
     role_id      INTEGER NOT NULL REFERENCES role_privilege(role_id),
     module_key   VARCHAR(30) NOT NULL REFERENCES module_registry(module_key),
     PRIMARY KEY (role_id, module_key)

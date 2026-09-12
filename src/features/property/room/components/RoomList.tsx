@@ -356,11 +356,11 @@ export const RoomsListView: React.FC = () => {
         </div>
       ) : (
         /* Table View */
-        <div className="bg-white rounded-xl shadow-xs border border-[#c6c6cd]/30 overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-xs border border-[#c6c6cd]/30 overflow-hidden flex flex-col">
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[300px]">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#f2f4f6] border-b border-[#e0e3e5] text-[12px] font-semibold uppercase tracking-wider text-[#45464d]">
+              <thead className="bg-[#f2f4f6] sticky top-0 z-10 shadow-xs border-b border-[#e0e3e5]">
+                <tr className="text-[12px] font-semibold uppercase tracking-wider text-[#45464d]">
                   <th className="px-4 py-3">Room Name</th>
                   <th className="px-4 py-3">Short Name</th>
                   <th className="px-4 py-3">Room Type</th>

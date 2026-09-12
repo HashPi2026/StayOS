@@ -45,7 +45,15 @@ export const Sidebar: React.FC = () => {
     {
       title: 'Configuration',
       items: [
-        { id: 'rates-packages', label: 'Rates & Packages', icon: 'sell' },
+        {
+          id: 'rates-packages',
+          label: 'Rates & Packages',
+          icon: 'sell',
+          subItems: [
+            { id: 'rates-packages-types', label: 'Rate Types', icon: 'sell' },
+            { id: 'rates-packages-packages', label: 'Packages', icon: 'inventory_2' },
+          ],
+        },
         { id: 'document-types', label: 'Document Types', icon: 'badge' },
         { id: 'other-charges-categories', label: 'Other Charges Category', icon: 'category' },
         { id: 'other-charges', label: 'Other Charges', icon: 'receipt_long' },
@@ -178,25 +186,37 @@ export const Sidebar: React.FC = () => {
     if (itemId === 'policies' && (activePath === 'policies' || activePath === 'add-policy' || activePath === 'edit-policy')) {
       return true;
     }
+    if (itemId === 'rates-packages' && (
+      activePath === 'rates-packages' ||
+      activePath === 'rates-packages-types' ||
+      activePath === 'rates-packages-packages' ||
+      activePath === 'rate-types' ||
+      activePath === 'packages'
+    )) {
+      return true;
+    }
     return false;
   };
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#f2f4f6] z-50 flex flex-col border-r border-[#c6c6cd]/60 select-none">
       {/* Brand & Exit */}
-      <div className="px-4 py-6 flex flex-col gap-6">
+      <div className="px-4 py-6 flex flex-col gap-4">
         <div 
           className="flex items-center gap-2 px-2 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => navigate('overview')}
+          onClick={() => navigate('dashboard')}
+          title="Return to Main PMS Dashboard"
         >
           <span className="material-symbols-outlined text-[#0058be] text-[26px]">domain</span>
           <span className="font-semibold text-[22px] tracking-tight text-[#191c1e]">StayOS</span>
         </div>
         <button
-          onClick={() => navigate('overview')}
-          className="flex items-center justify-center gap-2 w-full py-2 bg-[#000000] text-white rounded-lg text-label-uppercase hover:bg-[#333333] active:scale-[0.98] transition-all shadow-sm"
+          id="exit-configuration-btn"
+          onClick={() => navigate('dashboard')}
+          className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#0f172a] text-white rounded-lg text-label-uppercase hover:bg-[#1e293b] active:scale-[0.98] transition-all shadow-sm cursor-pointer"
+          title="Redirect to Main PMS Screen (11 Modules)"
         >
-          <span className="material-symbols-outlined text-[18px]">logout</span>
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Exit Configuration
         </button>
       </div>
@@ -267,6 +287,8 @@ export const Sidebar: React.FC = () => {
                         {item.subItems!.map((sub) => {
                           const isSubActive =
                             activePath === sub.id ||
+                            (sub.id === 'rates-packages-types' && (activePath === 'rates-packages' || activePath === 'rate-types')) ||
+                            (sub.id === 'rates-packages-packages' && activePath === 'packages') ||
                             (sub.id === 'device-configuration-payment-gateway' && activePath === 'payment-gateway') ||
                             (sub.id === 'device-configuration-doorlock' && activePath === 'doorlock-configuration') ||
                             (sub.id === 'device-configuration-scanner' && activePath === 'scanner-configuration');

@@ -7,6 +7,7 @@ import React from 'react';
 import { PropertyProvider, useProperty } from './context/PropertyContext';
 import { Sidebar, Header } from './components/layout';
 import { ToastContainer, GlobalSearchModal, VerifyPinModal } from './components/shared';
+import { MainPmsShell } from './features/shell';
 
 // Property Features
 import {
@@ -162,6 +163,10 @@ const MainLayout: React.FC = () => {
       case 'amenities':
         return <AmenitiesView />;
       case 'rates-packages':
+      case 'rates-packages-types':
+      case 'rates-packages-packages':
+      case 'rate-types':
+      case 'packages':
         return <RateTypesView />;
       case 'document-types':
         return <DocumentTypesView />;
@@ -280,6 +285,42 @@ const MainLayout: React.FC = () => {
         return <PropertyMasterView />;
     }
   };
+
+  const isPmsShellView = [
+    'dashboard',
+    'reservation',
+    'front_desk',
+    'front-desk',
+    'rate_availability',
+    'rate-availability',
+    'rate-availability-flash',
+    'rate-availability-forecasting',
+    'rate-availability-rate',
+    'rate-availability-restriction',
+    'rate_availability_flash',
+    'rate_availability_forecasting',
+    'rate_availability_rate',
+    'rate_availability_restriction',
+    'audit',
+    'business_channels',
+    'business-channels',
+    'guest',
+    'housekeeping',
+    'house-keeping',
+    'utility',
+    'reports',
+  ].includes(activePath);
+
+  if (isPmsShellView) {
+    return (
+      <>
+        <MainPmsShell />
+        <GlobalSearchModal />
+        <MultiPropertyModal />
+        <ToastContainer />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e] relative flex">

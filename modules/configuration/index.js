@@ -7,6 +7,7 @@ import { roomTypeRouter } from './room_type/room_type.routes.js';
 import { roomRouter } from './room/room.routes.js';
 import { roomStatusRouter } from './room_status/room_status.routes.js';
 import { taxRouter } from './tax/tax.routes.js';
+import { userRouter } from './user/user.routes.js';
 export const configurationRouter = Router();
 // Enforce tenant scoping on all configuration module endpoints
 configurationRouter.use(tenantMiddleware);
@@ -31,3 +32,7 @@ configurationRouter.use('/room_status', roomStatusRouter);
 // 7. Tax & Tax Configuration (Pattern B - Parent/Child with Active Date Range Overlap Check)
 configurationRouter.use('/taxes', taxRouter);
 configurationRouter.use('/tax', taxRouter);
+// 8. User Management (Pattern B - App Users & Roles)
+configurationRouter.use('/users', userRouter);
+configurationRouter.use('/user', userRouter);
+

@@ -6,6 +6,7 @@ import React from 'react';
 import { PropertyProvider, useProperty } from './context/PropertyContext';
 import { Sidebar, Header } from './components/layout';
 import { ToastContainer, GlobalSearchModal, VerifyPinModal } from './components/shared';
+import { MainPmsShell } from './features/shell';
 // Property Features
 import { BuildingsListView, AddBuildingView, EditBuildingView, BuildingDrawer, DeleteBuildingDialog, } from './features/property/building';
 import { FloorsListView, FloorDrawer, DeleteFloorDialog, } from './features/property/floor';
@@ -178,6 +179,38 @@ const MainLayout = () => {
                 return <PropertyMasterView />;
         }
     };
+    const isPmsShellView = [
+        'dashboard',
+        'reservation',
+        'front_desk',
+        'front-desk',
+        'rate_availability',
+        'rate-availability',
+        'rate-availability-flash',
+        'rate-availability-forecasting',
+        'rate-availability-rate',
+        'rate-availability-restriction',
+        'rate_availability_flash',
+        'rate_availability_forecasting',
+        'rate_availability_rate',
+        'rate_availability_restriction',
+        'audit',
+        'business_channels',
+        'business-channels',
+        'guest',
+        'housekeeping',
+        'house-keeping',
+        'utility',
+        'reports',
+    ].includes(activePath);
+    if (isPmsShellView) {
+        return (<>
+        <MainPmsShell />
+        <GlobalSearchModal />
+        <MultiPropertyModal />
+        <ToastContainer />
+      </>);
+    }
     return (<div className="min-h-screen bg-[#f7f9fb] text-[#191c1e] relative flex">
       {/* Persistent Left Sidebar */}
       <Sidebar />

@@ -12,16 +12,18 @@ export const Header: React.FC = () => {
     clearAllNotifications,
     navigate,
     currentUser,
+    authUsers,
+    switchUser,
     logout,
-    setMultiPropertyModalOpen,
+    isDbConnected,
+    isDbSyncing,
+    syncWithDatabase,
   } = useProperty();
 
-  const [isPropDropdownOpen, setIsPropDropdownOpen] = useState(false);
   const [isNotifDropdownOpen, setIsNotifDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
-  const propDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,9 +31,6 @@ export const Header: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (propDropdownRef.current && !propDropdownRef.current.contains(event.target as Node)) {
-        setIsPropDropdownOpen(false);
-      }
       if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target as Node)) {
         setIsNotifDropdownOpen(false);
       }
@@ -46,95 +45,52 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="fixed top-0 left-[240px] right-0 h-16 bg-[#ffffff]/90 backdrop-blur-xl border-b border-[#c6c6cd]/50 z-40 flex items-center justify-between px-6">
-        {/* Left: Property Switcher */}
-        <div className="relative" ref={propDropdownRef}>
-          <button
-            onClick={() => setIsPropDropdownOpen(!isPropDropdownOpen)}
-            className="flex items-center gap-2.5 bg-[#eceef0] px-3 py-1.5 rounded-xl cursor-pointer hover:bg-[#e2e5e8] transition-colors border border-transparent hover:border-[#c6c6cd]/40 group"
-          >
-            <div className="w-6 h-6 rounded-md bg-[#0058be] text-white flex items-center justify-center text-[12px] font-bold">
-              <span className="material-symbols-outlined text-[15px]">hotel</span>
-            </div>
-            <div className="text-left flex flex-col">
-              <span className="text-[13px] font-bold text-[#191c1e] max-w-[210px] truncate leading-tight">
-                {currentProperty.identity.name}
-              </span>
-              <span className="text-[10px] text-[#75859d] leading-none mt-0.5">
-                {currentProperty.meta?.code || currentProperty.identity.clientId} • {currentProperty.location.city}
-              </span>
-            </div>
-            <span className="material-symbols-outlined text-[18px] text-[#75859d] group-hover:text-[#191c1e]">
-              expand_more
+        {/* Left: Active Assigned Property (Strictly 1 Property per User) */}
+        <div className="flex items-center gap-2.5 bg-[#eceef0]/90 px-3.5 py-1.5 rounded-xl border border-[#c6c6cd]/40 select-none">
+          <div className="w-6 h-6 rounded-md bg-[#0058be] text-white flex items-center justify-center text-[12px] font-bold shadow-sm">
+            <span className="material-symbols-outlined text-[15px]">hotel</span>
+          </div>
+          <div className="text-left flex flex-col">
+            <span className="text-[13px] font-bold text-[#191c1e] max-w-[260px] truncate leading-tight">
+              {currentProperty.identity.name}
             </span>
-          </button>
-
-          {isPropDropdownOpen && (
-            <div className="absolute left-0 top-full mt-2 w-80 bg-[#ffffff] rounded-2xl shadow-xl border border-[#c6c6cd]/60 py-2.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-              <div className="px-4 py-1 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#75859d]">
-                  Switch Property ({properties.length})
-                </span>
-                <button
-                  onClick={() => {
-                    setIsPropDropdownOpen(false);
-                    setMultiPropertyModalOpen(true);
-                  }}
-                  className="text-[11px] font-semibold text-[#0058be] hover:underline"
-                >
-                  View All Hub
-                </button>
-              </div>
-
-              <div className="max-h-72 overflow-y-auto mt-1 divide-y divide-[#eceef0]/60">
-                {properties.map((prop) => (
-                  <button
-                    key={prop.id}
-                    onClick={() => {
-                      switchProperty(prop.id);
-                      setIsPropDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-[#f2f4f6] transition-colors text-[13px] ${
-                      prop.id === currentProperty.id ? 'bg-[#f0f5ff] font-semibold text-[#0058be]' : 'text-[#191c1e]'
-                    }`}
-                  >
-                    <div className="flex flex-col min-w-0 pr-2">
-                      <span className="truncate font-semibold text-[13px]">{prop.identity.name}</span>
-                      <span className="text-[11px] text-[#75859d] truncate">
-                        {prop.meta?.code || prop.identity.clientId} • {prop.location.city}, {prop.location.country}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {prop.meta?.occupancyRate && (
-                        <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                          {prop.meta.occupancyRate}%
-                        </span>
-                      )}
-                      {prop.id === currentProperty.id && (
-                        <span className="material-symbols-outlined text-[18px] text-[#0058be]">check</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-2 px-3 border-t border-[#eceef0] mt-1">
-                <button
-                  onClick={() => {
-                    setIsPropDropdownOpen(false);
-                    setMultiPropertyModalOpen(true);
-                  }}
-                  className="w-full py-2 bg-[#f7f9fb] hover:bg-[#eef2f6] text-[#0058be] text-[12px] font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px]">domain</span>
-                  <span>Open Multi-Property Cluster Hub</span>
-                </button>
-              </div>
-            </div>
-          )}
+            <span className="text-[10px] text-[#75859d] leading-none mt-0.5">
+              {currentProperty.meta?.code || currentProperty.identity.clientId} • {currentProperty.location.city}, {currentProperty.location.state || currentProperty.location.country}
+            </span>
+          </div>
+          <span className="ml-1 text-[10px] font-bold tracking-wider uppercase text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded">
+            Property Scoped
+          </span>
         </div>
 
         {/* Right: Search & User Controls */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
+          {/* Database Live Status & Sync Button */}
+          <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-[11px] font-medium shadow-2xs">
+            <span className={`w-2 h-2 rounded-full ${isDbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+            <span className="font-semibold tracking-wide">PostgreSQL DB</span>
+            <button
+              onClick={() => syncWithDatabase()}
+              disabled={isDbSyncing}
+              className="ml-1 p-0.5 hover:bg-emerald-100 rounded text-emerald-700 disabled:opacity-50 cursor-pointer flex items-center"
+              title="Sync now with PostgreSQL Supabase database"
+            >
+              <span className={`material-symbols-outlined text-[14px] ${isDbSyncing ? 'animate-spin' : ''}`}>
+                sync
+              </span>
+            </button>
+          </div>
+
+          {/* Exit to Main PMS Button */}
+          <button
+            onClick={() => navigate('dashboard')}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0f172a] hover:bg-[#1e293b] text-white text-[12px] font-semibold rounded-lg shadow-2xs transition-all cursor-pointer"
+            title="Exit Configuration and return to Main PMS Dashboard"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Exit to PMS</span>
+          </button>
+
           {/* Search Trigger */}
           <div
             onClick={() => setSearchModalOpen(true)}
@@ -234,30 +190,64 @@ export const Header: React.FC = () => {
               </div>
 
               {isUserDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-[#ffffff] rounded-2xl shadow-xl border border-[#c6c6cd]/60 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute right-0 top-full mt-2 w-72 bg-[#ffffff] rounded-2xl shadow-xl border border-[#c6c6cd]/60 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="px-4 py-2.5 border-b border-[#eceef0]">
-                    <div className="text-[13px] font-bold text-[#191c1e] leading-tight">
-                      {currentUser?.name || 'Marcus Vance'}
+                    <div className="flex items-center justify-between">
+                      <div className="text-[13px] font-bold text-[#191c1e] leading-tight">
+                        {currentUser?.name || 'Super Admin'}
+                      </div>
+                      {currentUser?.roleType === 'SuperAdmin' && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                          SuperAdmin
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] text-[#0058be] font-semibold mt-0.5">
-                      {currentUser?.role || 'Front Office Director'}
+                      {currentUser?.role || 'Super Administrator'}
                     </div>
                     <div className="text-[11px] text-[#75859d] truncate mt-0.5">
-                      {currentUser?.email || 'marcus.vance@grandmetropole.com'}
+                      {currentUser?.email || 'superadmin@stayos.com'}
+                    </div>
+                  </div>
+
+                  {/* Switch Active User / Account (Single-Property Model) */}
+                  <div className="px-3 py-1.5 border-b border-[#eceef0] bg-[#fafafa]">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-[#75859d] px-1 mb-1">
+                      Switch Account (1 User = 1 Hotel)
+                    </div>
+                    <div className="space-y-1">
+                      {authUsers.filter((u) => u.status === 'active').map((u) => {
+                        const isSelected = currentUser?.id === u.id;
+                        const prop = properties.find((p) => p.id === (u.accessiblePropertyIds?.[0] || u.defaultPropertyId));
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              switchUser(u);
+                              setIsUserDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1.5 rounded-lg text-[12px] flex items-center justify-between cursor-pointer transition-colors ${
+                              isSelected
+                                ? 'bg-[#0058be]/10 text-[#0058be] font-semibold'
+                                : 'hover:bg-slate-100 text-[#191c1e]'
+                            }`}
+                          >
+                            <div className="min-w-0 pr-1">
+                              <div className="font-medium truncate">{u.name}</div>
+                              <div className="text-[10px] text-[#75859d] truncate">
+                                {prop?.identity.name || 'Property'} • {u.role}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <span className="material-symbols-outlined text-[14px] text-[#0058be] shrink-0">check</span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="py-1">
-                    <button
-                      onClick={() => {
-                        setIsUserDropdownOpen(false);
-                        setMultiPropertyModalOpen(true);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[17px] text-[#0058be]">domain</span>
-                      <span>Switch Hotel Property</span>
-                    </button>
                     <button
                       onClick={() => {
                         navigate('user-management');
@@ -266,7 +256,7 @@ export const Header: React.FC = () => {
                       className="w-full text-left px-4 py-2 hover:bg-[#f2f4f6] text-[13px] text-[#191c1e] flex items-center gap-2.5 cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[17px] text-[#75859d]">manage_accounts</span>
-                      <span>Account Settings</span>
+                      <span>Users & Login Credentials</span>
                     </button>
                     <button
                       onClick={() => {

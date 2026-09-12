@@ -24,10 +24,18 @@ import {
   EmailTemplateItem,
   PolicyItem,
   GuestCategoryItem,
+  PackageItem,
   GeneralSettingsState,
   GeneralSettingsTab,
   AuthUser,
+  TenantSubscription,
+  TenantCapMetrics,
 } from '../types';
+import {
+  getTenantDataset,
+  TENANT_SUBSCRIPTIONS,
+  TENANT_CAP_SPECS,
+} from '../data/tenantDatasets';
 import {
   INITIAL_PROPERTIES,
   INITIAL_AUTH_USERS,
@@ -52,8 +60,10 @@ import {
   INITIAL_EMAIL_TEMPLATES,
   INITIAL_POLICIES,
   INITIAL_GUEST_CATEGORIES,
+  HOTLINKED_MAP_IMAGE,
 } from '../data/mockData';
 import { INITIAL_GENERAL_SETTINGS } from '../data/generalSettingsData';
+import { databaseApi } from '../services/api/database';
 
 export interface ToastItem {
   id: string;
@@ -62,12 +72,18 @@ export interface ToastItem {
 }
 
 interface PropertyContextType {
+  // Database Synchronization
+  isDbConnected: boolean;
+  isDbSyncing: boolean;
+  syncWithDatabase: (targetClientId?: string) => Promise<void>;
+
   // Authentication & Multi-Property
   isAuthenticated: boolean;
   currentUser: AuthUser | null;
   authUsers: AuthUser[];
   login: (email: string, password?: string, propertyId?: string) => { success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser };
   logout: () => void;
+  switchUser: (user: AuthUser) => void;
   selectPropertyAndLogin: (propertyId: string) => void;
   isMultiPropertyModalOpen: boolean;
   setMultiPropertyModalOpen: (open: boolean) => void;
@@ -223,6 +239,23 @@ interface PropertyContextType {
   deleteTargetRateType: RateTypeItem | null;
   openDeleteRateTypeDialog: (rateType: RateTypeItem) => void;
   closeDeleteRateTypeDialog: () => void;
+
+  // Packages (Rates & Packages)
+  packages: PackageItem[];
+  addPackage: (data: Omit<PackageItem, 'id' | 'createdAt' | 'updatedAt'>) => boolean;
+  updatePackage: (id: string, updates: Partial<PackageItem>) => boolean;
+  deletePackage: (id: string) => boolean;
+  isPackageDrawerOpen: boolean;
+  drawerPackage: PackageItem | null;
+  openAddPackageDrawer: () => void;
+  openEditPackageDrawer: (pkg: PackageItem) => void;
+  closePackageDrawer: () => void;
+  isDeletePackageDialogOpen: boolean;
+  deleteTargetPackage: PackageItem | null;
+  openDeletePackageDialog: (pkg: PackageItem) => void;
+  closeDeletePackageDialog: () => void;
+  activeRatesPackagesTab: 'rate-types' | 'packages';
+  setActiveRatesPackagesTab: (tab: 'rate-types' | 'packages') => void;
 
   // Policies (Configuration)
   policies: PolicyItem[];
@@ -458,6 +491,11 @@ interface PropertyContextType {
   // Secondary Data
   amenities: Amenity[];
   auditLogs: AuditLog[];
+
+  // SaaS Multi-Tenancy & CAP Architecture
+  tenantSubscription: TenantSubscription;
+  tenantCapMetrics: TenantCapMetrics;
+  isTenantIsolated: boolean;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -471,22 +509,41 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('stayos_current_user');
-    return saved ? JSON.parse(saved) : null;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return INITIAL_AUTH_USERS[0];
   });
   const [isMultiPropertyModalOpen, setMultiPropertyModalOpen] = useState<boolean>(false);
 
   // Navigation State
-  const [activePath, setActivePath] = useState<NavigationPath>('overview');
+  const [activePath, setActivePath] = useState<NavigationPath>('dashboard');
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | null>(null);
 
   // Property Data State
   const [properties, setProperties] = useState<PropertyData[]>(() => {
     const saved = localStorage.getItem('stayos_properties_v2');
-    return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const valid = parsed.filter((p: any) => p.id === 'DIS_001' || p.id === 'STVMC_SURAT');
+          if (valid.length > 0) return valid;
+        }
+      } catch (e) {
+        // fallback to INITIAL_PROPERTIES
+      }
+    }
+    return INITIAL_PROPERTIES;
   });
   const [currentPropertyId, setCurrentPropertyId] = useState<string>(() => {
-    return localStorage.getItem('stayos_current_prop_id') || 'prop-astoria';
+    const saved = localStorage.getItem('stayos_current_prop_id');
+    return (saved === 'DIS_001' || saved === 'STVMC_SURAT') ? saved : 'DIS_001';
   });
   const currentProperty = properties.find((p) => p.id === currentPropertyId) || properties[0];
 
@@ -494,40 +551,43 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [propertyForm, setPropertyForm] = useState<PropertyData>(currentProperty);
   const [hasPropertyUnsavedChanges, setHasPropertyUnsavedChanges] = useState<boolean>(false);
 
-  useEffect(() => {
-    setPropertyForm(currentProperty);
-    setHasPropertyUnsavedChanges(false);
-  }, [currentPropertyId]);
+  const initialTenantData = getTenantDataset(currentPropertyId);
 
   // Buildings State
   const [buildings, setBuildings] = useState<Building[]>(() => {
-    const saved = localStorage.getItem('stayos_buildings');
-    return saved ? JSON.parse(saved) : INITIAL_BUILDINGS;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_buildings`);
+    return saved ? JSON.parse(saved) : initialTenantData.buildings;
   });
 
   // Floors State
   const [floors, setFloors] = useState<Floor[]>(() => {
-    const saved = localStorage.getItem('stayos_floors');
-    return saved ? JSON.parse(saved) : INITIAL_FLOORS;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_floors`);
+    return saved ? JSON.parse(saved) : initialTenantData.floors;
   });
 
   // Room Types State
   const [roomTypes, setRoomTypes] = useState<RoomType[]>(() => {
-    const saved = localStorage.getItem('stayos_room_types');
-    return saved ? JSON.parse(saved) : INITIAL_ROOM_TYPES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_room_types`);
+    return saved ? JSON.parse(saved) : initialTenantData.roomTypes;
   });
 
-  // Secondary Data
+  // Secondary Data (Rooms, Audit Logs, Notifications)
   const [rooms, setRooms] = useState<Room[]>(() => {
-    const saved = localStorage.getItem('stayos_rooms');
-    return saved ? JSON.parse(saved) : INITIAL_ROOMS;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_rooms`);
+    return saved ? JSON.parse(saved) : initialTenantData.rooms;
   });
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [isDeleteRoomDialogOpen, setIsDeleteRoomDialogOpen] = useState(false);
   const [deleteTargetRoom, setDeleteTargetRoom] = useState<Room | null>(null);
   const [amenities] = useState<Amenity[]>(INITIAL_AMENITIES);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_audit_logs`);
+    return saved ? JSON.parse(saved) : initialTenantData.auditLogs;
+  });
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_notifications`);
+    return saved ? JSON.parse(saved) : initialTenantData.notifications;
+  });
 
   // UI Drawers / Modals
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -560,8 +620,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Taxes State
   const [taxes, setTaxes] = useState<TaxItem[]>(() => {
-    const saved = localStorage.getItem('stayos_taxes');
-    return saved ? JSON.parse(saved) : INITIAL_TAXES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_taxes`);
+    return saved ? JSON.parse(saved) : initialTenantData.taxes;
   });
   const [selectedTaxId, setSelectedTaxId] = useState<string | null>(null);
   const [isTaxDrawerOpen, setIsTaxDrawerOpen] = useState(false);
@@ -573,20 +633,75 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isTaxConfigDrawerOpen, setIsTaxConfigDrawerOpen] = useState(false);
   const [configTargetTax, setConfigTargetTax] = useState<TaxItem | null>(null);
 
+  // Helper sanitizers for Rate Types & Packages to guarantee complete type safety
+  const sanitizeRateType = (item: any): RateTypeItem => ({
+    id: item?.id || `rt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    shortName: item?.shortName || item?.rateCode || 'STD',
+    name: item?.name || 'Standard Rate',
+    description: item?.description || '',
+    bindPercentage: typeof item?.bindPercentage === 'number' ? item.bindPercentage : 0,
+    isHourly: Boolean(item?.isHourly),
+    isCrsTaxInclusive: item?.isCrsTaxInclusive !== undefined ? Boolean(item.isCrsTaxInclusive) : true,
+    isCrsEnabled: item?.isCrsEnabled !== undefined ? Boolean(item.isCrsEnabled) : true,
+    rateCode: item?.rateCode || item?.shortName || 'STD',
+    baseAmount: typeof item?.baseAmount === 'number' ? item.baseAmount : 199,
+    currency: item?.currency || 'USD',
+    status: item?.status || 'active',
+    isDefault: Boolean(item?.isDefault),
+    createdAt: item?.createdAt || 'Jan 15, 2024',
+    updatedAt: item?.updatedAt || 'Mar 10, 2026',
+  });
+
+  const sanitizePackage = (item: any): PackageItem => ({
+    id: item?.id || `pkg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    code: item?.code || item?.shortName || 'PKG-01',
+    name: item?.name || 'Package Deal',
+    description: item?.description || '',
+    rateTypeId: item?.rateTypeId || 'rate-dis-01',
+    rateTypeName: item?.rateTypeName || 'Standard Rate',
+    packageType: item?.packageType || 'leisure',
+    inclusions: Array.isArray(item?.inclusions) ? item.inclusions : ['Buffet Breakfast', 'High-Speed Wi-Fi'],
+    basePrice: typeof item?.basePrice === 'number' ? item.basePrice : 249,
+    extraAdultPrice: typeof item?.extraAdultPrice === 'number' ? item.extraAdultPrice : 40,
+    extraChildPrice: typeof item?.extraChildPrice === 'number' ? item.extraChildPrice : 20,
+    validFrom: item?.validFrom || '2024-01-01',
+    validTo: item?.validTo || '2026-12-31',
+    minStayNights: typeof item?.minStayNights === 'number' ? item.minStayNights : 1,
+    isActive: item?.isActive !== undefined ? Boolean(item.isActive) : true,
+    isCrsEnabled: item?.isCrsEnabled !== undefined ? Boolean(item.isCrsEnabled) : true,
+    createdAt: item?.createdAt || 'Jan 15, 2024',
+    updatedAt: item?.updatedAt || 'Mar 10, 2026',
+  });
+
+  // Rates & Packages Active Tab
+  const [activeRatesPackagesTab, setActiveRatesPackagesTab] = useState<'rate-types' | 'packages'>('rate-types');
+
   // Rate Types State
   const [rateTypes, setRateTypes] = useState<RateTypeItem[]>(() => {
-    const saved = localStorage.getItem('stayos_rate_types');
-    return saved ? JSON.parse(saved) : INITIAL_RATE_TYPES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_rate_types`);
+    const raw = saved ? JSON.parse(saved) : (initialTenantData.rateTypes || INITIAL_RATE_TYPES);
+    return Array.isArray(raw) ? raw.map(sanitizeRateType) : INITIAL_RATE_TYPES;
   });
   const [isRateTypeDrawerOpen, setIsRateTypeDrawerOpen] = useState(false);
   const [drawerRateType, setDrawerRateType] = useState<RateTypeItem | null>(null);
   const [isDeleteRateTypeDialogOpen, setIsDeleteRateTypeDialogOpen] = useState(false);
   const [deleteTargetRateType, setDeleteTargetRateType] = useState<RateTypeItem | null>(null);
 
+  // Packages State
+  const [packages, setPackages] = useState<PackageItem[]>(() => {
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_packages`);
+    const raw = saved ? JSON.parse(saved) : (initialTenantData.packages || []);
+    return Array.isArray(raw) ? raw.map(sanitizePackage) : [];
+  });
+  const [isPackageDrawerOpen, setIsPackageDrawerOpen] = useState(false);
+  const [drawerPackage, setDrawerPackage] = useState<PackageItem | null>(null);
+  const [isDeletePackageDialogOpen, setIsDeletePackageDialogOpen] = useState(false);
+  const [deleteTargetPackage, setDeleteTargetPackage] = useState<PackageItem | null>(null);
+
   // Policies State
   const [policies, setPolicies] = useState<PolicyItem[]>(() => {
-    const saved = localStorage.getItem('stayos_policies');
-    return saved ? JSON.parse(saved) : INITIAL_POLICIES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_policies`);
+    return saved ? JSON.parse(saved) : initialTenantData.policies;
   });
   const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
   const [isPolicyDrawerOpen, setIsPolicyDrawerOpen] = useState(false);
@@ -596,9 +711,52 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Guest Categories State
   const [guestCategories, setGuestCategories] = useState<GuestCategoryItem[]>(() => {
-    const saved = localStorage.getItem('stayos_guest_categories');
-    return saved ? JSON.parse(saved) : INITIAL_GUEST_CATEGORIES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_guest_categories`);
+    return saved ? JSON.parse(saved) : initialTenantData.guestCategories;
   });
+
+  // SaaS Tenant Data Switcher on property change: loads strictly isolated tenant dataset
+  useEffect(() => {
+    setPropertyForm(currentProperty);
+    setHasPropertyUnsavedChanges(false);
+
+    const tenantDataset = getTenantDataset(currentPropertyId);
+
+    const savedBld = localStorage.getItem(`stayos_${currentPropertyId}_buildings`);
+    setBuildings(savedBld ? JSON.parse(savedBld) : tenantDataset.buildings);
+
+    const savedFlr = localStorage.getItem(`stayos_${currentPropertyId}_floors`);
+    setFloors(savedFlr ? JSON.parse(savedFlr) : tenantDataset.floors);
+
+    const savedRt = localStorage.getItem(`stayos_${currentPropertyId}_room_types`);
+    setRoomTypes(savedRt ? JSON.parse(savedRt) : tenantDataset.roomTypes);
+
+    const savedRm = localStorage.getItem(`stayos_${currentPropertyId}_rooms`);
+    setRooms(savedRm ? JSON.parse(savedRm) : tenantDataset.rooms);
+
+    const savedTax = localStorage.getItem(`stayos_${currentPropertyId}_taxes`);
+    setTaxes(savedTax ? JSON.parse(savedTax) : tenantDataset.taxes);
+
+    const savedRates = localStorage.getItem(`stayos_${currentPropertyId}_rate_types`);
+    const rawRates = savedRates ? JSON.parse(savedRates) : tenantDataset.rateTypes;
+    setRateTypes(Array.isArray(rawRates) ? rawRates.map(sanitizeRateType) : INITIAL_RATE_TYPES);
+
+    const savedPkgs = localStorage.getItem(`stayos_${currentPropertyId}_packages`);
+    const rawPkgs = savedPkgs ? JSON.parse(savedPkgs) : tenantDataset.packages;
+    setPackages(Array.isArray(rawPkgs) ? rawPkgs.map(sanitizePackage) : []);
+
+    const savedPol = localStorage.getItem(`stayos_${currentPropertyId}_policies`);
+    setPolicies(savedPol ? JSON.parse(savedPol) : tenantDataset.policies);
+
+    const savedGc = localStorage.getItem(`stayos_${currentPropertyId}_guest_categories`);
+    setGuestCategories(savedGc ? JSON.parse(savedGc) : tenantDataset.guestCategories);
+
+    const savedAudit = localStorage.getItem(`stayos_${currentPropertyId}_audit_logs`);
+    setAuditLogs(savedAudit ? JSON.parse(savedAudit) : tenantDataset.auditLogs);
+
+    const savedNotifs = localStorage.getItem(`stayos_${currentPropertyId}_notifications`);
+    setNotifications(savedNotifs ? JSON.parse(savedNotifs) : tenantDataset.notifications);
+  }, [currentPropertyId]);
   const [editingGuestCategoryId, setEditingGuestCategoryId] = useState<string | null>(null);
   const [isGuestCategoryDrawerOpen, setIsGuestCategoryDrawerOpen] = useState(false);
   const [drawerGuestCategory, setDrawerGuestCategory] = useState<GuestCategoryItem | null>(null);
@@ -832,6 +990,320 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Database Synchronization State
+  const [isDbConnected, setIsDbConnected] = useState<boolean>(true);
+  const [isDbSyncing, setIsDbSyncing] = useState<boolean>(false);
+
+  // Sync data from PostgreSQL Database (Supabase)
+  const syncWithDatabase = async (targetClientId?: string) => {
+    const clientId = targetClientId || currentPropertyId;
+    setIsDbSyncing(true);
+    try {
+      // 1. Fetch properties from database
+      const propsRes = await databaseApi.getProperties();
+      if (propsRes.data && Array.isArray(propsRes.data) && propsRes.data.length > 0) {
+        const dbProps: PropertyData[] = propsRes.data.map((p: any) => {
+          const isDestin = p.client_id === 'DIS_001';
+          return {
+            id: p.client_id,
+            identity: {
+              name: p.property_name,
+              clientId: p.client_id,
+              region: (p.region as any) || (isDestin ? 'na' : 'apac'),
+            },
+            location: {
+              address: p.address || (isDestin ? '713 Harbor Blvd' : 'Ambika Niketan, Dumas Road'),
+              city: p.city || (isDestin ? 'Destin' : 'Surat'),
+              state: p.state || (isDestin ? 'Florida' : 'Gujarat'),
+              country: p.country || (isDestin ? 'United States' : 'India'),
+              latitude: p.latitude || (isDestin ? '30.3935' : '21.1578'),
+              longitude: p.longitude || (isDestin ? '-86.4958' : '72.7766'),
+              mapImageUrl: HOTLINKED_MAP_IMAGE,
+            },
+            contact: {
+              websiteUrl: p.url || (isDestin ? 'https://destininn.com/' : 'https://www.marriott.com/en-us/hotels/stvmc-surat-marriott-hotel/overview/?scid=f2ae0541-1279-4f24-b197-a979c79310b0'),
+              email: p.email || (isDestin ? 'stay@destininn.com' : 'reservations@suratmarriott.com'),
+              phone: p.phone || (isDestin ? '+1 850-837-7326' : '+91 261 711 7000'),
+            },
+            meta: {
+              code: isDestin ? 'DIS-FL' : 'STV-SURAT',
+              totalRooms: p.max_rooms || (isDestin ? 80 : 156),
+              occupancyRate: isDestin ? 82.0 : 88.5,
+              todayArrivals: isDestin ? 18 : 26,
+              todayDepartures: isDestin ? 14 : 20,
+              currency: p.currency || (isDestin ? 'USD' : 'INR'),
+              currencySymbol: p.currency_symbol || (isDestin ? '$' : '₹'),
+              status: (p.status as any) || 'operational',
+              imageUrl: isDestin 
+                ? 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'
+                : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
+              userRole: isDestin ? 'Property Administrator' : 'General Manager & Director',
+              clusterSyncStatus: 'synced',
+              starRating: p.star_rating || (isDestin ? 4 : 5),
+            },
+            subscription: TENANT_SUBSCRIPTIONS[p.client_id] || {
+              plan: p.subscription_plan || (isDestin ? 'Pro' : 'Enterprise'),
+              status: p.subscription_status || 'active',
+              billingCycle: p.billing_cycle || (isDestin ? 'monthly' : 'annually'),
+              maxRooms: p.max_rooms || (isDestin ? 150 : 300),
+              currentRoomCount: isDestin ? 80 : 156,
+              features: isDestin
+                ? ['core_pms', 'rate_management', 'taxes_and_folios', 'housekeeping', 'guest_profiles', 'standard_reports']
+                : ['core_pms', 'rate_management', 'taxes_and_folios', 'housekeeping', 'guest_profiles', 'advanced_reports', 'channel_manager', 'audit_vault', 'multi_building', 'custom_roles'],
+              renewalDate: isDestin ? '2026-12-31' : '2027-09-30',
+            },
+            capModel: TENANT_CAP_SPECS[p.client_id] || {
+              theoremModel: p.cap_theorem_model || 'CP',
+              isolationLevel: p.isolation_level || 'database_and_storage_partition',
+              tenantWorkspaceId: p.client_id,
+              isDataPartitioned: true,
+              activeNode: p.active_cluster_node || (isDestin ? 'us-east-cluster-01' : 'apac-south-cluster-01'),
+            },
+          };
+        });
+
+        setProperties(dbProps);
+        localStorage.setItem('stayos_properties_v2', JSON.stringify(dbProps));
+
+        // If active property isn't in database, switch to first database property
+        if (!dbProps.some((p) => p.id === clientId)) {
+          const firstId = dbProps[0].id;
+          setCurrentPropertyId(firstId);
+          localStorage.setItem('stayos_current_prop_id', firstId);
+        }
+      }
+
+      // 2. Fetch Buildings for active client
+      const bldRes = await databaseApi.getBuildings(clientId);
+      let loadedBuildings: Building[] = [];
+      if (bldRes.data && Array.isArray(bldRes.data) && bldRes.data.length > 0) {
+        loadedBuildings = bldRes.data.map((b: any) => ({
+          id: String(b.building_id),
+          code: `BLD-${String(b.building_id).padStart(3, '0')}`,
+          name: b.building_name,
+          description: b.description || '',
+          status: 'active',
+          totalFloors: 1,
+          totalRooms: 0,
+          hasActiveRooms: false,
+          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          updatedBy: { name: 'PostgreSQL DB', initials: 'DB' },
+        }));
+        setBuildings(loadedBuildings);
+        localStorage.setItem(`stayos_${clientId}_buildings`, JSON.stringify(loadedBuildings));
+      }
+
+      // 3. Fetch Floors for active client
+      const flrRes = await databaseApi.getFloors(clientId);
+      if (flrRes.data && Array.isArray(flrRes.data) && flrRes.data.length > 0) {
+        const loadedFloors: Floor[] = flrRes.data.map((f: any) => {
+          const bld = loadedBuildings.find((b) => b.id === String(f.building_id));
+          return {
+            id: String(f.floor_id),
+            name: f.floor_name,
+            floorNumber: Number(f.floor_id),
+            description: f.description || '',
+            buildingId: String(f.building_id),
+            buildingName: bld ? bld.name : `Building ${f.building_id}`,
+            status: 'active',
+            totalRooms: 0,
+            createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          };
+        });
+        setFloors(loadedFloors);
+        localStorage.setItem(`stayos_${clientId}_floors`, JSON.stringify(loadedFloors));
+      }
+
+      // 4. Fetch Room Types for active client
+      const rtRes = await databaseApi.getRoomTypes(clientId);
+      let loadedRoomTypes: RoomType[] = [];
+      if (rtRes.data && Array.isArray(rtRes.data) && rtRes.data.length > 0) {
+        loadedRoomTypes = rtRes.data.map((rt: any) => ({
+          id: String(rt.room_type_id),
+          name: rt.room_type_name,
+          code: rt.short_name || `RT-${rt.room_type_id}`,
+          shortName: rt.short_name || 'STD',
+          category: 'Deluxe',
+          baseRate: 250,
+          capacity: 2,
+          bedType: 'King Bed',
+          totalUnits: 10,
+          status: 'active',
+          color: rt.room_type_color || '#3b82f6',
+          description: rt.description || '',
+          buildingId: String(rt.building_id),
+          floorId: String(rt.floor_id),
+          overBookingLimit: rt.over_booking || 0,
+          allowInOccupancy: rt.allow_in_occupancy ?? true,
+          isCrs: rt.is_crs ?? false,
+          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        }));
+        setRoomTypes(loadedRoomTypes);
+        localStorage.setItem(`stayos_${clientId}_room_types`, JSON.stringify(loadedRoomTypes));
+      }
+
+      // 5. Fetch Rooms for active client
+      const rmRes = await databaseApi.getRooms(clientId);
+      if (rmRes.data && Array.isArray(rmRes.data) && rmRes.data.length > 0) {
+        const loadedRooms: Room[] = rmRes.data.map((r: any) => {
+          const bld = loadedBuildings.find((b) => b.id === String(r.building_id));
+          const rt = loadedRoomTypes.find((t) => t.id === String(r.room_type_id));
+          return {
+            id: String(r.room_id),
+            name: r.room_name,
+            shortName: r.short_name || r.room_name,
+            number: r.room_name,
+            buildingId: String(r.building_id),
+            buildingName: bld ? bld.name : `Building ${r.building_id}`,
+            floorId: String(r.floor_id),
+            floor: Number(r.floor_id) || 1,
+            roomTypeId: String(r.room_type_id),
+            roomTypeName: rt ? rt.name : `Type ${r.room_type_id}`,
+            status: 'clean',
+            rate: 250,
+            isHourlyRental: r.is_hourly_rental ?? false,
+            isSmoking: r.is_smoking ?? false,
+            isHandicapAccessible: r.is_handicap ?? false,
+            isPetAllowed: r.is_pet_allowed ?? false,
+            includeInOccupancyAdr: r.include_in_occupancy_adr ?? true,
+            isCrsInventory: r.is_crs_inventory ?? false,
+            createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          };
+        });
+        setRooms(loadedRooms);
+        localStorage.setItem(`stayos_${clientId}_rooms`, JSON.stringify(loadedRooms));
+      }
+
+      // 6. Fetch Taxes for active client
+      const taxRes = await databaseApi.getTaxes(clientId);
+      if (taxRes.data && Array.isArray(taxRes.data) && taxRes.data.length > 0) {
+        const loadedTaxes: TaxItem[] = taxRes.data.map((t: any) => ({
+          id: String(t.tax_id),
+          code: `TAX-${t.tax_id}`,
+          name: t.tax_name,
+          type: t.tax_type || 'percentage',
+          basis: t.per_day_tax ? 'per_day' : 'per_stay',
+          applyTo: 'room_charges',
+          rate: 10,
+          isActive: t.is_active ?? true,
+          isSystemDefault: false,
+          slabs: [],
+          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        }));
+        setTaxes(loadedTaxes);
+        localStorage.setItem(`stayos_${clientId}_taxes`, JSON.stringify(loadedTaxes));
+      }
+
+      // 7. Fetch Room Statuses for active client
+      const rsRes = await databaseApi.getRoomStatuses(clientId);
+      if (rsRes.data && Array.isArray(rsRes.data) && rsRes.data.length > 0) {
+        const loadedStatuses: RoomStatusConfig[] = rsRes.data.map((s: any) => ({
+          id: String(s.room_status_id),
+          name: s.status_name,
+          shortName: s.short_name || s.status_name.substring(0, 3).toUpperCase(),
+          code: s.status_code?.trim() || `STAT-${s.room_status_id}`,
+          bgColor: s.status_color || '#3b82f6',
+          textColor: s.text_color || '#ffffff',
+          isActive: s.is_active ?? true,
+          isSystemDefault: true,
+          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        }));
+        setRoomStatuses(loadedStatuses);
+        localStorage.setItem('stayos_room_statuses', JSON.stringify(loadedStatuses));
+      }
+
+      // 8. Fetch Users & Permissions for active client from PostgreSQL
+      const usrRes = await databaseApi.getUsers(clientId);
+      if (usrRes.data && Array.isArray(usrRes.data) && usrRes.data.length > 0) {
+        const loadedUsers: UserAccountItem[] = usrRes.data.map((u: any) => {
+          let roleType: RoleType = 'FrontOffice';
+          const rType = (u.role_type || '').toUpperCase();
+          const rName = (u.role_name || '').toLowerCase();
+          if (rType.includes('ADMIN') || rName.includes('administrator') || rName.includes('superadmin')) {
+            roleType = 'SuperAdmin';
+          } else if (rType.includes('FINANCE') || rName.includes('finance') || rName.includes('accounting')) {
+            roleType = 'Finance';
+          } else if (rType.includes('OPERATIONS') || rName.includes('housekeeping')) {
+            roleType = 'Operations';
+          } else if (rName.includes('manager')) {
+            roleType = 'Management';
+          }
+
+          const matchedRole = roles.find(
+            (r) =>
+              r.name.toLowerCase() === (u.role_name || '').toLowerCase() ||
+              r.id === `role-${u.role_id}` ||
+              r.id === String(u.role_id)
+          );
+
+          const initials =
+            u.initials ||
+            (u.user_name || 'User')
+              .split(' ')
+              .map((n: string) => n[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2);
+
+          return {
+            id: String(u.user_id),
+            name: u.user_name,
+            email: u.email || u.login_email || `${u.username || 'user'}@destininn.com`,
+            avatarUrl: u.avatar_url || undefined,
+            initials,
+            roleId: matchedRole ? matchedRole.id : `role-${u.role_id}`,
+            roleName: u.role_name || 'Staff Member',
+            roleType,
+            lastLogin: u.last_login_at
+              ? new Date(u.last_login_at).toLocaleString()
+              : 'Recent Session',
+            status: u.is_active ? 'active' : 'inactive',
+            phone: u.phone || '+1 (850) 555-0100',
+            department: u.department || 'Hotel Operations',
+            description: u.description || '',
+            createdAt: u.created_at
+              ? new Date(u.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: '2-digit',
+                  year: 'numeric',
+                })
+              : 'Jan 15, 2026',
+          };
+        });
+        setUsers(loadedUsers);
+        localStorage.setItem(`stayos_${clientId}_users`, JSON.stringify(loadedUsers));
+        localStorage.setItem('stayos_users', JSON.stringify(loadedUsers));
+
+        // Dynamically update role user counts based on actual database rows
+        setRoles((prev) =>
+          prev.map((r) => ({
+            ...r,
+            usersCount: loadedUsers.filter(
+              (u) => u.roleId === r.id || u.roleName.toLowerCase() === r.name.toLowerCase()
+            ).length,
+          }))
+        );
+      }
+
+      setIsDbConnected(true);
+    } catch (err: any) {
+      console.warn('[PostgreSQL DB Sync Warning]:', err);
+      setIsDbConnected(false);
+    } finally {
+      setIsDbSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    syncWithDatabase(currentPropertyId);
+  }, [currentPropertyId]);
+
   // Keyboard shortcut Cmd+K for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -845,6 +1317,11 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const navigate = (path: NavigationPath, entityId: string | null = null) => {
+    if (path === 'configuration') {
+      setActivePath('overview');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setActivePath(path);
     if (path === 'edit-building' || path === 'buildings') {
       setSelectedBuildingId(entityId);
@@ -868,13 +1345,26 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveGeneralSettingsTab('emails');
     } else if (path === 'general-settings-guest-mandatory-data') {
       setActiveGeneralSettingsTab('guest-mandatory-data');
+    } else if (path === 'rates-packages-types' || path === 'rate-types') {
+      setActiveRatesPackagesTab('rate-types');
+    } else if (path === 'rates-packages-packages' || path === 'packages') {
+      setActiveRatesPackagesTab('packages');
+    } else if (path === 'rates-packages') {
+      setActiveRatesPackagesTab('rate-types');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const login = (email: string, password?: string, targetPropertyId?: string) => {
+  const login = (email: string, password?: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    const foundUser = authUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+    const foundUser = authUsers.find((u) =>
+      u.email.toLowerCase() === cleanEmail ||
+      u.id.toLowerCase() === cleanEmail ||
+      u.name.toLowerCase() === cleanEmail ||
+      (cleanEmail.includes('destin') && u.email.includes('destin')) ||
+      (cleanEmail.includes('grandhotel') && u.email.includes('grandhotel')) ||
+      (cleanEmail.includes('grandazure') && u.email.includes('grandazure'))
+    );
 
     if (!foundUser) {
       return { success: false, message: 'The email address or password entered does not match our records.' };
@@ -891,29 +1381,26 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentUser(foundUser);
     localStorage.setItem('stayos_current_user', JSON.stringify(foundUser));
 
-    // If target property explicitly passed or user only has 1 property:
-    if (targetPropertyId) {
-      setCurrentPropertyId(targetPropertyId);
-      localStorage.setItem('stayos_current_prop_id', targetPropertyId);
-      setIsAuthenticated(true);
-      localStorage.setItem('stayos_is_authenticated', 'true');
-      const target = properties.find((p) => p.id === targetPropertyId);
-      addToast(`Welcome back, ${foundUser.name}! Initialized ${target?.identity.name || 'PMS'}.`, 'success');
-      return { success: true, requirePropertySelect: false, user: foundUser };
-    }
-
-    if (foundUser.accessiblePropertyIds.length > 1) {
-      // Prompt property selection screen
-      return { success: true, requirePropertySelect: true, user: foundUser };
-    }
-
-    const singlePropId = foundUser.accessiblePropertyIds[0] || foundUser.defaultPropertyId || 'prop-astoria';
+    // Every user credential maps strictly to ONE property
+    const singlePropId = foundUser.accessiblePropertyIds?.[0] || foundUser.defaultPropertyId || 'DIS_001';
     setCurrentPropertyId(singlePropId);
     localStorage.setItem('stayos_current_prop_id', singlePropId);
     setIsAuthenticated(true);
     localStorage.setItem('stayos_is_authenticated', 'true');
-    addToast(`Welcome back, ${foundUser.name}!`, 'success');
+    setCurrentPath('dashboard');
+    const target = properties.find((p) => p.id === singlePropId);
+    addToast(`Welcome back, ${foundUser.name}! Loaded ${target?.identity.name || 'PMS'}.`, 'success');
     return { success: true, requirePropertySelect: false, user: foundUser };
+  };
+
+  const switchUser = (user: AuthUser) => {
+    setCurrentUser(user);
+    localStorage.setItem('stayos_current_user', JSON.stringify(user));
+    const singlePropId = user.accessiblePropertyIds?.[0] || user.defaultPropertyId || 'DIS_001';
+    setCurrentPropertyId(singlePropId);
+    localStorage.setItem('stayos_current_prop_id', singlePropId);
+    const target = properties.find((p) => p.id === singlePropId);
+    addToast(`Switched active user to ${user.name} (${user.role}) - ${target?.identity.name || singlePropId}`, 'info');
   };
 
   const selectPropertyAndLogin = (propertyId: string) => {
@@ -963,6 +1450,20 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setProperties(updatedProperties);
     localStorage.setItem('stayos_properties', JSON.stringify(updatedProperties));
     setHasPropertyUnsavedChanges(false);
+
+    // Persist to PostgreSQL database
+    databaseApi
+      .updatePropertyMaster(propertyForm.id, {
+        property_name: propertyForm.identity.name,
+        city: propertyForm.location.city,
+        state: propertyForm.location.state,
+        address: propertyForm.location.address,
+        region: propertyForm.identity.region,
+        url: propertyForm.contact.websiteUrl,
+        latitude: propertyForm.location.latitude,
+        longitude: propertyForm.location.longitude,
+      })
+      .catch((err) => console.warn('Property Master DB update warning:', err));
 
     // Add audit log
     const newLog: AuditLog = {
@@ -1021,6 +1522,22 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setBuildings(updated);
     localStorage.setItem('stayos_buildings', JSON.stringify(updated));
 
+    // Persist directly to PostgreSQL database
+    databaseApi
+      .createBuilding(currentPropertyId, {
+        building_name: newBuilding.name,
+        description: newBuilding.description || undefined,
+      })
+      .then((res) => {
+        if (res.data?.building_id) {
+          const dbId = String(res.data.building_id);
+          setBuildings((prev) =>
+            prev.map((b) => (b.name === newBuilding.name ? { ...b, id: dbId } : b))
+          );
+        }
+      })
+      .catch((err) => console.warn('Building create DB warning:', err));
+
     // Audit log
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -1056,6 +1573,16 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setBuildings(updated);
     localStorage.setItem('stayos_buildings', JSON.stringify(updated));
 
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi
+        .updateBuilding(currentPropertyId, numericId, {
+          building_name: updates.name,
+          description: updates.description,
+        })
+        .catch((err) => console.warn('Building update DB warning:', err));
+    }
+
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
@@ -1083,6 +1610,13 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updated = buildings.filter((b) => b.id !== id);
     setBuildings(updated);
     localStorage.setItem('stayos_buildings', JSON.stringify(updated));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi
+        .deleteBuilding(currentPropertyId, numericId)
+        .catch((err) => console.warn('Building delete DB warning:', err));
+    }
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -1125,7 +1659,25 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newFloor, ...floors];
     setFloors(updated);
-    localStorage.setItem('stayos_floors', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_floors`, JSON.stringify(updated));
+
+    // Persist directly to PostgreSQL database
+    const bldIdNum = Number(data.buildingId) || 1;
+    databaseApi
+      .createFloor(currentPropertyId, {
+        building_id: bldIdNum,
+        floor_name: newFloor.name,
+        description: newFloor.description || undefined,
+      })
+      .then((res) => {
+        if (res.data?.floor_id) {
+          const dbId = String(res.data.floor_id);
+          setFloors((prev) =>
+            prev.map((f) => (f.name === newFloor.name ? { ...f, id: dbId } : f))
+          );
+        }
+      })
+      .catch((err) => console.warn('Floor create DB warning:', err));
 
     // Update building totalFloors count if applicable
     if (targetBuilding) {
@@ -1175,7 +1727,17 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     setFloors(updated);
-    localStorage.setItem('stayos_floors', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_floors`, JSON.stringify(updated));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi
+        .updateFloor(currentPropertyId, numericId, {
+          floor_name: updates.name,
+          description: updates.description,
+        })
+        .catch((err) => console.warn('Floor update DB warning:', err));
+    }
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -1208,7 +1770,14 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = floors.filter((f) => f.id !== id);
     setFloors(filtered);
-    localStorage.setItem('stayos_floors', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_floors`, JSON.stringify(filtered));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi
+        .deleteFloor(currentPropertyId, numericId)
+        .catch((err) => console.warn('Floor delete DB warning:', err));
+    }
 
     // Update building floors count
     const bld = buildings.find((b) => b.id === target.buildingId);
@@ -1294,6 +1863,31 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updated = [newRoomType, ...roomTypes];
     setRoomTypes(updated);
     localStorage.setItem('stayos_room_types', JSON.stringify(updated));
+
+    // Persist directly to PostgreSQL database
+    const bldIdNum = Number(data.buildingId) || 1;
+    const flrIdNum = Number(data.floorId) || 1;
+    databaseApi
+      .createRoomType(currentPropertyId, {
+        floor_id: flrIdNum,
+        building_id: bldIdNum,
+        short_name: data.shortName || data.code || 'STD',
+        room_type_name: data.name,
+        room_type_color: data.color || '#3b82f6',
+        description: data.description || undefined,
+        over_booking: data.overBookingLimit || 0,
+        allow_in_occupancy: data.allowInOccupancy ?? true,
+        is_crs: data.isCrs ?? false,
+      })
+      .then((res) => {
+        if (res.data?.room_type_id) {
+          const dbId = String(res.data.room_type_id);
+          setRoomTypes((prev) =>
+            prev.map((rt) => (rt.name === data.name ? { ...rt, id: dbId } : rt))
+          );
+        }
+      })
+      .catch((err) => console.warn('Room type create DB warning:', err));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -1807,6 +2401,109 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const closeDeleteRateTypeDialog = () => {
     setIsDeleteRateTypeDialogOpen(false);
     setDeleteTargetRateType(null);
+  };
+
+  // Packages CRUD & Drawers
+  const addPackage = (data: Omit<PackageItem, 'id' | 'createdAt' | 'updatedAt'>): boolean => {
+    const newPackage: PackageItem = {
+      ...data,
+      id: `pkg-${Date.now()}`,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+
+    const updated = [newPackage, ...packages];
+    setPackages(updated);
+    localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'CREATE',
+      module: 'Rates & Packages',
+      details: `Created package: ${newPackage.name} (${newPackage.code})`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Package "${newPackage.name}" created successfully`, 'success');
+    return true;
+  };
+
+  const updatePackage = (id: string, updates: Partial<PackageItem>): boolean => {
+    const updated = packages.map((pkg) =>
+      pkg.id === id
+        ? {
+            ...pkg,
+            ...updates,
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          }
+        : pkg
+    );
+    setPackages(updated);
+    localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
+
+    const target = packages.find((p) => p.id === id);
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'UPDATE',
+      module: 'Rates & Packages',
+      details: `Updated package: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Package updated successfully`, 'success');
+    return true;
+  };
+
+  const deletePackage = (id: string): boolean => {
+    const target = packages.find((pkg) => pkg.id === id);
+    const updated = packages.filter((pkg) => pkg.id !== id);
+    setPackages(updated);
+    localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
+
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString(),
+      user: 'Property Admin',
+      action: 'DELETE',
+      module: 'Rates & Packages',
+      details: `Deleted package: ${target?.name || id}`,
+      ipAddress: '192.168.1.100',
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+
+    addToast(`Package "${target?.name || 'Item'}" deleted`, 'info');
+    return true;
+  };
+
+  const openAddPackageDrawer = () => {
+    setDrawerPackage(null);
+    setIsPackageDrawerOpen(true);
+  };
+
+  const openEditPackageDrawer = (pkg: PackageItem) => {
+    setDrawerPackage(pkg);
+    setIsPackageDrawerOpen(true);
+  };
+
+  const closePackageDrawer = () => {
+    setIsPackageDrawerOpen(false);
+    setDrawerPackage(null);
+  };
+
+  const openDeletePackageDialog = (pkg: PackageItem) => {
+    setDeleteTargetPackage(pkg);
+    setIsDeletePackageDialogOpen(true);
+  };
+
+  const closeDeletePackageDialog = () => {
+    setIsDeletePackageDialogOpen(false);
+    setDeleteTargetPackage(null);
   };
 
   // Policies CRUD & Actions
@@ -3065,6 +3762,30 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       prev.map((r) => (r.id === data.roleId ? { ...r, usersCount: (r.usersCount || 0) + 1 } : r))
     );
 
+    // Persist directly to PostgreSQL database
+    const targetRoleId = Number(data.roleId?.replace('role-', '')) || undefined;
+    databaseApi
+      .createUser(currentPropertyId, {
+        user_name: data.name,
+        email: data.email,
+        phone: data.phone,
+        department: data.department,
+        role_id: targetRoleId,
+        role_name: data.roleName,
+        is_active: data.status === 'active',
+        avatar_url: data.avatarUrl,
+        initials: data.initials,
+      })
+      .then((res) => {
+        if (res.data?.user_id) {
+          const dbId = String(res.data.user_id);
+          setUsers((prev) =>
+            prev.map((u) => (u.email.toLowerCase() === data.email.toLowerCase() ? { ...u, id: dbId } : u))
+          );
+        }
+      })
+      .catch((err) => console.warn('User create DB warning:', err));
+
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString(),
@@ -3101,6 +3822,25 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setUsers(updated);
     localStorage.setItem('stayos_users', JSON.stringify(updated));
 
+    // Persist directly to PostgreSQL database
+    const numericUserId = parseInt(id.replace('usr-', ''), 10);
+    if (!isNaN(numericUserId)) {
+      const targetRoleId = updates.roleId ? Number(updates.roleId.replace('role-', '')) : undefined;
+      databaseApi
+        .updateUser(currentPropertyId, numericUserId, {
+          user_name: updates.name,
+          email: updates.email,
+          phone: updates.phone,
+          department: updates.department,
+          role_id: targetRoleId,
+          role_name: updates.roleName,
+          is_active: updates.status !== undefined ? updates.status === 'active' : undefined,
+          avatar_url: updates.avatarUrl,
+          initials: updates.initials,
+        })
+        .catch((err) => console.warn('User update DB warning:', err));
+    }
+
     // If role changed, adjust usersCount on roles
     if (newRoleId && newRoleId !== oldRoleId) {
       setRoles((prev) =>
@@ -3135,6 +3875,14 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setUsers(filtered);
     localStorage.setItem('stayos_users', JSON.stringify(filtered));
 
+    // Persist directly to PostgreSQL database
+    const numericUserId = parseInt(id.replace('usr-', ''), 10);
+    if (!isNaN(numericUserId)) {
+      databaseApi
+        .deleteUser(currentPropertyId, numericUserId)
+        .catch((err) => console.warn('User delete DB warning:', err));
+    }
+
     // Decrement role usersCount
     setRoles((prev) =>
       prev.map((r) => (r.id === target.roleId ? { ...r, usersCount: Math.max(0, (r.usersCount || 1) - 1) } : r))
@@ -3160,6 +3908,12 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!target) return;
     const nextStatus = target.status === 'active' ? 'inactive' : 'active';
     updateUser(id, { status: nextStatus });
+    const numericUserId = parseInt(id.replace('usr-', ''), 10);
+    if (!isNaN(numericUserId)) {
+      databaseApi
+        .toggleUserStatus(currentPropertyId, numericUserId, nextStatus === 'active')
+        .catch((err) => console.warn('User toggle status DB warning:', err));
+    }
   };
 
   const openInviteUserModal = (user?: UserAccountItem) => {
@@ -3381,6 +4135,34 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setRooms(updated);
     localStorage.setItem('stayos_rooms', JSON.stringify(updated));
 
+    // Persist directly to PostgreSQL database
+    const bldIdNum = Number(data.buildingId) || 1;
+    const flrIdNum = Number(data.floorId) || 1;
+    const rtIdNum = Number(data.roomTypeId) || 1;
+    databaseApi
+      .createRoom(currentPropertyId, {
+        room_type_id: rtIdNum,
+        floor_id: flrIdNum,
+        building_id: bldIdNum,
+        room_name: newRoom.name,
+        short_name: newRoom.shortName || newRoom.name,
+        is_hourly_rental: newRoom.isHourlyRental ?? false,
+        is_smoking: newRoom.isSmoking ?? false,
+        is_handicap: newRoom.isHandicapAccessible ?? false,
+        is_pet_allowed: newRoom.isPetAllowed ?? false,
+        include_in_occupancy_adr: newRoom.includeInOccupancyAdr ?? true,
+        is_crs_inventory: newRoom.isCrsInventory ?? false,
+      })
+      .then((res) => {
+        if (res.data?.room_id) {
+          const dbId = String(res.data.room_id);
+          setRooms((prev) =>
+            prev.map((r) => (r.name === newRoom.name ? { ...r, id: dbId } : r))
+          );
+        }
+      })
+      .catch((err) => console.warn('Room create DB warning:', err));
+
     // Also update room type total units
     const rt = roomTypes.find((t) => t.id === data.roomTypeId);
     if (rt) {
@@ -3581,11 +4363,15 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <PropertyContext.Provider
       value={{
+        isDbConnected,
+        isDbSyncing,
+        syncWithDatabase,
         isAuthenticated,
         currentUser,
         authUsers,
         login,
         logout,
+        switchUser,
         selectPropertyAndLogin,
         isMultiPropertyModalOpen,
         setMultiPropertyModalOpen,
@@ -3698,6 +4484,21 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteTargetRateType,
         openDeleteRateTypeDialog,
         closeDeleteRateTypeDialog,
+        packages,
+        addPackage,
+        updatePackage,
+        deletePackage,
+        isPackageDrawerOpen,
+        drawerPackage,
+        openAddPackageDrawer,
+        openEditPackageDrawer,
+        closePackageDrawer,
+        isDeletePackageDialogOpen,
+        deleteTargetPackage,
+        openDeletePackageDialog,
+        closeDeletePackageDialog,
+        activeRatesPackagesTab,
+        setActiveRatesPackagesTab,
         policies,
         editingPolicyId,
         setEditingPolicyId,
@@ -3910,6 +4711,27 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateGuestMandatoryField,
         resetGeneralSettingsSection,
         saveGeneralSettings,
+        tenantSubscription:
+          currentProperty?.subscription ||
+          TENANT_SUBSCRIPTIONS[currentPropertyId] || {
+            plan: 'Pro',
+            status: 'active',
+            billingCycle: 'monthly',
+            maxRooms: 150,
+            currentRoomCount: rooms.length,
+            features: ['core_pms', 'rate_management', 'taxes_and_folios', 'housekeeping', 'guest_profiles'],
+            renewalDate: '2026-12-31',
+          },
+        tenantCapMetrics:
+          currentProperty?.capModel ||
+          TENANT_CAP_SPECS[currentPropertyId] || {
+            theoremModel: 'CP',
+            isolationLevel: 'database_and_storage_partition',
+            tenantWorkspaceId: currentPropertyId,
+            isDataPartitioned: true,
+            activeNode: 'us-east-cluster-01',
+          },
+        isTenantIsolated: true,
       }}
     >
       {children}

@@ -355,10 +355,10 @@ export const RoomTypesListView: React.FC = () => {
           </div>
         ) : (
           /* Table View */
-          <div className="bg-white rounded-xl border border-[#e0e3e5] overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
+          <div className="bg-white rounded-xl border border-[#e0e3e5] overflow-hidden shadow-xs flex flex-col">
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[300px]">
               <table className="w-full text-left border-collapse whitespace-nowrap">
-                <thead className="bg-[#f2f4f6] text-[12px] font-semibold uppercase tracking-wider text-[#45464d] border-b border-[#e0e3e5]">
+                <thead className="bg-[#f2f4f6] sticky top-0 z-10 shadow-xs text-[12px] font-semibold uppercase tracking-wider text-[#45464d] border-b border-[#e0e3e5]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Room Type</th>
                     <th className="px-4 py-3 font-semibold">Code</th>

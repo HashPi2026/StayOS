@@ -35,12 +35,32 @@ export interface PropertyMetadata {
   starRating?: number;
 }
 
+export interface TenantSubscription {
+  plan: 'Free' | 'Basic' | 'Pro' | 'Enterprise';
+  status: 'active' | 'trial' | 'past_due' | 'suspended';
+  billingCycle: 'monthly' | 'annually';
+  maxRooms: number;
+  features: string[];
+  currentRoomCount: number;
+  renewalDate: string;
+}
+
+export interface TenantCapMetrics {
+  theoremModel: 'CP' | 'CA'; // Hotel PMS CP model: Consistency (no double-booking) + Partition Tolerance (tenant isolation)
+  isolationLevel: 'database_and_storage_partition';
+  tenantWorkspaceId: string;
+  isDataPartitioned: boolean;
+  activeNode: string;
+}
+
 export interface PropertyData {
   id: string;
   identity: PropertyIdentity;
   location: PropertyLocation;
   contact: PropertyContact;
   meta?: PropertyMetadata;
+  subscription?: TenantSubscription;
+  capModel?: TenantCapMetrics;
 }
 
 export interface Amenity {

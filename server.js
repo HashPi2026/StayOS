@@ -4,6 +4,9 @@ import { createServer as createViteServer } from 'vite';
 import { testConnection } from './db/pool.js';
 import { runMigrations } from './db/migrate.js';
 import { configurationRouter } from './modules/configuration/index.js';
+import { rateAvailabilityRouter } from './modules/rate_availability/index.js';
+import { shellRouter } from './modules/shell/index.js';
+import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { sendSuccess } from './utils/response.js';
 async function startServer() {
@@ -58,9 +61,19 @@ async function startServer() {
         }
     });
     // ==================== API ROUTING ====================
-    // Mount StayOS Configuration REST Modules
-    app.use('/api/v1/configuration', configurationRouter);
-    app.use('/api/configuration', configurationRouter); // Version-agnostic fallback
+    // Shell & Auth Endpoints (v1 & version-agnostic)
+    app.use('/api/v1', shellRouter);
+    app.use('/api', shellRouter);
+
+    // Mount StayOS Configuration REST Modules (guarded by role access)
+    app.use('/api/v1/configuration', requireModuleAccess('configuration'), configurationRouter);
+    app.use('/api/configuration', requireModuleAccess('configuration'), configurationRouter); // Version-agnostic fallback
+
+    // Mount StayOS Rate & Availability REST Modules
+    app.use('/api/v1/rate-availability', rateAvailabilityRouter);
+    app.use('/api/rate-availability', rateAvailabilityRouter);
+    app.use('/api/v1/rate', rateAvailabilityRouter);
+    app.use('/api/rate', rateAvailabilityRouter);
     // ==================== STATIC / VITE MIDDLEWARE ====================
     if (process.env.NODE_ENV !== 'production') {
         const isHmrDisabled = process.env.DISABLE_HMR === 'true';

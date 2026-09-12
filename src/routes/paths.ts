@@ -34,4 +34,9 @@ export const ROUTES = {
   GUEST_MANDATORY_DATA: 'guest-mandatory-data' as NavigationPath,
   DEVICE_CONFIGURATION: 'device-configuration' as NavigationPath,
   CRS_TAX_EXEMPT: 'crs-tax-exempt' as NavigationPath,
+  RATE_AVAILABILITY: 'rate-availability' as NavigationPath,
+  RATE_AVAILABILITY_FLASH: 'rate-availability-flash' as NavigationPath,
+  RATE_AVAILABILITY_FORECASTING: 'rate-availability-forecasting' as NavigationPath,
+  RATE_AVAILABILITY_RATE: 'rate-availability-rate' as NavigationPath,
+  RATE_AVAILABILITY_RESTRICTION: 'rate-availability-restriction' as NavigationPath,
 } as const;

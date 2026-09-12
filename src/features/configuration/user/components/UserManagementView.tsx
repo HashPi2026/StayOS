@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProperty } from '@/src/context/PropertyContext';
 import { UserAccountItem, RoleType } from '@/src/types';
 import { RolesPrivilegesView } from '@/src/features/configuration/roles-privileges';
@@ -16,7 +16,18 @@ export const UserManagementView: React.FC = () => {
     openEditRoleDrawer,
     navigate,
     addToast,
+    isDbConnected,
+    isDbSyncing,
+    currentProperty,
+    syncWithDatabase,
   } = useProperty();
+
+  useEffect(() => {
+    // Automatically trigger database synchronization on mount to ensure full parity with PostgreSQL
+    if (syncWithDatabase) {
+      syncWithDatabase();
+    }
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'security'>('users');
   const [searchTerm, setSearchTerm] = useState('');
@@ -134,9 +145,23 @@ export const UserManagementView: React.FC = () => {
             <span>/</span>
             <span className="text-[#0058be]">User Management & Permissions</span>
           </div>
-          <h1 className="text-title-lg font-bold text-[#191c1e] tracking-tight">
-            Users & Permissions
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-title-lg font-bold text-[#191c1e] tracking-tight">
+              Users & Permissions
+            </h1>
+            {isDbConnected && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                PostgreSQL Synced ({users.length} Users)
+              </span>
+            )}
+            {isDbSyncing && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
+                Syncing with Database...
+              </span>
+            )}
+          </div>
           <p className="text-body-sm text-[#75859d] mt-0.5">
             Manage staff accounts, assign granular role-based permissions, and audit system access.
           </p>
@@ -145,6 +170,21 @@ export const UserManagementView: React.FC = () => {
         <div className="flex items-center gap-3">
           {activeTab === 'users' && (
             <div className="flex items-center gap-2">
+              <button
+                id="sync-users-db-btn"
+                onClick={() => {
+                  syncWithDatabase();
+                  addToast?.('Syncing users with PostgreSQL database...', 'info');
+                }}
+                disabled={isDbSyncing}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-body-sm font-medium rounded-lg transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                title="Synchronize user list directly with PostgreSQL database"
+              >
+                <span className={`material-symbols-outlined text-[18px] text-[#0058be] ${isDbSyncing ? 'animate-spin' : ''}`}>
+                  sync
+                </span>
+                <span>{isDbSyncing ? 'Syncing...' : 'Sync DB'}</span>
+              </button>
               <button
                 id="invite-user-modal-btn"
                 onClick={() => openInviteUserModal()}
@@ -545,9 +585,17 @@ export const UserManagementView: React.FC = () => {
 
             {/* Table Footer */}
             <div className="px-6 py-4 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-between text-body-xs text-[#75859d]">
-              <div>
-                Showing <span className="font-semibold text-[#191c1e]">{filteredUsers.length}</span> of{' '}
-                <span className="font-semibold text-[#191c1e]">{users.length}</span> team members
+              <div className="flex items-center gap-3">
+                <span>
+                  Showing <span className="font-semibold text-[#191c1e]">{filteredUsers.length}</span> of{' '}
+                  <span className="font-semibold text-[#191c1e]">{users.length}</span> team members
+                </span>
+                {isDbConnected && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Database Source: app_user &amp; user_login_credential
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span>Page 1 of 1</span>

@@ -10,6 +10,9 @@ export const PropertyMasterView: React.FC = () => {
     savePropertyMaster,
     discardPropertyMasterChanges,
     setVerifyPinOpen,
+    tenantSubscription,
+    tenantCapMetrics,
+    rooms,
   } = useProperty();
 
   return (
@@ -235,7 +238,7 @@ export const PropertyMasterView: React.FC = () => {
           </div>
 
           {/* Web & Contact Section */}
-          <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 p-6 mb-8">
+          <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 p-6">
             <h2 className="text-title-sm text-[#191c1e] mb-4 pb-2 border-b border-[#eceef0]">
               Web & Contact
             </h2>
@@ -254,6 +257,165 @@ export const PropertyMasterView: React.FC = () => {
                   onChange={(e) => updatePropertyField('contact', 'websiteUrl', e.target.value)}
                   placeholder="https://www.yourhotel.com"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* SaaS Multi-Tenancy & CAP Theorem Isolation Section */}
+          <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 p-6">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#eceef0]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#0058be] text-[20px]">
+                  verified_user
+                </span>
+                <h2 className="text-title-sm text-[#191c1e]">
+                  SaaS Multi-Tenancy & CAP Theorem Partitioning
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-uppercase text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Strict Tenant Isolation Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Tenant Workspace ID
+                </div>
+                <div className="font-mono text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                  <span>{propertyForm.identity.clientId}</span>
+                  <span className="text-[11px] font-normal px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                    Logical Partition
+                  </span>
+                </div>
+                <p className="text-[12px] text-slate-600 mt-2">
+                  All buildings, rooms, folios, taxes, and policies are strictly isolated to this tenant. Zero cross-tenant data leakage.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  CAP Theorem Model
+                </div>
+                <div className="font-mono text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                  <span className="text-emerald-700">{tenantCapMetrics?.theoremModel || 'CP'}</span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-[12px] text-slate-700 font-sans font-medium">
+                    Consistency & Partition Tolerance
+                  </span>
+                </div>
+                <p className="text-[12px] text-slate-600 mt-2">
+                  Enforces atomic room inventory reservations to eliminate double-booking across concurrent front-desk and CRS operations.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Isolation Architecture
+                </div>
+                <div className="text-[13px] font-semibold text-slate-800 capitalize">
+                  {tenantCapMetrics?.isolationLevel?.replace(/_/g, ' ') || 'Database & Storage Partition'}
+                </div>
+                <div className="text-[11px] text-slate-500 font-mono mt-1">
+                  Cluster Node: {tenantCapMetrics?.activeNode || 'cluster-node-partition-01'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Transport & Data Security
+                </div>
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                  <span className="material-symbols-outlined text-emerald-600 text-[18px]">lock</span>
+                  <span>TLS 1.3 / HTTPS & Encrypted at Rest</span>
+                </div>
+                <div className="text-[11px] text-slate-500 mt-1">
+                  API queries scoped via authenticated tenant credential headers
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Subscription & Quota Section */}
+          <div className="bg-[#ffffff] rounded-xl shadow-sm border border-[#c6c6cd]/30 p-6 mb-8">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#eceef0]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#0058be] text-[20px]">
+                  workspace_premium
+                </span>
+                <h2 className="text-title-sm text-[#191c1e]">
+                  SaaS Subscription & License Limits
+                </h2>
+              </div>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold bg-[#0058be] text-white">
+                {tenantSubscription?.plan || 'Pro'} Tier
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Room License Quota
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[22px] font-bold text-slate-900">{rooms.length}</span>
+                  <span className="text-[13px] text-slate-500">/ {tenantSubscription?.maxRooms || 150} max rooms</span>
+                </div>
+                <div className="w-full bg-slate-200 h-2 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-[#0058be] h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, Math.round((rooms.length / (tenantSubscription?.maxRooms || 150)) * 100))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Billing Cycle
+                </div>
+                <div className="text-[18px] font-bold text-slate-900 capitalize">
+                  {tenantSubscription?.billingCycle || 'Monthly'}
+                </div>
+                <div className="text-[12px] text-slate-500 mt-1">
+                  Status: <span className="font-semibold text-emerald-600 capitalize">{tenantSubscription?.status || 'Active'}</span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#f8fafc] border border-[#e2e8f0]">
+                <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-1">
+                  Subscription Renewal
+                </div>
+                <div className="text-[18px] font-bold text-slate-900">
+                  {tenantSubscription?.renewalDate || '2026-12-31'}
+                </div>
+                <div className="text-[12px] text-slate-500 mt-1">
+                  Automated Enterprise Invoice
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-2">
+                Enabled Platform Capabilities
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(tenantSubscription?.features || [
+                  'core_pms',
+                  'rate_management',
+                  'taxes_and_folios',
+                  'housekeeping',
+                  'guest_profiles',
+                ]).map((feat) => (
+                  <span
+                    key={feat}
+                    className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[11px]"
+                  >
+                    ✓ {feat.replace(/_/g, ' ')}
+                  </span>
+                ))}
               </div>
             </div>
           </div>

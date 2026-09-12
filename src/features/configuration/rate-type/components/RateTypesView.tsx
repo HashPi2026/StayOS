@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useProperty } from '@/src/context/PropertyContext';
 import { RateTypeItem } from '@/src/types';
+import { PackagesTab } from './PackagesTab';
 
 export const RateTypesView: React.FC = () => {
   const {
@@ -17,6 +18,10 @@ export const RateTypesView: React.FC = () => {
     deleteTargetRateType,
     openDeleteRateTypeDialog,
     closeDeleteRateTypeDialog,
+    packages,
+    openAddPackageDrawer,
+    activeRatesPackagesTab,
+    setActiveRatesPackagesTab,
     navigate,
     addToast,
   } = useProperty();
@@ -81,23 +86,24 @@ export const RateTypesView: React.FC = () => {
   // Filtered List
   const filteredRateTypes = useMemo(() => {
     return rateTypes.filter((rt) => {
-      const matchesSearch =
-        rt.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rt.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rt.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const name = (rt.name || '').toLowerCase();
+      const shortName = (rt.shortName || (rt as any).rateCode || '').toLowerCase();
+      const desc = (rt.description || '').toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || name.includes(q) || shortName.includes(q) || desc.includes(q);
 
       const matchesHourly =
         filterHourly === 'all'
           ? true
           : filterHourly === 'hourly'
-          ? rt.isHourly
+          ? Boolean(rt.isHourly)
           : !rt.isHourly;
 
       const matchesCrs =
         filterCrs === 'all'
           ? true
           : filterCrs === 'enabled'
-          ? rt.isCrsEnabled
+          ? Boolean(rt.isCrsEnabled)
           : !rt.isCrsEnabled;
 
       return matchesSearch && matchesHourly && matchesCrs;
@@ -179,37 +185,102 @@ export const RateTypesView: React.FC = () => {
             </span>
             <span className="material-symbols-outlined text-[14px]">chevron_right</span>
             <span
-              onClick={() => navigate('rates-packages')}
+              onClick={() => {
+                setActiveRatesPackagesTab('rate-types');
+                navigate('rates-packages');
+              }}
               className="hover:text-[#000000] cursor-pointer transition-colors"
             >
               Rates & Packages
             </span>
             <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-            <span className="text-[#000000] font-bold">Rate Types</span>
+            <span className="text-[#000000] font-bold">
+              {activeRatesPackagesTab === 'packages' ? 'Packages' : 'Rate Types'}
+            </span>
           </nav>
           <div>
             <h1 className="text-[28px] font-bold text-[#191c1e] m-0 tracking-tight leading-tight">
-              Rate Types
+              Rates & Packages
             </h1>
             <p className="text-[14px] text-[#45464d] mt-1 max-w-2xl">
-              Manage standard and derived rate types used across the property. Configure pricing
-              structures, binding rules, and CRS synchronization.
+              Configure room rate codes, tiered pricing schemes, bundled inclusions, and seasonal stay packages.
             </p>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              id="tab-rate-types-btn"
+              onClick={() => setActiveRatesPackagesTab('rate-types')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-all cursor-pointer ${
+                activeRatesPackagesTab === 'rate-types'
+                  ? 'bg-[#000000] text-white shadow-xs'
+                  : 'bg-[#f2f4f6] text-[#45464d] hover:bg-[#e6e8ea] hover:text-[#191c1e]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[17px]">sell</span>
+              <span>Rate Types</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+                  activeRatesPackagesTab === 'rate-types'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#e0e3e5] text-[#45464d]'
+                }`}
+              >
+                {rateTypes.length}
+              </span>
+            </button>
+
+            <button
+              id="tab-packages-btn"
+              onClick={() => setActiveRatesPackagesTab('packages')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-all cursor-pointer ${
+                activeRatesPackagesTab === 'packages'
+                  ? 'bg-[#000000] text-white shadow-xs'
+                  : 'bg-[#f2f4f6] text-[#45464d] hover:bg-[#e6e8ea] hover:text-[#191c1e]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[17px]">inventory_2</span>
+              <span>Packages</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+                  activeRatesPackagesTab === 'packages'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#e0e3e5] text-[#45464d]'
+                }`}
+              >
+                {packages.length}
+              </span>
+            </button>
           </div>
         </div>
 
         <div className="mt-4 md:mt-0 relative z-10">
-          <button
-            id="open-drawer-btn"
-            onClick={openAddRateTypeDrawer}
-            className="relative flex items-center gap-2 bg-[#000000] text-white px-4 py-2.5 rounded-lg text-[13px] font-semibold tracking-wide shadow-md hover:bg-[#2d3133] active:scale-[0.98] transition-all group overflow-hidden cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[19px] transition-transform group-hover:rotate-90">
-              add
-            </span>
-            <span>Add Rate Type</span>
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none rounded-lg" />
-          </button>
+          {activeRatesPackagesTab === 'rate-types' ? (
+            <button
+              id="open-drawer-btn"
+              onClick={openAddRateTypeDrawer}
+              className="relative flex items-center gap-2 bg-[#000000] text-white px-4 py-2.5 rounded-lg text-[13px] font-semibold tracking-wide shadow-md hover:bg-[#2d3133] active:scale-[0.98] transition-all group overflow-hidden cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[19px] transition-transform group-hover:rotate-90">
+                add
+              </span>
+              <span>Add Rate Type</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none rounded-lg" />
+            </button>
+          ) : (
+            <button
+              id="open-package-drawer-btn"
+              onClick={openAddPackageDrawer}
+              className="relative flex items-center gap-2 bg-[#000000] text-white px-4 py-2.5 rounded-lg text-[13px] font-semibold tracking-wide shadow-md hover:bg-[#2d3133] active:scale-[0.98] transition-all group overflow-hidden cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[19px] transition-transform group-hover:rotate-90">
+                add
+              </span>
+              <span>Add Package</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none rounded-lg" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -218,7 +289,11 @@ export const RateTypesView: React.FC = () => {
         <div className="absolute -right-32 top-10 w-96 h-96 bg-[#2170e4]/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="bg-white rounded-xl shadow-xs border border-[#e0e3e5] flex flex-col flex-1 overflow-hidden relative z-10">
-          {/* Table Controls */}
+          {activeRatesPackagesTab === 'packages' ? (
+            <PackagesTab />
+          ) : (
+            <>
+              {/* Table Controls */}
           <div className="p-4 bg-white flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-[#e0e3e5] z-20">
             <div className="relative flex items-center w-full sm:w-72">
               <span className="material-symbols-outlined absolute left-3 text-[#75859d] text-[20px]">
@@ -624,6 +699,8 @@ export const RateTypesView: React.FC = () => {
               </button>
             </div>
           </div>
+            </>
+          )}
         </div>
       </div>
 

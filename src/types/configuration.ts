@@ -9,6 +9,34 @@ export interface RateTypeItem {
   isHourly: boolean;
   isCrsTaxInclusive: boolean;
   isCrsEnabled: boolean;
+  rateCode?: string;
+  baseAmount?: number;
+  currency?: string;
+  status?: string;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type PackageType = 'meal' | 'leisure' | 'wellness' | 'business' | 'seasonal' | 'all-inclusive';
+
+export interface PackageItem {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  rateTypeId?: string;
+  rateTypeName?: string;
+  packageType: PackageType;
+  inclusions: string[];
+  basePrice: number;
+  extraAdultPrice: number;
+  extraChildPrice: number;
+  validFrom?: string;
+  validTo?: string;
+  minStayNights: number;
+  isActive: boolean;
+  isCrsEnabled: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

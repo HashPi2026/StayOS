@@ -7,6 +7,7 @@ import { roomTypeRouter } from './room_type/room_type.routes';
 import { roomRouter } from './room/room.routes';
 import { roomStatusRouter } from './room_status/room_status.routes';
 import { taxRouter } from './tax/tax.routes';
+import { userRouter } from './user/user.routes';
 
 export const configurationRouter = Router();
 
@@ -40,3 +41,7 @@ configurationRouter.use('/room_status', roomStatusRouter);
 // 7. Tax & Tax Configuration (Pattern B - Parent/Child with Active Date Range Overlap Check)
 configurationRouter.use('/taxes', taxRouter);
 configurationRouter.use('/tax', taxRouter);
+
+// 8. User Management (Pattern B - App Users & Roles)
+configurationRouter.use('/users', userRouter);
+configurationRouter.use('/user', userRouter);
