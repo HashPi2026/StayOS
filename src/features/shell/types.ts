@@ -87,6 +87,51 @@ export const RATE_AVAILABILITY_SUBMENUS: PmsSubMenuItem[] = [
   },
 ];
 
+export const GUEST_SUBMENUS: PmsSubMenuItem[] = [
+  {
+    key: 'guest-database',
+    path: 'guest-database',
+    displayName: 'Guest Database',
+    materialIcon: 'badge',
+    description: 'Master individual guest profiles, identity documents, stay statistics, multi-channel contacts, and DNR safeguards.',
+    badge: 'Profiles',
+    plannedFeatures: [
+      'Master Guest Profiles & In-House Tracking',
+      'Multi-Channel Contact Dispatch & Folio Routing',
+      'Passport & Biometric Document Verification',
+      'Do Not Rent (DNR) Risk & Security Enforcement',
+    ],
+  },
+  {
+    key: 'contacts',
+    path: 'contacts',
+    displayName: 'Contacts',
+    materialIcon: 'corporate_fare',
+    description: 'B2B commercial directory, corporate accounts, travel management agencies, suppliers, and category credit terms.',
+    badge: 'Commercial',
+    plannedFeatures: [
+      'Commercial Accounts & Legal Entity Records',
+      'Category Credit Ceilings & Payment Terms',
+      'Direct Billing to City Ledger Invoicing',
+      'Corporate Contract Rates & Negotiated Tariffs',
+    ],
+  },
+  {
+    key: 'lost-and-found',
+    path: 'lost-and-found',
+    displayName: 'Lost and Found',
+    materialIcon: 'inventory_2',
+    description: 'Property custody ledger, recovered guest belongings, high-security vault safekeeping, and statutory disposition logs.',
+    badge: 'Custody',
+    plannedFeatures: [
+      'Chain of Custody Safekeeping Ledger',
+      'High-Security Vault Storage Allocation',
+      'Guest Restitution & Verification Workflow',
+      'Statutory Disposition & Donation Clearing',
+    ],
+  },
+];
+
 export const PMS_MODULES_CONFIG: Record<string, {
   materialIcon: string;
   description: string;

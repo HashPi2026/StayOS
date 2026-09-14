@@ -31,25 +31,19 @@ export class FlashRepository {
    * Update Flash view settings for a client.
    */
   async updateSettings(clientId, data) {
+    // Ensure row exists first
+    await this.getSettings(clientId);
+
     const text = `
-      INSERT INTO flash_view_settings (
-        client_id,
-        show_tooltip,
-        show_rate,
-        show_occupancy,
-        show_crs_inventory,
-        show_v_maint_room,
-        show_chart
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (client_id) DO UPDATE
+      UPDATE flash_view_settings
       SET
-        show_tooltip = COALESCE(EXCLUDED.show_tooltip, flash_view_settings.show_tooltip),
-        show_rate = COALESCE(EXCLUDED.show_rate, flash_view_settings.show_rate),
-        show_occupancy = COALESCE(EXCLUDED.show_occupancy, flash_view_settings.show_occupancy),
-        show_crs_inventory = COALESCE(EXCLUDED.show_crs_inventory, flash_view_settings.show_crs_inventory),
-        show_v_maint_room = COALESCE(EXCLUDED.show_v_maint_room, flash_view_settings.show_v_maint_room),
-        show_chart = COALESCE(EXCLUDED.show_chart, flash_view_settings.show_chart)
+        show_tooltip = CASE WHEN $2::BOOLEAN IS NOT NULL THEN $2::BOOLEAN ELSE show_tooltip END,
+        show_rate = CASE WHEN $3::BOOLEAN IS NOT NULL THEN $3::BOOLEAN ELSE show_rate END,
+        show_occupancy = CASE WHEN $4::BOOLEAN IS NOT NULL THEN $4::BOOLEAN ELSE show_occupancy END,
+        show_crs_inventory = CASE WHEN $5::BOOLEAN IS NOT NULL THEN $5::BOOLEAN ELSE show_crs_inventory END,
+        show_v_maint_room = CASE WHEN $6::BOOLEAN IS NOT NULL THEN $6::BOOLEAN ELSE show_v_maint_room END,
+        show_chart = CASE WHEN $7::BOOLEAN IS NOT NULL THEN $7::BOOLEAN ELSE show_chart END
+      WHERE client_id = $1
       RETURNING
         flash_view_setting_id,
         client_id,

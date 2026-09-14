@@ -13,8 +13,8 @@ export const Login: React.FC = () => {
   const { login, properties } = useProperty();
 
   // Form State
-  const [email, setEmail] = useState('marcus.vance@grandmetropole.com');
-  const [password, setPassword] = useState('StayOS2026!Secure');
+  const [email, setEmail] = useState('jaymistry1804@gmail.com');
+  const [password, setPassword] = useState('Destin@2026!');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,9 +68,8 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     setAlert(null);
 
-    // Simulate enterprise auth handshake
-    setTimeout(() => {
-      const result = login(email, password);
+    try {
+      const result = await login(email, password);
       setIsLoading(false);
 
       if (!result.success) {
@@ -79,7 +78,13 @@ export const Login: React.FC = () => {
           message: result.message || 'Authentication failed. Please check your credentials.',
         });
       }
-    }, 450);
+    } catch (err: any) {
+      setIsLoading(false);
+      setAlert({
+        type: 'error',
+        message: err?.message || 'Authentication failed. Please check your credentials.',
+      });
+    }
   };
 
   // Google SSO handler

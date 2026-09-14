@@ -14,7 +14,9 @@ interface FlashScreenProps {
 }
 
 export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
-  const { currentProperty, properties, switchProperty } = useProperty();
+  const { currentProperty, properties, switchProperty, roomTypes, rooms, currentPropertyId } = useProperty();
+  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const currencySymbol = currentProperty?.meta?.currencySymbol || (isSurat ? '₹' : '$');
 
   // Active hotel selector dropdown state
   const [isPropMenuOpen, setIsPropMenuOpen] = useState(false);
@@ -74,61 +76,151 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
   // User custom CRS overrides: roomCode -> isoDate -> number
   const [userCrs, setUserCrs] = useState<Record<string, Record<string, number>>>({});
 
-  // Room definitions
-  const categories = [
-    {
-      code: 'DLXK',
-      name: 'Deluxe King (DLXK)',
-      keys: 42,
-      subtitle: 'Max Occ: 2 Ad + 1 Ch',
-      baseRateWeekday: 285,
-      baseRatePeak: 385,
-      baseAvailWeekday: 38,
-      baseAvailPeak: 19,
-      baseCrsWeekday: 15,
-      baseCrsPeak: 6,
-      maint: 1,
-    },
-    {
-      code: 'EXSU',
-      name: 'Executive Suite (EXSU)',
-      keys: 18,
-      subtitle: 'Max Occ: 3 Ad',
-      baseRateWeekday: 420,
-      baseRatePeak: 550,
-      baseAvailWeekday: 15,
-      baseAvailPeak: 6,
-      baseCrsWeekday: 6,
-      baseCrsPeak: 2,
-      maint: 1,
-    },
-    {
-      code: 'PROV',
-      name: 'Premier Ocean View (PROV)',
-      keys: 24,
-      subtitle: 'Max Occ: 2 Ad',
-      baseRateWeekday: 380,
-      baseRatePeak: 495,
-      baseAvailWeekday: 21,
-      baseAvailPeak: 8,
-      baseCrsWeekday: 7,
-      baseCrsPeak: 3,
-      maint: 1,
-    },
-    {
-      code: 'PRES',
-      name: 'Presidential Suite (PRES)',
-      keys: 4,
-      subtitle: 'VIP Signature Penthouse',
-      baseRateWeekday: 1450,
-      baseRatePeak: 1950,
-      baseAvailWeekday: 3,
-      baseAvailPeak: 1,
-      baseCrsWeekday: 1,
-      baseCrsPeak: 0,
-      maint: 0,
-    },
-  ];
+  // Reset override state on tenant switch (strict data isolation)
+  useEffect(() => {
+    setUserRates({});
+    setUserCrs({});
+    setEditingCell(null);
+  }, [currentPropertyId]);
+
+  // Dynamic Room definitions per tenant
+  const categories = useMemo(() => {
+    if (roomTypes && roomTypes.length > 0) {
+      return roomTypes.map((rt) => {
+        const rtRooms = rooms.filter((r) => r.roomTypeId === rt.id);
+        const keysCount = rtRooms.length > 0 ? rtRooms.length : (rt.totalUnits || 10);
+        const baseRate = rt.baseRate || (isSurat ? 12500 : 285);
+        const peakRate = Math.round(baseRate * 1.35);
+        const baseAvail = Math.max(1, Math.round(keysCount * 0.8));
+        const peakAvail = Math.max(1, Math.round(keysCount * 0.4));
+        return {
+          code: rt.code || rt.shortName || `RT-${rt.id}`,
+          name: `${rt.name} (${rt.code || rt.shortName})`,
+          keys: keysCount,
+          subtitle: `${rt.category || 'Standard'} • ${rt.bedType || 'King Bed'}`,
+          baseRateWeekday: baseRate,
+          baseRatePeak: peakRate,
+          baseAvailWeekday: baseAvail,
+          baseAvailPeak: peakAvail,
+          baseCrsWeekday: Math.max(1, Math.round(keysCount * 0.3)),
+          baseCrsPeak: Math.max(1, Math.round(keysCount * 0.15)),
+          maint: 1,
+        };
+      });
+    }
+
+    if (isSurat) {
+      return [
+        {
+          code: 'DLX_KG',
+          name: 'Deluxe King Room (DLX_KG)',
+          keys: 30,
+          subtitle: 'City View • Plush King Bed',
+          baseRateWeekday: 11500,
+          baseRatePeak: 14500,
+          baseAvailWeekday: 26,
+          baseAvailPeak: 12,
+          baseCrsWeekday: 10,
+          baseCrsPeak: 4,
+          maint: 1,
+        },
+        {
+          code: 'EXE_TW',
+          name: 'Executive Twin Room (EXE_TW)',
+          keys: 24,
+          subtitle: 'Executive Club Access • Twin Beds',
+          baseRateWeekday: 13500,
+          baseRatePeak: 16800,
+          baseAvailWeekday: 20,
+          baseAvailPeak: 9,
+          baseCrsWeekday: 8,
+          baseCrsPeak: 3,
+          maint: 1,
+        },
+        {
+          code: 'TAPI_SU',
+          name: 'Tapi River View Suite (TAPI_SU)',
+          keys: 12,
+          subtitle: 'Panoramic Tapi River View Suite',
+          baseRateWeekday: 22000,
+          baseRatePeak: 28000,
+          baseAvailWeekday: 10,
+          baseAvailPeak: 4,
+          baseCrsWeekday: 4,
+          baseCrsPeak: 1,
+          maint: 0,
+        },
+        {
+          code: 'PRES_SU',
+          name: 'Presidential Suite (PRES_SU)',
+          keys: 2,
+          subtitle: 'Signature Luxury Penthouse',
+          baseRateWeekday: 65000,
+          baseRatePeak: 85000,
+          baseAvailWeekday: 2,
+          baseAvailPeak: 1,
+          baseCrsWeekday: 1,
+          baseCrsPeak: 0,
+          maint: 0,
+        },
+      ];
+    }
+
+    return [
+      {
+        code: 'DLXK',
+        name: 'Deluxe King (DLXK)',
+        keys: 42,
+        subtitle: 'Max Occ: 2 Ad + 1 Ch',
+        baseRateWeekday: 285,
+        baseRatePeak: 385,
+        baseAvailWeekday: 38,
+        baseAvailPeak: 19,
+        baseCrsWeekday: 15,
+        baseCrsPeak: 6,
+        maint: 1,
+      },
+      {
+        code: 'EXSU',
+        name: 'Executive Suite (EXSU)',
+        keys: 18,
+        subtitle: 'Max Occ: 3 Ad',
+        baseRateWeekday: 420,
+        baseRatePeak: 550,
+        baseAvailWeekday: 15,
+        baseAvailPeak: 6,
+        baseCrsWeekday: 6,
+        baseCrsPeak: 2,
+        maint: 1,
+      },
+      {
+        code: 'PROV',
+        name: 'Premier Ocean View (PROV)',
+        keys: 24,
+        subtitle: 'Max Occ: 2 Ad',
+        baseRateWeekday: 380,
+        baseRatePeak: 495,
+        baseAvailWeekday: 21,
+        baseAvailPeak: 8,
+        baseCrsWeekday: 7,
+        baseCrsPeak: 3,
+        maint: 1,
+      },
+      {
+        code: 'PRES',
+        name: 'Presidential Suite (PRES)',
+        keys: 4,
+        subtitle: 'VIP Signature Penthouse',
+        baseRateWeekday: 1450,
+        baseRatePeak: 1950,
+        baseAvailWeekday: 3,
+        baseAvailPeak: 1,
+        baseCrsWeekday: 1,
+        baseCrsPeak: 0,
+        maint: 0,
+      },
+    ];
+  }, [roomTypes, rooms, currentPropertyId, isSurat]);
 
   // Helper to get rate for a room & date
   const getRateForDate = (roomCode: string, d: DateItem): number => {
@@ -190,7 +282,7 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
           [dateItem.iso]: num,
         },
       }));
-      onNotify(`BAR Rate for ${room} on ${dateItem.label} updated to $${num}. Synchronized to ARI.`);
+      onNotify(`BAR Rate for ${room} on ${dateItem.label} updated to ${currencySymbol}${num}. Synchronized to ARI.`);
     }
     setEditingCell(null);
   };
@@ -252,7 +344,7 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
       // Row 2: CRS Allocation
       rows.push([cat.name, cat.keys, 'CRS Allocation', ...dates.map((d) => getCrsForDate(cat.code, d))]);
       // Row 3: BAR Rate
-      rows.push([cat.name, cat.keys, 'BAR Rate (USD)', ...dates.map((d) => `$${getRateForDate(cat.code, d)}`)]);
+      rows.push([cat.name, cat.keys, `BAR Rate (${currencySymbol})`, ...dates.map((d) => `${currencySymbol}${getRateForDate(cat.code, d)}`)]);
       // Row 4: Maintenance
       rows.push([cat.name, cat.keys, 'Maintenance (OOO)', ...dates.map(() => cat.maint)]);
       // Row 5: Occupancy
@@ -418,9 +510,9 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
             <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-600">
               <span>Property Pace: <strong className="text-[#0058be]">78.4%</strong></span>
               <span className="text-slate-300">|</span>
-              <span>ADR: <strong className="text-slate-800">$342</strong></span>
+              <span>ADR: <strong className="text-slate-800">{currencySymbol}{isSurat ? '14,250' : '342'}</strong></span>
               <span className="text-slate-300">|</span>
-              <span>RevPAR: <strong className="text-slate-800">$268</strong></span>
+              <span>RevPAR: <strong className="text-slate-800">{currencySymbol}{isSurat ? '11,180' : '268'}</strong></span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -862,14 +954,14 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
                           <td className="sticky left-0 z-20 bg-white px-3 py-1.5 font-medium text-slate-800 border-r border-slate-200 flex items-center justify-between">
                             <span className="flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[15px] text-[#0058be]">sell</span>
-                              BAR Rate (USD)
+                              BAR Rate ({currencySymbol})
                             </span>
                             <span className="px-1.5 py-0.2 bg-blue-100 text-[#0058be] text-[10px] font-bold rounded">
                               LIVE
                             </span>
                           </td>
                           <td className="sticky left-[210px] z-20 bg-white text-center font-mono font-bold text-slate-800 border-r border-slate-200">
-                            ${getRateForDate(cat.code, dates[0])}
+                            {currencySymbol}{getRateForDate(cat.code, dates[0])}
                           </td>
                           {dates.map((d, i) => {
                             const currentRate = getRateForDate(cat.code, d);
@@ -899,7 +991,7 @@ export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
                                     />
                                   </div>
                                 ) : (
-                                  <span>${currentRate}</span>
+                                  <span>{currencySymbol}{currentRate}</span>
                                 )}
                               </td>
                             );

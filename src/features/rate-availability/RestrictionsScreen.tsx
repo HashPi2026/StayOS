@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useProperty } from '../../context/PropertyContext';
 import { DatePickerField } from './DatePickerField';
 import {
@@ -14,8 +14,9 @@ interface RestrictionsScreenProps {
 }
 
 export const RestrictionsScreen: React.FC<RestrictionsScreenProps> = ({ onNotify }) => {
-  const { currentProperty } = useProperty();
-  const hotelDisplayName = currentProperty?.identity?.name || 'Destin Inn & Suites';
+  const { currentProperty, roomTypes, rooms, currentPropertyId } = useProperty();
+  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const hotelDisplayName = currentProperty?.identity?.name || (isSurat ? 'Surat Marriott Hotel' : 'Destin Inn & Suites');
 
   const [isBulkDrawerOpen, setIsBulkDrawerOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -71,12 +72,102 @@ export const RestrictionsScreen: React.FC<RestrictionsScreenProps> = ({ onNotify
     },
   });
 
-  const categories = [
-    { code: 'DLXK', name: 'Deluxe King Room', keys: 42 },
-    { code: 'EXSU', name: 'Executive Suite', keys: 18 },
-    { code: 'PROV', name: 'Premier Ocean View', keys: 24 },
-    { code: 'PRES', name: 'Presidential Villa', keys: 4 },
-  ];
+  // Strict tenant data isolation: reset restrictions upon tenant change
+  useEffect(() => {
+    if (isSurat) {
+      setRestrictions({
+        DLX_KG: {
+          cta: { '2026-07-04': true, '2026-07-11': true },
+          ctd: { '2026-07-05': true },
+          stopSell: {},
+          minLos: { '2026-07-04': 2, '2026-07-11': 2 },
+          maxLos: { '2026-07-04': 7, '2026-07-11': 7 },
+        },
+        EXE_TW: {
+          cta: { '2026-07-04': true },
+          ctd: {},
+          stopSell: {},
+          minLos: { '2026-07-04': 2 },
+          maxLos: {},
+        },
+        TAPI_SU: {
+          cta: {},
+          ctd: {},
+          stopSell: {},
+          minLos: { '2026-07-04': 3 },
+          maxLos: {},
+        },
+        PRES_SU: {
+          cta: {},
+          ctd: {},
+          stopSell: {},
+          minLos: {},
+          maxLos: {},
+        },
+      });
+    } else {
+      setRestrictions({
+        DLXK: {
+          cta: { '2026-07-03': true, '2026-07-04': true, '2026-07-10': true, '2026-07-11': true },
+          ctd: { '2026-07-05': true, '2026-07-12': true },
+          stopSell: { '2026-07-04': true, '2026-07-11': true },
+          minLos: { '2026-07-03': 3, '2026-07-04': 3, '2026-07-10': 3, '2026-07-11': 3 },
+          maxLos: { '2026-07-03': 7, '2026-07-04': 7, '2026-07-10': 7, '2026-07-11': 7 },
+        },
+        EXSU: {
+          cta: { '2026-07-03': true, '2026-07-04': true, '2026-07-10': true, '2026-07-11': true },
+          ctd: { '2026-07-05': true },
+          stopSell: { '2026-07-04': true },
+          minLos: { '2026-07-03': 3, '2026-07-04': 3, '2026-07-10': 3, '2026-07-11': 3 },
+          maxLos: { '2026-07-03': 7, '2026-07-04': 7, '2026-07-10': 7, '2026-07-11': 7 },
+        },
+        PROV: {
+          cta: { '2026-07-03': true, '2026-07-10': true },
+          ctd: {},
+          stopSell: {},
+          minLos: { '2026-07-03': 2, '2026-07-04': 2, '2026-07-10': 2, '2026-07-11': 2 },
+          maxLos: {},
+        },
+        PRES: {
+          cta: {},
+          ctd: {},
+          stopSell: {},
+          minLos: { '2026-07-03': 5, '2026-07-04': 5, '2026-07-10': 5, '2026-07-11': 5 },
+          maxLos: { '2026-07-03': 14, '2026-07-04': 14, '2026-07-10': 14, '2026-07-11': 14 },
+        },
+      });
+    }
+  }, [currentPropertyId, isSurat]);
+
+  const categories = useMemo(() => {
+    if (roomTypes && roomTypes.length > 0) {
+      return roomTypes.map((rt) => {
+        const rtRooms = rooms.filter((r) => r.roomTypeId === rt.id);
+        const keysCount = rtRooms.length > 0 ? rtRooms.length : (rt.totalUnits || 10);
+        return {
+          code: rt.code || rt.shortName || `RT-${rt.id}`,
+          name: rt.name,
+          keys: keysCount,
+        };
+      });
+    }
+
+    if (isSurat) {
+      return [
+        { code: 'DLX_KG', name: 'Deluxe King Room', keys: 30 },
+        { code: 'EXE_TW', name: 'Executive Twin Room', keys: 24 },
+        { code: 'TAPI_SU', name: 'Tapi River View Suite', keys: 12 },
+        { code: 'PRES_SU', name: 'Presidential Suite', keys: 2 },
+      ];
+    }
+
+    return [
+      { code: 'DLXK', name: 'Deluxe King Room', keys: 42 },
+      { code: 'EXSU', name: 'Executive Suite', keys: 18 },
+      { code: 'PROV', name: 'Premier Ocean View', keys: 24 },
+      { code: 'PRES', name: 'Presidential Villa', keys: 4 },
+    ];
+  }, [roomTypes, rooms, currentPropertyId, isSurat]);
 
   const handleToggleBool = (catCode: string, type: 'cta' | 'ctd' | 'stopSell', dateIso: string, dateLabel: string) => {
     setRestrictions((prev) => {

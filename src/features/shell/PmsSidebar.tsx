@@ -17,6 +17,7 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
   const { activePath, navigate, currentUser } = useProperty();
   const [openSubMenus, setOpenSubMenus] = React.useState<Record<string, boolean>>({
     rate_availability: true,
+    guest: true,
   });
 
   const toggleSubMenu = (key: string) => {
@@ -44,7 +45,10 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
           activePath === sub.path ||
           activePath === sub.key ||
           activePath === `rate-availability-${sub.key}` ||
-          activePath === `rate_availability_${sub.key}`
+          activePath === `rate_availability_${sub.key}` ||
+          activePath === `guest-${sub.key}` ||
+          activePath === `guest_${sub.key}` ||
+          (mod.moduleKey === 'guest' && (activePath === sub.key || activePath === sub.path))
       );
       if (!isAlreadyInSub) {
         navigate(mod.subItems[0].path);
@@ -87,6 +91,18 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
         activePath === 'rate-availability' ||
         activePath.startsWith('rate-availability-') ||
         activePath.startsWith('rate_availability_')
+      );
+    }
+    if (mod.moduleKey === 'guest') {
+      return (
+        activePath === 'guest' ||
+        activePath.startsWith('guest-') ||
+        activePath.startsWith('guest/') ||
+        activePath === 'contacts' ||
+        activePath.startsWith('contacts-') ||
+        activePath === 'lost-and-found' ||
+        activePath === 'add-guest' ||
+        activePath === 'edit-guest'
       );
     }
     return (
@@ -204,7 +220,11 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                       activePath === sub.path ||
                       activePath === sub.key ||
                       activePath === `rate-availability-${sub.key}` ||
-                      activePath === `rate_availability_${sub.key}`;
+                      activePath === `rate_availability_${sub.key}` ||
+                      activePath === `guest-${sub.key}` ||
+                      (sub.key === 'guest-database' && (activePath === 'guest' || activePath === 'guest-database' || activePath === 'guest-hub' || activePath === 'guest-add' || activePath === 'guest-edit' || activePath === 'add-guest' || activePath === 'edit-guest')) ||
+                      (sub.key === 'contacts' && (activePath === 'contacts' || activePath.startsWith('contacts-'))) ||
+                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found'));
 
                     return (
                       <button
@@ -256,7 +276,11 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                       activePath === sub.path ||
                       activePath === sub.key ||
                       activePath === `rate-availability-${sub.key}` ||
-                      activePath === `rate_availability_${sub.key}`;
+                      activePath === `rate_availability_${sub.key}` ||
+                      activePath === `guest-${sub.key}` ||
+                      (sub.key === 'guest-database' && (activePath === 'guest' || activePath === 'guest-database' || activePath === 'guest-hub' || activePath === 'guest-add' || activePath === 'guest-edit' || activePath === 'add-guest' || activePath === 'edit-guest')) ||
+                      (sub.key === 'contacts' && (activePath === 'contacts' || activePath.startsWith('contacts-'))) ||
+                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found'));
                     return (
                       <button
                         key={sub.key}

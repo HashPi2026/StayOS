@@ -81,7 +81,7 @@ interface PropertyContextType {
   isAuthenticated: boolean;
   currentUser: AuthUser | null;
   authUsers: AuthUser[];
-  login: (email: string, password?: string, propertyId?: string) => { success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser };
+  login: (email: string, password?: string, propertyId?: string) => Promise<{ success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser }> | { success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser };
   logout: () => void;
   switchUser: (user: AuthUser) => void;
   selectPropertyAndLogin: (propertyId: string) => void;
@@ -1119,28 +1119,34 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // 4. Fetch Room Types for active client
       const rtRes = await databaseApi.getRoomTypes(clientId);
       let loadedRoomTypes: RoomType[] = [];
+      const isSurat = clientId === 'STVMC_SURAT';
+      const defaultTenantRate = isSurat ? 12500 : 185;
+
       if (rtRes.data && Array.isArray(rtRes.data) && rtRes.data.length > 0) {
-        loadedRoomTypes = rtRes.data.map((rt: any) => ({
-          id: String(rt.room_type_id),
-          name: rt.room_type_name,
-          code: rt.short_name || `RT-${rt.room_type_id}`,
-          shortName: rt.short_name || 'STD',
-          category: 'Deluxe',
-          baseRate: 250,
-          capacity: 2,
-          bedType: 'King Bed',
-          totalUnits: 10,
-          status: 'active',
-          color: rt.room_type_color || '#3b82f6',
-          description: rt.description || '',
-          buildingId: String(rt.building_id),
-          floorId: String(rt.floor_id),
-          overBookingLimit: rt.over_booking || 0,
-          allowInOccupancy: rt.allow_in_occupancy ?? true,
-          isCrs: rt.is_crs ?? false,
-          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-          updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-        }));
+        loadedRoomTypes = rtRes.data.map((rt: any) => {
+          const baseRateVal = rt.base_rate ? parseFloat(rt.base_rate) : defaultTenantRate;
+          return {
+            id: String(rt.room_type_id),
+            name: rt.room_type_name,
+            code: rt.short_name || `RT-${rt.room_type_id}`,
+            shortName: rt.short_name || 'STD',
+            category: rt.category || (isSurat ? 'Luxury Suite' : 'Deluxe'),
+            baseRate: baseRateVal,
+            capacity: rt.capacity || (isSurat ? 3 : 2),
+            bedType: rt.bed_type || (isSurat ? 'King Plush' : 'King Bed'),
+            totalUnits: 10,
+            status: 'active',
+            color: rt.room_type_color || (isSurat ? '#0284c7' : '#3b82f6'),
+            description: rt.description || '',
+            buildingId: String(rt.building_id),
+            floorId: String(rt.floor_id),
+            overBookingLimit: rt.over_booking || 0,
+            allowInOccupancy: rt.allow_in_occupancy ?? true,
+            isCrs: rt.is_crs ?? false,
+            createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          };
+        });
         setRoomTypes(loadedRoomTypes);
         localStorage.setItem(`stayos_${clientId}_room_types`, JSON.stringify(loadedRoomTypes));
       }
@@ -1151,6 +1157,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const loadedRooms: Room[] = rmRes.data.map((r: any) => {
           const bld = loadedBuildings.find((b) => b.id === String(r.building_id));
           const rt = loadedRoomTypes.find((t) => t.id === String(r.room_type_id));
+          const roomRate = rt ? (rt.baseRate || defaultTenantRate) : defaultTenantRate;
           return {
             id: String(r.room_id),
             name: r.room_name,
@@ -1163,7 +1170,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             roomTypeId: String(r.room_type_id),
             roomTypeName: rt ? rt.name : `Type ${r.room_type_id}`,
             status: 'clean',
-            rate: 250,
+            rate: roomRate,
             isHourlyRental: r.is_hourly_rental ?? false,
             isSmoking: r.is_smoking ?? false,
             isHandicapAccessible: r.is_handicap ?? false,
@@ -1355,15 +1362,85 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const login = (email: string, password?: string) => {
+  const login = async (email: string, password?: string): Promise<{ success: boolean; message?: string; requirePropertySelect?: boolean; user?: AuthUser }> => {
     const cleanEmail = email.trim().toLowerCase();
-    const foundUser = authUsers.find((u) =>
-      u.email.toLowerCase() === cleanEmail ||
-      u.id.toLowerCase() === cleanEmail ||
-      u.name.toLowerCase() === cleanEmail ||
-      (cleanEmail.includes('destin') && u.email.includes('destin')) ||
-      (cleanEmail.includes('grandhotel') && u.email.includes('grandhotel')) ||
-      (cleanEmail.includes('grandazure') && u.email.includes('grandazure'))
+
+    // 1. Authenticate with backend /api/v1/auth/login
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          login_email: email.trim(),
+          password: password || '',
+        }),
+      });
+
+      const resJson = await res.json();
+      if (!res.ok || resJson.error) {
+        return {
+          success: false,
+          message: resJson.error?.message || 'The email address or password entered does not match our records.',
+        };
+      }
+
+      const backendUser = resJson.data?.user;
+      if (backendUser) {
+        const singlePropId = backendUser.clientId || 'DIS_001';
+        const roleId = Number(backendUser.roleId) || 1;
+        const loggedUser: AuthUser = {
+          id: String(backendUser.userId),
+          name: backendUser.name,
+          email: backendUser.email,
+          role: backendUser.roleName || 'Staff',
+          roleId,
+          roleType: backendUser.roleType || 'FrontOffice',
+          initials: (backendUser.name || 'User')
+            .split(' ')
+            .map((n: string) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2),
+          accessiblePropertyIds: [singlePropId],
+          defaultPropertyId: singlePropId,
+          status: 'active',
+        };
+
+        setCurrentUser(loggedUser);
+        localStorage.setItem('stayos_current_user', JSON.stringify(loggedUser));
+        setCurrentPropertyId(singlePropId);
+        localStorage.setItem('stayos_current_prop_id', singlePropId);
+        setIsAuthenticated(true);
+        localStorage.setItem('stayos_is_authenticated', 'true');
+        setCurrentPath('dashboard');
+
+        // Immediately purge and re-sync state for the authenticated property
+        syncWithDatabase(singlePropId);
+        const target = properties.find((p) => p.id === singlePropId);
+        addToast(`Welcome back, ${loggedUser.name}! Loaded ${target?.identity.name || 'PMS'}.`, 'success');
+        return { success: true, requirePropertySelect: false, user: loggedUser };
+      }
+    } catch (apiErr) {
+      console.warn('Backend login endpoint unavailable, checking credentials locally', apiErr);
+    }
+
+    // 2. Strict fallback verification with correct credentials
+    const validCredentials: Record<string, string> = {
+      'jaymistry1804@gmail.com': 'Destin@2026!',
+      'jaymistry.destin_admin@example.com': 'Destin@2026!',
+      'sarah.jenkins@destininn.com': 'Destin@2026!',
+      'sarah.j@destininn.com': 'Destin@2026!',
+      'superadmin@stayos.com': 'SuperAdmin@2026!',
+      'rajesh.mehta@marriott.com': 'SuperAdmin@2026!',
+      'priya.shah@marriott.com': 'Marriott@2026!',
+      'd.chen@destininn.com': 'Destin@2026!',
+      'marcus.vance@grandmetropole.com': 'StayOS2026!Secure',
+    };
+
+    const foundUser = authUsers.find(
+      (u) =>
+        u.email.toLowerCase() === cleanEmail ||
+        u.id.toLowerCase() === cleanEmail
     );
 
     if (!foundUser) {
@@ -1374,20 +1451,21 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return { success: false, message: 'This account is currently inactive. Please contact your property administrator or General Manager.' };
     }
 
-    if (password === 'WrongPassword999') {
+    const expectedPass = validCredentials[foundUser.email.toLowerCase()];
+    if (!expectedPass || password !== expectedPass) {
       return { success: false, message: 'The email address or password entered does not match our records.' };
     }
 
     setCurrentUser(foundUser);
     localStorage.setItem('stayos_current_user', JSON.stringify(foundUser));
 
-    // Every user credential maps strictly to ONE property
     const singlePropId = foundUser.accessiblePropertyIds?.[0] || foundUser.defaultPropertyId || 'DIS_001';
     setCurrentPropertyId(singlePropId);
     localStorage.setItem('stayos_current_prop_id', singlePropId);
     setIsAuthenticated(true);
     localStorage.setItem('stayos_is_authenticated', 'true');
     setCurrentPath('dashboard');
+    syncWithDatabase(singlePropId);
     const target = properties.find((p) => p.id === singlePropId);
     addToast(`Welcome back, ${foundUser.name}! Loaded ${target?.identity.name || 'PMS'}.`, 'success');
     return { success: true, requirePropertySelect: false, user: foundUser };
@@ -1399,6 +1477,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const singlePropId = user.accessiblePropertyIds?.[0] || user.defaultPropertyId || 'DIS_001';
     setCurrentPropertyId(singlePropId);
     localStorage.setItem('stayos_current_prop_id', singlePropId);
+    // Explicitly invalidate cache and re-sync database for the new property
+    syncWithDatabase(singlePropId);
     const target = properties.find((p) => p.id === singlePropId);
     addToast(`Switched active user to ${user.name} (${user.role}) - ${target?.identity.name || singlePropId}`, 'info');
   };
@@ -1412,6 +1492,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('stayos_current_prop_id', propertyId);
     setIsAuthenticated(true);
     localStorage.setItem('stayos_is_authenticated', 'true');
+    syncWithDatabase(propertyId);
 
     const target = properties.find((p) => p.id === propertyId);
     addToast(`Connected to ${target?.identity.name || 'Property'}`, 'success');
@@ -1428,6 +1509,12 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const switchProperty = (propertyId: string) => {
     setCurrentPropertyId(propertyId);
     localStorage.setItem('stayos_current_prop_id', propertyId);
+    // Invalidate state and re-sync
+    setSelectedBuildingId(null);
+    setSelectedRoomTypeId(null);
+    setSelectedRoomId(null);
+    setSelectedTaxId(null);
+    syncWithDatabase(propertyId);
     const target = properties.find((p) => p.id === propertyId);
     if (target) {
       addToast(`Switched active property to ${target.identity.name}`, 'info');

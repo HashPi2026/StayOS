@@ -288,5 +288,42 @@ export const databaseApi = {
       clientId
     );
   },
+
+  // =========================================================================
+  // GUEST MODULE API (Isolated Multi-Tenant)
+  // =========================================================================
+  async getGuests(clientId: string, roleId?: number) {
+    return request<any[]>('/guest/guests', { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getGuest(clientId: string, guestId: number | string, roleId?: number) {
+    return request<any>(`/guest/guests/${guestId}`, { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async createGuest(clientId: string, data: any, roleId?: number) {
+    return request<any>('/guest/guests', { method: 'POST', body: JSON.stringify(data), headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async updateGuest(clientId: string, guestId: number | string, data: any, roleId?: number) {
+    return request<any>(`/guest/guests/${guestId}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async deleteGuest(clientId: string, guestId: number | string, roleId?: number) {
+    return request<any>(`/guest/guests/${guestId}`, { method: 'DELETE', headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getGuestContacts(clientId: string, guestId: number | string, roleId?: number) {
+    return request<any[]>(`/guest/guests/${guestId}/contacts`, { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getGuestDocuments(clientId: string, guestId: number | string, roleId?: number) {
+    return request<any[]>(`/guest/guests/${guestId}/documents`, { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getContacts(clientId: string, roleId?: number) {
+    return request<any[]>('/guest/contacts', { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getContactCategories(clientId: string, roleId?: number) {
+    return request<any[]>('/guest/contact-categories', { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async getLostFoundItems(clientId: string, roleId?: number) {
+    return request<any[]>('/guest/lost-found-items', { headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
+  async createLostFoundItem(clientId: string, data: any, roleId?: number) {
+    return request<any>('/guest/lost-found-items', { method: 'POST', body: JSON.stringify(data), headers: { 'x-role-id': String(roleId || 1) } }, clientId);
+  },
 };
 

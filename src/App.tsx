@@ -286,6 +286,7 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const normalizedPath = (activePath || '').toLowerCase().replace(/^\/+/, '');
   const isPmsShellView = [
     'dashboard',
     'reservation',
@@ -305,11 +306,29 @@ const MainLayout: React.FC = () => {
     'business_channels',
     'business-channels',
     'guest',
+    'guest-database',
+    'guest-hub',
+    'guest-add',
+    'guest-edit',
+    'add-guest',
+    'edit-guest',
+    'contacts',
+    'contacts-directory',
+    'contacts-add',
+    'contacts-categories',
+    'lost-and-found',
+    'lost_and_found',
     'housekeeping',
     'house-keeping',
     'utility',
     'reports',
-  ].includes(activePath);
+  ].includes(normalizedPath) ||
+    normalizedPath.startsWith('guest') ||
+    normalizedPath.startsWith('contacts') ||
+    normalizedPath.startsWith('lost-and-found') ||
+    normalizedPath.startsWith('lost_and_found') ||
+    normalizedPath.startsWith('rate-availability') ||
+    normalizedPath.startsWith('rate_availability');
 
   if (isPmsShellView) {
     return (

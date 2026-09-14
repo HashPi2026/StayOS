@@ -14,7 +14,9 @@ interface RateMatrixScreenProps {
 }
 
 export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) => {
-  const { currentProperty } = useProperty();
+  const { currentProperty, roomTypes, rooms, currentPropertyId } = useProperty();
+  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const currencySymbol = currentProperty?.meta?.currencySymbol || (isSurat ? '₹' : '$');
 
   // Modal / Drawer states
   const [isRangeDrawerOpen, setIsRangeDrawerOpen] = useState(false);
@@ -44,64 +46,163 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
   // Dynamic grid state: rowId -> isoDate -> price
   const [matrixData, setMatrixData] = useState<Record<string, Record<string, number>>>({});
 
-  const categories = [
-    {
-      code: 'DLXK',
-      name: 'Deluxe King Room',
-      keys: 42,
-      plan: 'Base Plan: RACK-STD',
-      baseRateWeekday: 285,
-      baseRatePeak: 365,
-      rows: [
-        { id: 'DLXK-Base', title: 'DLXK • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 285, defaultPk: 365 },
-        { id: 'DLXK-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 45, defaultPk: 55 },
-        { id: 'DLXK-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 25, defaultPk: 25 },
-        { id: 'DLXK-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 35, defaultPk: 35 },
-      ],
-    },
-    {
-      code: 'EXSU',
-      name: 'Executive Suite',
-      keys: 18,
-      plan: 'Derived: +$135 from DLXK',
-      baseRateWeekday: 420,
-      baseRatePeak: 540,
-      rows: [
-        { id: 'EXSU-Base', title: 'EXSU • Base Tier', tierLabel: 'Base (2)', isBase: true, defaultWk: 420, defaultPk: 540 },
-        { id: 'EXSU-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 65, defaultPk: 75 },
-        { id: 'EXSU-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 35, defaultPk: 35 },
-        { id: 'EXSU-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 50, defaultPk: 50 },
-      ],
-    },
-    {
-      code: 'PROV',
-      name: 'Premier Ocean View',
-      keys: 24,
-      plan: 'Derived: +$75 from DLXK',
-      baseRateWeekday: 360,
-      baseRatePeak: 450,
-      rows: [
-        { id: 'PROV-Base', title: 'PROV • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 360, defaultPk: 450 },
-        { id: 'PROV-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 55, defaultPk: 65 },
-        { id: 'PROV-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 30, defaultPk: 30 },
-        { id: 'PROV-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 40, defaultPk: 40 },
-      ],
-    },
-    {
-      code: 'PRES',
-      name: 'Presidential Villa',
-      keys: 4,
-      plan: 'Independent Luxury Pricing',
-      baseRateWeekday: 1250,
-      baseRatePeak: 1750,
-      rows: [
-        { id: 'PRES-Base', title: 'PRES • Full Villa', tierLabel: 'Base (4)', isBase: true, defaultWk: 1250, defaultPk: 1750 },
-        { id: 'PRES-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 150, defaultPk: 200 },
-        { id: 'PRES-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 75, defaultPk: 100 },
-        { id: 'PRES-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 80, defaultPk: 80 },
-      ],
-    },
-  ];
+  // Reset grid state when active hotel changes (strict CAP data isolation)
+  useEffect(() => {
+    setMatrixData({});
+    setEditingKey(null);
+  }, [currentPropertyId]);
+
+  const categories = useMemo(() => {
+    if (roomTypes && roomTypes.length > 0) {
+      return roomTypes.map((rt) => {
+        const rtRooms = rooms.filter((r) => r.roomTypeId === rt.id);
+        const keysCount = rtRooms.length > 0 ? rtRooms.length : (rt.totalUnits || 10);
+        const baseWk = rt.baseRate || (isSurat ? 12500 : 285);
+        const basePk = Math.round(baseWk * 1.3);
+        const code = rt.code || rt.shortName || `RT-${rt.id}`;
+
+        const adultWk = Math.round(baseWk * 0.18);
+        const adultPk = Math.round(basePk * 0.18);
+        const childWk = Math.round(baseWk * 0.09);
+        const childPk = Math.round(basePk * 0.09);
+
+        return {
+          code,
+          name: rt.name,
+          keys: keysCount,
+          plan: `Base Plan: RACK-${code}`,
+          baseRateWeekday: baseWk,
+          baseRatePeak: basePk,
+          rows: [
+            { id: `${code}-Base`, title: `${code} • Base Tier`, tierLabel: 'Base (2)', isBase: true, defaultWk: baseWk, defaultPk: basePk },
+            { id: `${code}-Adult`, title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: adultWk, defaultPk: adultPk },
+            { id: `${code}-Child`, title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: childWk, defaultPk: childPk },
+            { id: `${code}-Special`, title: 'Club / Special Fee', tierLabel: '+Amenity', isBase: false, defaultWk: Math.round(baseWk * 0.12), defaultPk: Math.round(basePk * 0.12) },
+          ],
+        };
+      });
+    }
+
+    if (isSurat) {
+      return [
+        {
+          code: 'DLX_KG',
+          name: 'Deluxe King Room',
+          keys: 30,
+          plan: 'Base Plan: RACK-DLX',
+          baseRateWeekday: 11500,
+          baseRatePeak: 14500,
+          rows: [
+            { id: 'DLX_KG-Base', title: 'DLX_KG • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 11500, defaultPk: 14500 },
+            { id: 'DLX_KG-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 2200, defaultPk: 2800 },
+            { id: 'DLX_KG-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 1200, defaultPk: 1500 },
+            { id: 'DLX_KG-Breakfast', title: 'Breakfast Buffet', tierLabel: '+Meal', isBase: false, defaultWk: 950, defaultPk: 950 },
+          ],
+        },
+        {
+          code: 'EXE_TW',
+          name: 'Executive Twin Room',
+          keys: 24,
+          plan: 'Derived: +₹2,000 from DLX_KG',
+          baseRateWeekday: 13500,
+          baseRatePeak: 16800,
+          rows: [
+            { id: 'EXE_TW-Base', title: 'EXE_TW • Base Tier', tierLabel: 'Base (2)', isBase: true, defaultWk: 13500, defaultPk: 16800 },
+            { id: 'EXE_TW-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 2500, defaultPk: 3200 },
+            { id: 'EXE_TW-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 1500, defaultPk: 1800 },
+            { id: 'EXE_TW-Lounge', title: 'Executive Lounge Access', tierLabel: '+Lounge', isBase: false, defaultWk: 1800, defaultPk: 1800 },
+          ],
+        },
+        {
+          code: 'TAPI_SU',
+          name: 'Tapi River View Suite',
+          keys: 12,
+          plan: 'Derived: +₹8,500 from EXE_TW',
+          baseRateWeekday: 22000,
+          baseRatePeak: 28000,
+          rows: [
+            { id: 'TAPI_SU-Base', title: 'TAPI_SU • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 22000, defaultPk: 28000 },
+            { id: 'TAPI_SU-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 3500, defaultPk: 4500 },
+            { id: 'TAPI_SU-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 2000, defaultPk: 2500 },
+            { id: 'TAPI_SU-Butler', title: 'Dedicated Butler Service', tierLabel: '+Butler', isBase: false, defaultWk: 2500, defaultPk: 2500 },
+          ],
+        },
+        {
+          code: 'PRES_SU',
+          name: 'Presidential Suite',
+          keys: 2,
+          plan: 'Independent Luxury Pricing',
+          baseRateWeekday: 65000,
+          baseRatePeak: 85000,
+          rows: [
+            { id: 'PRES_SU-Base', title: 'PRES_SU • Full Suite', tierLabel: 'Base (4)', isBase: true, defaultWk: 65000, defaultPk: 85000 },
+            { id: 'PRES_SU-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 7500, defaultPk: 10000 },
+            { id: 'PRES_SU-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 4500, defaultPk: 6000 },
+            { id: 'PRES_SU-Dining', title: 'Private Chef Dining', tierLabel: '+Chef', isBase: false, defaultWk: 6500, defaultPk: 8000 },
+          ],
+        },
+      ];
+    }
+
+    return [
+      {
+        code: 'DLXK',
+        name: 'Deluxe King Room',
+        keys: 42,
+        plan: 'Base Plan: RACK-STD',
+        baseRateWeekday: 285,
+        baseRatePeak: 365,
+        rows: [
+          { id: 'DLXK-Base', title: 'DLXK • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 285, defaultPk: 365 },
+          { id: 'DLXK-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 45, defaultPk: 55 },
+          { id: 'DLXK-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 25, defaultPk: 25 },
+          { id: 'DLXK-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 35, defaultPk: 35 },
+        ],
+      },
+      {
+        code: 'EXSU',
+        name: 'Executive Suite',
+        keys: 18,
+        plan: 'Derived: +$135 from DLXK',
+        baseRateWeekday: 420,
+        baseRatePeak: 540,
+        rows: [
+          { id: 'EXSU-Base', title: 'EXSU • Base Tier', tierLabel: 'Base (2)', isBase: true, defaultWk: 420, defaultPk: 540 },
+          { id: 'EXSU-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 65, defaultPk: 75 },
+          { id: 'EXSU-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 35, defaultPk: 35 },
+          { id: 'EXSU-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 50, defaultPk: 50 },
+        ],
+      },
+      {
+        code: 'PROV',
+        name: 'Premier Ocean View',
+        keys: 24,
+        plan: 'Derived: +$75 from DLXK',
+        baseRateWeekday: 360,
+        baseRatePeak: 450,
+        rows: [
+          { id: 'PROV-Base', title: 'PROV • Standard', tierLabel: 'Base (2)', isBase: true, defaultWk: 360, defaultPk: 450 },
+          { id: 'PROV-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 55, defaultPk: 65 },
+          { id: 'PROV-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 30, defaultPk: 30 },
+          { id: 'PROV-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 40, defaultPk: 40 },
+        ],
+      },
+      {
+        code: 'PRES',
+        name: 'Presidential Villa',
+        keys: 4,
+        plan: 'Independent Luxury Pricing',
+        baseRateWeekday: 1250,
+        baseRatePeak: 1750,
+        rows: [
+          { id: 'PRES-Base', title: 'PRES • Full Villa', tierLabel: 'Base (4)', isBase: true, defaultWk: 1250, defaultPk: 1750 },
+          { id: 'PRES-Adult', title: 'Extra Adult', tierLabel: '+Adult (1)', isBase: false, defaultWk: 150, defaultPk: 200 },
+          { id: 'PRES-Child', title: 'Extra Child', tierLabel: '+Child (1)', isBase: false, defaultWk: 75, defaultPk: 100 },
+          { id: 'PRES-Pet', title: 'Pet Fee', tierLabel: '+Pet (1)', isBase: false, defaultWk: 80, defaultPk: 80 },
+        ],
+      },
+    ];
+  }, [roomTypes, rooms, currentPropertyId, isSurat]);
 
   // Helper to retrieve cell value
   const getCellValue = (rowId: string, d: DateItem, defaultWk: number, defaultPk: number): number => {
@@ -126,7 +227,7 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
           [d.iso]: num,
         },
       }));
-      onNotify(`Rate point for ${rowId} on ${d.label} updated to $${num}. Synchronized to ARI gateway.`);
+      onNotify(`Rate point for ${rowId} on ${d.label} updated to ${currencySymbol}${num}. Synchronized to ARI gateway.`);
     }
     setEditingKey(null);
   };
@@ -345,7 +446,7 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Rate Plan</label>
                 <span className="font-mono text-[11px] px-2 py-0.5 bg-[#d8e2ff] text-[#001a42] font-bold rounded">
-                  USD ($)
+                  {currentProperty?.meta?.currency || (isSurat ? 'INR' : 'USD')} ({currencySymbol})
                 </span>
               </div>
               <div className="relative">
@@ -673,7 +774,7 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
                                     d.isPeak ? 'text-[#ba1a1a]' : 'text-[#0058be]'
                                   }`}
                                 >
-                                  ${val}
+                                  {currencySymbol}{val}
                                 </div>
                               )}
                             </td>

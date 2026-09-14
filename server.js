@@ -5,6 +5,7 @@ import { testConnection } from './db/pool.js';
 import { runMigrations } from './db/migrate.js';
 import { configurationRouter } from './modules/configuration/index.js';
 import { rateAvailabilityRouter } from './modules/rate_availability/index.js';
+import { guestRouter } from './modules/guest/index.js';
 import { shellRouter } from './modules/shell/index.js';
 import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -74,6 +75,27 @@ async function startServer() {
     app.use('/api/rate-availability', rateAvailabilityRouter);
     app.use('/api/v1/rate', rateAvailabilityRouter);
     app.use('/api/rate', rateAvailabilityRouter);
+
+    // Mount StayOS Guest REST Modules (API Gateway Base URL: https://api.stayos.io/v1/guest)
+    app.use('/api/v1/guest', guestRouter);
+    app.use('/api/guest', guestRouter);
+    // Direct endpoint aliases (/api/v1/guests, /api/v1/contacts, etc.)
+    app.use(['/api/v1', '/api'], (req, res, next) => {
+        const p = req.path;
+        if (
+            p.startsWith('/guests') ||
+            p.startsWith('/guest-contacts') ||
+            p.startsWith('/guest-documents') ||
+            p.startsWith('/contact-categories') ||
+            p.startsWith('/contacts') ||
+            p.startsWith('/contact-details') ||
+            p.startsWith('/contact-documents') ||
+            p.startsWith('/lost-found-items')
+        ) {
+            return guestRouter(req, res, next);
+        }
+        next();
+    });
     // ==================== STATIC / VITE MIDDLEWARE ====================
     if (process.env.NODE_ENV !== 'production') {
         const isHmrDisabled = process.env.DISABLE_HMR === 'true';
