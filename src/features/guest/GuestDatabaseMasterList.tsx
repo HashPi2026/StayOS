@@ -10,6 +10,9 @@ interface GuestDatabaseMasterListProps {
   onAddGuest: () => void;
   onEditGuest: (guest: GuestRecord) => void;
   onUpdateGuest: (updated: GuestRecord) => void;
+  onDeleteGuest?: (guest: GuestRecord) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
   onOpenHub: () => void;
 }
 
@@ -20,11 +23,21 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
   onAddGuest,
   onEditGuest,
   onUpdateGuest,
+  onDeleteGuest,
+  onRefresh,
+  isRefreshing,
   onOpenHub,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'dnr' | 'vip' | 'in_house'>('all');
   const [inspectorTab, setInspectorTab] = useState<'personal' | 'contacts' | 'documents'>('personal');
+  const [guestToDelete, setGuestToDelete] = useState<GuestRecord | null>(null);
+
+  // Dynamic filter counts reflecting actual real-time database state
+  const totalCount = guests.length;
+  const dnrCount = guests.filter((g) => g.dnrStatus !== 'none').length;
+  const vipCount = guests.filter((g) => g.isVip).length;
+  const inHouseCount = guests.filter((g) => g.inHouse).length;
 
   // Drawers state
   const [contactDrawerOpen, setContactDrawerOpen] = useState(false);
@@ -175,6 +188,19 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
         </div>
 
         <div className="flex items-center gap-2">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
+              title="Sync with PostgreSQL database"
+            >
+              <span className={`material-symbols-outlined text-[16px] text-[#4472C4] ${isRefreshing ? 'animate-spin' : ''}`}>
+                sync
+              </span>
+              {isRefreshing ? 'Syncing...' : 'Sync Database'}
+            </button>
+          )}
           <button
             onClick={() => alert('Exporting Master Guest List as CSV...')}
             className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
@@ -220,7 +246,7 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                All Guests (18,420)
+                All Guests ({totalCount})
               </button>
               <button
                 onClick={() => setActiveFilter('dnr')}
@@ -230,7 +256,7 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                DNR Flagged (142)
+                DNR Flagged ({dnrCount})
               </button>
               <button
                 onClick={() => setActiveFilter('vip')}
@@ -240,7 +266,7 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                VIP Members (1,240)
+                VIP Members ({vipCount})
               </button>
               <button
                 onClick={() => setActiveFilter('in_house')}
@@ -250,7 +276,7 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                In-House Now (214)
+                In-House Now ({inHouseCount})
               </button>
             </div>
           </div>
@@ -419,6 +445,15 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
                   <span className="material-symbols-outlined text-[14px]">edit</span>
                   Edit Profile
                 </button>
+                {onDeleteGuest && (
+                  <button
+                    onClick={() => setGuestToDelete(activeGuest)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Delete Guest Profile"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -858,6 +893,45 @@ export const GuestDatabaseMasterList: React.FC<GuestDatabaseMasterListProps> = (
             onDelete={handleDeleteDocument}
           />
         </>
+      )}
+      {/* Delete Guest Confirmation Modal */}
+      {guestToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">delete</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Delete Guest Profile</h3>
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Are you sure you want to delete profile{' '}
+              <strong className="text-slate-800">
+                {guestToDelete.title} {guestToDelete.firstName} {guestToDelete.lastName} ({guestToDelete.id})
+              </strong>
+              ? This action will remove the guest and associated records from the PostgreSQL database.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setGuestToDelete(null)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onDeleteGuest && guestToDelete) {
+                    onDeleteGuest(guestToDelete);
+                    setGuestToDelete(null);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-2xs cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

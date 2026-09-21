@@ -16,6 +16,7 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
 }) => {
   const { activePath, navigate, currentUser } = useProperty();
   const [openSubMenus, setOpenSubMenus] = React.useState<Record<string, boolean>>({
+    front_desk: true,
     rate_availability: true,
     guest: true,
   });
@@ -44,6 +45,14 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
         (sub) =>
           activePath === sub.path ||
           activePath === sub.key ||
+          activePath === `front-desk-${sub.key}` ||
+          activePath === `front_desk_${sub.key}` ||
+          (mod.moduleKey === 'front_desk' && (
+            activePath === sub.path ||
+            activePath === sub.key ||
+            activePath === `front-desk-${sub.key}` ||
+            activePath === `front_desk_${sub.key}`
+          )) ||
           activePath === `rate-availability-${sub.key}` ||
           activePath === `rate_availability_${sub.key}` ||
           activePath === `guest-${sub.key}` ||
@@ -83,6 +92,27 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
         activePath === 'general-settings' ||
         activePath === 'device-configuration' ||
         activePath === 'crs-tax-exempt'
+      );
+    }
+    if (mod.moduleKey === 'front_desk' || mod.moduleKey === 'front-desk' || mod.moduleKey === 'frontdesk') {
+      return (
+        activePath === 'front_desk' ||
+        activePath === 'front-desk' ||
+        activePath === 'frontdesk' ||
+        activePath.startsWith('front-desk-') ||
+        activePath.startsWith('front_desk_') ||
+        activePath.startsWith('frontdesk-') ||
+        activePath.startsWith('frontdesk_') ||
+        activePath.startsWith('front-desk/') ||
+        activePath.startsWith('front_desk/') ||
+        activePath.startsWith('frontdesk/') ||
+        activePath === 'search-reservation' ||
+        activePath === 'guest-ledger' ||
+        activePath === 'batch-folio' ||
+        activePath === 'change-room-status' ||
+        activePath === 'block-room' ||
+        activePath === 'edit-group' ||
+        activePath === 'room-comments'
       );
     }
     if (mod.moduleKey === 'rate_availability') {
@@ -219,6 +249,13 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                     const isSubActive =
                       activePath === sub.path ||
                       activePath === sub.key ||
+                      (mod.moduleKey === 'front_desk' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        activePath === `front-desk-${sub.key}` ||
+                        activePath === `front_desk_${sub.key}` ||
+                        (sub.key === 'search-reservation' && (activePath === 'front_desk' || activePath === 'front-desk' || activePath === 'frontdesk'))
+                      )) ||
                       activePath === `rate-availability-${sub.key}` ||
                       activePath === `rate_availability_${sub.key}` ||
                       activePath === `guest-${sub.key}` ||
@@ -275,6 +312,13 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                     const isSubActive =
                       activePath === sub.path ||
                       activePath === sub.key ||
+                      (mod.moduleKey === 'front_desk' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        activePath === `front-desk-${sub.key}` ||
+                        activePath === `front_desk_${sub.key}` ||
+                        (sub.key === 'search-reservation' && (activePath === 'front_desk' || activePath === 'front-desk' || activePath === 'frontdesk'))
+                      )) ||
                       activePath === `rate-availability-${sub.key}` ||
                       activePath === `rate_availability_${sub.key}` ||
                       activePath === `guest-${sub.key}` ||

@@ -1,10 +1,13 @@
 import { 
-  Building, Floor, RoomType, Room, TaxItem, RateTypeItem, PolicyItem, AuditLog, 
-  GuestCategoryItem, NotificationItem, TenantSubscription, TenantCapMetrics 
+  Building, Floor, RoomType, Room, TaxItem, RateTypeItem, PackageItem, PolicyItem, AuditLog, 
+  GuestCategoryItem, NotificationItem, TenantSubscription, TenantCapMetrics,
+  RoomStatusConfig, DocumentTypeItem, OtherChargeCategoryItem, OtherChargeItem,
+  MeasurementUnitItem, PaymentTypeItem, ExchangeRateItem, RoleItem, UserAccountItem,
+  EmailTemplateItem 
 } from '../types';
 
 export const TENANT_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
-  'DIS_001': {
+  '10001': {
     plan: 'Pro',
     status: 'active',
     billingCycle: 'monthly',
@@ -13,7 +16,7 @@ export const TENANT_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
     features: ['core_pms', 'rate_management', 'taxes_and_folios', 'housekeeping', 'guest_profiles', 'standard_reports'],
     renewalDate: '2026-12-31',
   },
-  'STVMC_SURAT': {
+  '10002': {
     plan: 'Enterprise',
     status: 'active',
     billingCycle: 'annually',
@@ -23,23 +26,29 @@ export const TENANT_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
     renewalDate: '2027-09-30',
   },
 };
+// Legacy alias references
+TENANT_SUBSCRIPTIONS['DIS_001'] = TENANT_SUBSCRIPTIONS['10001'];
+TENANT_SUBSCRIPTIONS['STVMC_SURAT'] = TENANT_SUBSCRIPTIONS['10002'];
 
 export const TENANT_CAP_SPECS: Record<string, TenantCapMetrics> = {
-  'DIS_001': {
+  '10001': {
     theoremModel: 'CP',
     isolationLevel: 'database_and_storage_partition',
-    tenantWorkspaceId: 'DIS_001',
+    tenantWorkspaceId: '10001',
     isDataPartitioned: true,
     activeNode: 'us-east-cluster-01',
   },
-  'STVMC_SURAT': {
+  '10002': {
     theoremModel: 'CP',
     isolationLevel: 'database_and_storage_partition',
-    tenantWorkspaceId: 'STVMC_SURAT',
+    tenantWorkspaceId: '10002',
     isDataPartitioned: true,
     activeNode: 'apac-south-cluster-01',
   },
 };
+// Legacy alias references
+TENANT_CAP_SPECS['DIS_001'] = TENANT_CAP_SPECS['10001'];
+TENANT_CAP_SPECS['STVMC_SURAT'] = TENANT_CAP_SPECS['10002'];
 
 export interface TenantIsolatedData {
   buildings: Building[];
@@ -53,13 +62,23 @@ export interface TenantIsolatedData {
   auditLogs: AuditLog[];
   guestCategories: GuestCategoryItem[];
   notifications: NotificationItem[];
+  roomStatuses?: RoomStatusConfig[];
+  documentTypes?: DocumentTypeItem[];
+  otherChargeCategories?: OtherChargeCategoryItem[];
+  otherCharges?: OtherChargeItem[];
+  measurementUnits?: MeasurementUnitItem[];
+  paymentTypes?: PaymentTypeItem[];
+  exchangeRates?: ExchangeRateItem[];
+  roles?: RoleItem[];
+  users?: UserAccountItem[];
+  emailTemplates?: EmailTemplateItem[];
 }
 
 export const TENANT_DATASETS: Record<string, TenantIsolatedData> = {
   // =========================================================================
-  // 1. Destin Inn & Suite (DIS_001) - Destin, Florida USA
+  // 1. Destin Inn & Suite (10001) - Destin, Florida USA
   // =========================================================================
-  'DIS_001': {
+  '10001': {
     buildings: [
       {
         id: 'bld-dis-01',
@@ -506,18 +525,346 @@ export const TENANT_DATASETS: Record<string, TenantIsolatedData> = {
       {
         id: 'notif-dis-01',
         title: 'Destin Inn & Suite Partition Active',
-        message: 'Tenant DIS_001 is running with strict database-level multi-tenancy and zero cross-property sharing.',
+        message: 'Tenant 10001 is running with strict database-level multi-tenancy and zero cross-property sharing.',
         timestamp: '10 min ago',
         type: 'success',
         read: false,
       },
     ],
+    roomStatuses: [
+      { id: 'rs-dis-1', name: 'Clean', shortName: 'CLN', code: 'CLN', bgColor: '#10B981', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-dis-2', name: 'Dirty', shortName: 'DRT', code: 'DRT', bgColor: '#F59E0B', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-dis-3', name: 'Inspected', shortName: 'INS', code: 'INS', bgColor: '#3B82F6', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-dis-4', name: 'Out of Order', shortName: 'OOO', code: 'OOO', bgColor: '#EF4444', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-dis-5', name: 'Out of Service', shortName: 'OOS', code: 'OOS', bgColor: '#6B7280', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+    ],
+    documentTypes: [
+      { id: 'doc-dis-1', shortName: 'DL', name: "Driver's License", category: 'Identity', description: 'State-issued valid driving license', isDefault: true, isActive: true },
+      { id: 'doc-dis-2', shortName: 'PP', name: 'US Passport', category: 'Identity', description: 'Official US Passport document', isDefault: false, isActive: true },
+      { id: 'doc-dis-3', shortName: 'FL-ID', name: 'Florida Resident Card', category: 'Identity', description: 'Resident verification for local resident discount rate', isDefault: false, isActive: true },
+      { id: 'doc-dis-4', shortName: 'MIL', name: 'Military CAC Card', category: 'Identity', description: 'US Armed Forces Eglin AFB identification card', isDefault: false, isActive: true },
+      { id: 'doc-dis-5', shortName: 'VISA', name: 'Foreign Passport & US Visa', category: 'Visa', description: 'International guest passport and valid entry visa', isDefault: false, isActive: true },
+    ],
+    otherChargeCategories: [
+      { id: 'occ-dis-1', shortName: 'MARINA', name: 'Marina & Watersports', description: 'Destin Harbor boat slip, kayak, and jet ski rentals', isDefault: true },
+      { id: 'occ-dis-2', shortName: 'BEACH', name: 'Beach & Cabana Services', description: 'Emerald Coast beach chair and umbrella setup', isDefault: false },
+      { id: 'occ-dis-3', shortName: 'FB', name: 'Harbor Grill & Bar', description: 'Waterfront seafood dining and cocktails', isDefault: false },
+      { id: 'occ-dis-4', shortName: 'PARK', name: 'Parking & Transport', description: 'Trailer parking and VPS Airport shuttle', isDefault: false },
+      { id: 'occ-dis-5', shortName: 'FEE', name: 'Resort Amenities Fee', description: 'Daily resort access and harbor boardwalk privileges', isDefault: false },
+    ],
+    otherCharges: [
+      { id: 'oc-dis-1', shortName: 'SLIP-D', name: 'Marina Boat Slip (Daily)', category: 'Marina & Watersports', price: 65.0, taxable: true, alwaysCharge: false, reoccur: true, reoccurFrequency: 'Daily', crsCharge: true, callLoggingCharge: false, posCharge: false, forecastingRevenue: true, description: 'Dedicated dock slip with shore power hookup.' },
+      { id: 'oc-dis-2', shortName: 'CABANA', name: 'Beach Cabana Setup', category: 'Beach & Cabana Services', price: 45.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: true, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: '2 cushioned loungers with umbrella on Destin white sand beach.' },
+      { id: 'oc-dis-3', shortName: 'RES-FEE', name: 'Harbor Resort Access Fee', category: 'Resort Amenities Fee', price: 28.0, taxable: true, alwaysCharge: true, reoccur: true, reoccurFrequency: 'Daily', crsCharge: true, callLoggingCharge: false, posCharge: false, forecastingRevenue: true, description: 'Includes marina boardwalk Wi-Fi, pool towels, and harbor bicycles.' },
+      { id: 'oc-dis-4', shortName: 'TRL-PRK', name: 'Boat Trailer Parking (Overnight)', category: 'Parking & Transport', price: 20.0, taxable: true, alwaysCharge: false, reoccur: true, reoccurFrequency: 'Daily', crsCharge: false, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Gated parking stall for boat trailers and oversized vehicles.' },
+      { id: 'oc-dis-5', shortName: 'SHUTTLE', name: 'VPS Airport Shuttle Transfer', category: 'Parking & Transport', price: 35.0, taxable: false, alwaysCharge: false, reoccur: false, crsCharge: true, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Scheduled transfer to Destin-Fort Walton Beach Airport (VPS).' },
+    ],
+    measurementUnits: [
+      { id: 'mu-dis-1', name: 'Person', shortName: 'PAX', description: 'Per guest head count', icon: 'person' },
+      { id: 'mu-dis-2', name: 'Day', shortName: 'DAY', description: 'Daily 24-hour rental interval', icon: 'calendar_today' },
+      { id: 'mu-dis-3', name: 'Hour', shortName: 'HR', description: 'Hourly rental rate', icon: 'schedule' },
+      { id: 'mu-dis-4', name: 'Item', shortName: 'EA', description: 'Individual unit count', icon: 'category' },
+    ],
+    paymentTypes: [
+      { id: 'pt-dis-1', shortName: 'VISA', name: 'Visa Credit Card', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Visa terminal processing' },
+      { id: 'pt-dis-2', shortName: 'MC', name: 'Mastercard', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Mastercard terminal processing' },
+      { id: 'pt-dis-3', shortName: 'AMEX', name: 'American Express', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Amex corporate and personal cards' },
+      { id: 'pt-dis-4', shortName: 'DISC', name: 'Discover Card', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Discover network cards' },
+      { id: 'pt-dis-5', shortName: 'MOBILE', name: 'Apple Pay / Google Pay', category: 'Digital Wallet', ccProcessing: true, status: 'Active', description: 'Contactless NFC mobile payments' },
+      { id: 'pt-dis-6', shortName: 'CASH', name: 'Cash (USD)', category: 'Cash', ccProcessing: false, status: 'Active', description: 'US Dollar banknotes' },
+    ],
+    exchangeRates: [
+      { id: 'xr-dis-1', country: 'United States', countryCode: 'US', currency: 'US Dollar', sign: '$', rate: 1.0000, isBaseRate: true },
+      { id: 'xr-dis-2', country: 'Canada', countryCode: 'CA', currency: 'Canadian Dollar', sign: 'C$', rate: 1.3600, isBaseRate: false },
+      { id: 'xr-dis-3', country: 'Eurozone', countryCode: 'EU', currency: 'Euro', sign: '€', rate: 0.9200, isBaseRate: false },
+      { id: 'xr-dis-4', country: 'United Kingdom', countryCode: 'GB', currency: 'British Pound', sign: '£', rate: 0.7900, isBaseRate: false },
+    ],
+    roles: [
+      {
+        id: 'role-1',
+        name: 'Property Administrator',
+        code: 'PROP-ADMIN',
+        type: 'SuperAdmin',
+        description: 'Full administrative control over Destin Inn & Suites operations.',
+        usersCount: 1,
+        isSystem: true,
+        isCritical: true,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: true },
+          'property-master': { view: true, add: true, edit: true, delete: true },
+          'user-accounts': { view: true, add: true, edit: true, delete: true },
+          'tax-config': { view: true, add: true, edit: true, delete: true },
+          'rooms-inventory': { view: true, add: true, edit: true, delete: true },
+        },
+      },
+      {
+        id: 'role-2',
+        name: 'Front Desk Associate',
+        code: 'FDA',
+        type: 'FrontOffice',
+        description: 'Daily check-in, check-out, cashiering, and room keys.',
+        usersCount: 3,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: false },
+          'rooms-inventory': { view: true, add: false, edit: true, delete: false },
+          'cashiering': { view: true, add: true, edit: false, delete: false },
+        },
+      },
+      {
+        id: 'role-3',
+        name: 'General Manager',
+        code: 'GM',
+        type: 'Management',
+        description: 'Property management, RevPAR analytics, VIP guest approvals.',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: true,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: true },
+          'rates-packages': { view: true, add: true, edit: true, delete: true },
+          'audit-logs': { view: true, add: false, edit: false, delete: false },
+        },
+      },
+      {
+        id: 'role-4',
+        name: 'Housekeeping Supervisor',
+        code: 'HK-SUP',
+        type: 'Operations',
+        description: 'Room turnover inspection and attendant dispatch.',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'housekeeping-status': { view: true, add: true, edit: true, delete: false },
+        },
+      },
+      {
+        id: 'role-5',
+        name: 'Night Auditor',
+        code: 'NA',
+        type: 'Finance',
+        description: 'End-of-day closure, trial balance reconciliation, ledger audit.',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'cashiering': { view: true, add: true, edit: true, delete: false },
+          'audit-logs': { view: true, add: false, edit: false, delete: false },
+        },
+      },
+      {
+        id: 'role-6',
+        name: 'Finance Controller',
+        code: 'FC',
+        type: 'Finance',
+        description: 'Tax reporting, folios reconciliation, accounts receivable.',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'tax-config': { view: true, add: true, edit: true, delete: false },
+          'invoices': { view: true, add: true, edit: true, delete: true },
+        },
+      },
+      {
+        id: 'role-7',
+        name: 'Front Desk Manager',
+        code: 'FDM',
+        type: 'FrontOffice',
+        description: 'Front office supervision, rate overrides, VIP approvals.',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: false },
+          'rate-calendar': { view: true, add: true, edit: true, delete: false },
+        },
+      },
+    ],
+    users: [
+      {
+        id: '1',
+        name: 'Jay Mistry',
+        email: 'jaymistry1804@gmail.com',
+        initials: 'JM',
+        roleId: 'role-1',
+        roleName: 'Property Administrator',
+        roleType: 'SuperAdmin',
+        lastLogin: 'Active Now',
+        status: 'active',
+        phone: '+1 (850) 837-7326',
+        department: 'Executive Management',
+        description: 'Lead Property Administrator for Destin Inn & Suites.',
+      },
+      {
+        id: '2',
+        name: 'Sarah Jenkins',
+        email: 'sarah.j@destininn.com',
+        initials: 'SJ',
+        roleId: 'role-2',
+        roleName: 'Front Desk Associate',
+        roleType: 'FrontOffice',
+        lastLogin: 'Today, 09:15 AM',
+        status: 'active',
+        phone: '+1 (850) 555-0101',
+        department: 'Guest Services',
+      },
+      {
+        id: '5',
+        name: 'David Chen',
+        email: 'd.chen@destininn.com',
+        initials: 'DC',
+        roleId: 'role-3',
+        roleName: 'General Manager',
+        roleType: 'Management',
+        lastLogin: 'Yesterday, 17:40',
+        status: 'active',
+        phone: '+1 (850) 555-0102',
+        department: 'Hotel Administration',
+      },
+      {
+        id: '6',
+        name: 'Maria Rodriguez',
+        email: 'm.rodriguez@destininn.com',
+        initials: 'MR',
+        roleId: 'role-2',
+        roleName: 'Front Desk Associate',
+        roleType: 'FrontOffice',
+        lastLogin: 'Oct 24, 08:30',
+        status: 'active',
+        phone: '+1 (850) 555-0103',
+        department: 'Front Desk',
+      },
+      {
+        id: '7',
+        name: 'Emily Clark',
+        email: 'e.clark@destininn.com',
+        initials: 'EC',
+        roleId: 'role-2',
+        roleName: 'Front Desk Associate',
+        roleType: 'FrontOffice',
+        lastLogin: 'Sep 12, 14:10',
+        status: 'active',
+        phone: '+1 (850) 555-0104',
+        department: 'Front Desk',
+      },
+      {
+        id: '8',
+        name: 'Carlos Mendez',
+        email: 'c.mendez@destininn.com',
+        initials: 'CM',
+        roleId: 'role-4',
+        roleName: 'Housekeeping Supervisor',
+        roleType: 'Operations',
+        lastLogin: 'Today, 07:00 AM',
+        status: 'active',
+        phone: '+1 (850) 555-0105',
+        department: 'Housekeeping',
+      },
+      {
+        id: '9',
+        name: 'Alexandre Dumas',
+        email: 'a.dumas@destininn.com',
+        initials: 'AD',
+        roleId: 'role-5',
+        roleName: 'Night Auditor',
+        roleType: 'Finance',
+        lastLogin: 'Today, 04:30 AM',
+        status: 'active',
+        phone: '+1 (850) 555-0106',
+        department: 'Finance & Audit',
+      },
+      {
+        id: '10',
+        name: 'Priya Sharma',
+        email: 'p.sharma@destininn.com',
+        initials: 'PS',
+        roleId: 'role-6',
+        roleName: 'Finance Controller',
+        roleType: 'Finance',
+        lastLogin: 'Yesterday, 16:20',
+        status: 'active',
+        phone: '+1 (850) 555-0107',
+        department: 'Finance & Accounting',
+      },
+      {
+        id: '11',
+        name: 'Marcus Vance',
+        email: 'm.vance@destininn.com',
+        initials: 'MV',
+        roleId: 'role-7',
+        roleName: 'Front Desk Manager',
+        roleType: 'FrontOffice',
+        lastLogin: 'Today, 08:00 AM',
+        status: 'active',
+        phone: '+1 (850) 555-0108',
+        department: 'Front Office Management',
+      },
+    ],
+    emailTemplates: [
+      {
+        id: 'tmpl-dis-1',
+        name: 'Destin Harbor Booking Confirmation',
+        subject: 'Your Destin Inn & Suites Reservation Confirmation - {{confirmation_no}}',
+        senderName: 'Destin Inn Reservations',
+        replyTo: 'stay@destininn.com',
+        status: 'active',
+        triggers: {
+          created: true,
+          updated: false,
+          cancelled: false,
+          dob: false,
+          beforeCheckIn: false,
+          beforeCheckInDays: 0,
+          atCheckIn: false,
+          afterCheckIn: false,
+          afterCheckInDays: 0,
+          beforeCheckOut: false,
+          beforeCheckOutDays: 0,
+          atCheckOut: false,
+          afterCheckOut: false,
+          afterCheckOutDays: 0,
+        },
+        body: `<p>Dear {{guest_name}},</p><p>Thank you for choosing <strong>Destin Inn & Suites</strong> overlooking Destin Harbor marina. Your reservation is confirmed!</p><p>Check-in: {{check_in_date}} | Room: {{room_type}}</p>`,
+        createdAt: 'Jan 15, 2024',
+        updatedAt: 'Mar 10, 2026',
+      },
+      {
+        id: 'tmpl-dis-2',
+        name: 'Marina & Beach Pass Guidance',
+        subject: 'Preparing for your stay in Destin, Florida',
+        senderName: 'Destin Inn Guest Services',
+        replyTo: 'stay@destininn.com',
+        status: 'active',
+        triggers: {
+          created: false,
+          updated: false,
+          cancelled: false,
+          dob: false,
+          beforeCheckIn: true,
+          beforeCheckInDays: 1,
+          atCheckIn: false,
+          afterCheckIn: false,
+          afterCheckInDays: 0,
+          beforeCheckOut: false,
+          beforeCheckOutDays: 0,
+          atCheckOut: false,
+          afterCheckOut: false,
+          afterCheckOutDays: 0,
+        },
+        body: `<p>Dear {{guest_name}},</p><p>Your harbor vacation starts tomorrow! Remember to request your complimentary marina boardwalk access passes at the front desk upon arrival.</p>`,
+        createdAt: 'Feb 01, 2024',
+        updatedAt: 'Feb 15, 2026',
+      },
+    ],
   },
 
   // =========================================================================
-  // 2. Surat Marriott Hotel (STVMC_SURAT) - Surat, Gujarat, India
+  // 2. Surat Marriott Hotel (10002) - Surat, Gujarat, India
   // =========================================================================
-  'STVMC_SURAT': {
+  '10002': {
     buildings: [
       {
         id: 'bld-surat-01',
@@ -1009,18 +1356,303 @@ export const TENANT_DATASETS: Record<string, TenantIsolatedData> = {
         read: false,
       },
     ],
+    roomStatuses: [
+      { id: 'rs-surat-1', name: 'Clean & Sanitized', shortName: 'CLN', code: 'CLN', bgColor: '#10B981', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-surat-2', name: 'Dirty - Turnover Pending', shortName: 'DRT', code: 'DRT', bgColor: '#F59E0B', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-surat-3', name: 'Inspected - EHK Approved', shortName: 'INS', code: 'INS', bgColor: '#3B82F6', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-surat-4', name: 'Out of Order - Maintenance', shortName: 'OOO', code: 'OOO', bgColor: '#EF4444', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-surat-5', name: 'Out of Service - Renovation', shortName: 'OOS', code: 'OOS', bgColor: '#6B7280', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+      { id: 'rs-surat-6', name: 'VIP Reserved - Bonvoy', shortName: 'VIP', code: 'VIP', bgColor: '#8B5CF6', textColor: '#FFFFFF', isActive: true, isSystemDefault: true },
+    ],
+    documentTypes: [
+      { id: 'doc-surat-1', shortName: 'UID', name: 'Aadhaar Card', category: 'Identity', description: 'Government of India Unique Identification 12-digit card', isDefault: true, isActive: true },
+      { id: 'doc-surat-2', shortName: 'PP', name: 'Indian Passport', category: 'Identity', description: 'Official Republic of India Passport', isDefault: false, isActive: true },
+      { id: 'doc-surat-3', shortName: 'PAN', name: 'PAN Card', category: 'Identity', description: 'Income Tax Permanent Account Number (Mandatory for INR 50,000+ cash)', isDefault: false, isActive: true },
+      { id: 'doc-surat-4', shortName: 'EPIC', name: 'Voter ID (Election Commission)', category: 'Identity', description: 'Election Commission of India Photo Identity Card', isDefault: false, isActive: true },
+      { id: 'doc-surat-5', shortName: 'DL', name: 'Indian Driving License', category: 'Identity', description: 'State RTO Motor Vehicle driving license', isDefault: false, isActive: true },
+      { id: 'doc-surat-6', shortName: 'FRRO', name: 'Passport with Indian Visa / OCI', category: 'Visa', description: 'International Passport with Form C FRRO compliance', isDefault: false, isActive: true },
+      { id: 'doc-surat-7', shortName: 'GTP', name: 'Gujarat Tourism Visitor Permit', category: 'Other', description: 'Government of Gujarat official visitor permit certificate', isDefault: false, isActive: true },
+    ],
+    otherChargeCategories: [
+      { id: 'occ-surat-1', shortName: 'BANQ', name: 'Banqueting & Diamond Bourse Events', description: 'Grand Crystal Ballroom, boardroom catering, and corporate conventions', isDefault: true },
+      { id: 'occ-surat-2', shortName: 'FB', name: 'Table One Riverside Dining', description: 'All-day dining, riverside buffet, and private dining pavilions', isDefault: false },
+      { id: 'occ-surat-3', shortName: 'SPA', name: 'Quan Spa & Wellness', description: 'Ayurvedic treatments, aromatherapy, and riverside fitness pavilion', isDefault: false },
+      { id: 'occ-surat-4', shortName: 'TRANS', name: 'Airport & Corporate Chauffeur', description: 'Surat International Airport (STV) transfers & Diamond Bourse shuttles', isDefault: false },
+      { id: 'occ-surat-5', shortName: 'BIZ', name: 'Corporate Business Center', description: 'High-speed leased line, secretarial support, and conference printing', isDefault: false },
+      { id: 'occ-surat-6', shortName: 'LDY', name: 'Express Dry Cleaning & Laundry', description: '4-hour executive suit pressing and delicate fabric laundering', isDefault: false },
+    ],
+    otherCharges: [
+      { id: 'oc-surat-1', shortName: 'STV-LIMO', name: 'Airport Chauffeur Transfer (STV)', category: 'Airport & Corporate Chauffeur', price: 2200.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: true, callLoggingCharge: false, posCharge: false, forecastingRevenue: true, description: 'Chauffeur airport transfer in premium Toyota Camry hybrid.' },
+      { id: 'oc-surat-2', shortName: 'SDB-SHUTTLE', name: 'Surat Diamond Bourse Shuttle', category: 'Airport & Corporate Chauffeur', price: 1500.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: true, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Executive shuttle service to Surat Diamond Bourse at Khajod.' },
+      { id: 'oc-surat-3', shortName: 'BUFFET', name: 'Table One Riverside Dinner Buffet', category: 'Table One Riverside Dining', price: 1850.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: false, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Buffet featuring authentic Gujarati specialties, kebabs, and continental fare.' },
+      { id: 'oc-surat-4', shortName: 'BALLROOM', name: 'Ballroom Audio-Visual & Stage Package', category: 'Banqueting & Diamond Bourse Events', price: 35000.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: false, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: '4K LED wall, line array sound system, and stage lighting.' },
+      { id: 'oc-surat-5', shortName: 'ABHYANGA', name: 'Quan Spa Ayurvedic Abhyanga (75m)', category: 'Quan Spa & Wellness', price: 4500.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: true, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Traditional 75-minute synchronized warm herbal oil body massage.' },
+      { id: 'oc-surat-6', shortName: 'SUIT-PRS', name: 'Executive 2-Piece Suit Steam Pressing', category: 'Express Dry Cleaning & Laundry', price: 650.0, taxable: true, alwaysCharge: false, reoccur: false, crsCharge: false, callLoggingCharge: false, posCharge: true, forecastingRevenue: true, description: 'Same-day steam finishing and hanger packaging.' },
+    ],
+    measurementUnits: [
+      { id: 'mu-surat-1', name: 'Plate / Person', shortName: 'PLT', description: 'Per person banquet or buffet tariff count', icon: 'restaurant' },
+      { id: 'mu-surat-2', name: 'Session', shortName: 'SES', description: 'Conference or spa session slot', icon: 'schedule' },
+      { id: 'mu-surat-3', name: 'Day', shortName: 'DAY', description: '24-hour calendar period', icon: 'calendar_today' },
+      { id: 'mu-surat-4', name: 'Piece', shortName: 'PC', description: 'Individual item or laundry piece count', icon: 'category' },
+      { id: 'mu-surat-5', name: 'Kilogram', shortName: 'KG', description: 'Bulk laundry and kitchen weighing', icon: 'scale' },
+    ],
+    paymentTypes: [
+      { id: 'pt-surat-1', shortName: 'UPI', name: 'UPI Instant (GPay / PhonePe / Paytm / BHIM)', category: 'Digital Wallet', ccProcessing: true, status: 'Active', description: 'Dynamic NPCI QR code scanning with instant settlement' },
+      { id: 'pt-surat-2', shortName: 'RUPAY', name: 'RuPay Debit & Credit Cards', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'National Payments Corporation of India card settlement' },
+      { id: 'pt-surat-3', shortName: 'INT-CC', name: 'Visa & Mastercard International', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Global multi-currency credit and debit cards' },
+      { id: 'pt-surat-4', shortName: 'AMEX', name: 'American Express India', category: 'Credit Card', ccProcessing: true, status: 'Active', description: 'Amex corporate and Bonvoy co-branded cards' },
+      { id: 'pt-surat-5', shortName: 'NETBNK', name: 'Net Banking (HDFC / ICICI / SBI / Axis)', category: 'Bank Transfer', ccProcessing: false, status: 'Active', description: 'Direct Indian institutional bank transfer' },
+      { id: 'pt-surat-6', shortName: 'CASH', name: 'Cash - Indian Rupee (PAN Compliant)', category: 'Cash', ccProcessing: false, status: 'Active', description: 'Indian Rupee banknotes subject to Sec 269ST limits' },
+    ],
+    exchangeRates: [
+      { id: 'xr-surat-1', country: 'India', countryCode: 'IN', currency: 'Indian Rupee', sign: '₹', rate: 1.0000, isBaseRate: true },
+      { id: 'xr-surat-2', country: 'United States', countryCode: 'US', currency: 'US Dollar', sign: '$', rate: 0.0120, isBaseRate: false },
+      { id: 'xr-surat-3', country: 'Eurozone', countryCode: 'EU', currency: 'Euro', sign: '€', rate: 0.0110, isBaseRate: false },
+      { id: 'xr-surat-4', country: 'United Kingdom', countryCode: 'GB', currency: 'British Pound', sign: '£', rate: 0.0095, isBaseRate: false },
+      { id: 'xr-surat-5', country: 'United Arab Emirates', countryCode: 'AE', currency: 'UAE Dirham', sign: 'د.إ', rate: 0.0441, isBaseRate: false },
+      { id: 'xr-surat-6', country: 'Singapore', countryCode: 'SG', currency: 'Singapore Dollar', sign: 'S$', rate: 0.0161, isBaseRate: false },
+    ],
+    roles: [
+      {
+        id: 'role-10',
+        name: 'General Manager & Director',
+        code: 'GM-DIR',
+        type: 'Management',
+        description: 'Executive oversight, Bonvoy brand compliance, RevPAR optimization',
+        usersCount: 1,
+        isSystem: true,
+        isCritical: true,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: true },
+          'property-master': { view: true, add: true, edit: true, delete: true },
+          'user-accounts': { view: true, add: true, edit: true, delete: true },
+          'tax-config': { view: true, add: true, edit: true, delete: true },
+          'rooms-inventory': { view: true, add: true, edit: true, delete: true },
+        },
+      },
+      {
+        id: 'role-11',
+        name: 'Front Office Executive',
+        code: 'FO-EXEC',
+        type: 'FrontOffice',
+        description: 'Guest check-in, Form C FRRO verification, Bonvoy elite recognition',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'guest-folio': { view: true, add: true, edit: true, delete: false },
+          'rooms-inventory': { view: true, add: false, edit: true, delete: false },
+          'cashiering': { view: true, add: true, edit: false, delete: false },
+        },
+      },
+      {
+        id: 'role-12',
+        name: 'Financial Controller',
+        code: 'FIN-CTRL',
+        type: 'Finance',
+        description: 'GST filing, TDS compliance, daily night audit sign-off',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: true,
+        permissions: {
+          'tax-config': { view: true, add: true, edit: true, delete: false },
+          'invoices': { view: true, add: true, edit: true, delete: true },
+          'audit-logs': { view: true, add: false, edit: false, delete: false },
+        },
+      },
+      {
+        id: 'role-13',
+        name: 'Executive Housekeeper',
+        code: 'EHK',
+        type: 'Operations',
+        description: 'Turnover management, Tapi tower hygiene protocol inspection',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'housekeeping-status': { view: true, add: true, edit: true, delete: false },
+        },
+      },
+      {
+        id: 'role-14',
+        name: 'Marriott Bonvoy Loyalty Host',
+        code: 'LOYALTY',
+        type: 'FrontOffice',
+        description: 'VIP Diamond Bourse concierge, lounge access management',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'guest-folio': { view: true, add: false, edit: true, delete: false },
+        },
+      },
+      {
+        id: 'role-15',
+        name: 'Banquet & Events Director',
+        code: 'BANQUET',
+        type: 'Sales',
+        description: 'Grand Crystal Ballroom corporate conferences, weddings, catering',
+        usersCount: 1,
+        isSystem: false,
+        isCritical: false,
+        permissions: {
+          'rate-calendar': { view: true, add: true, edit: true, delete: false },
+        },
+      },
+    ],
+    users: [
+      {
+        id: '3',
+        name: 'Rajesh Mehta',
+        email: 'rajesh.mehta@marriott.com',
+        initials: 'RM',
+        roleId: 'role-10',
+        roleName: 'General Manager & Director',
+        roleType: 'Management',
+        lastLogin: 'Active Now',
+        status: 'active',
+        phone: '+91 261 711 7000',
+        department: 'Executive Management',
+        description: 'General Manager and executive director for Surat Marriott Hotel.',
+      },
+      {
+        id: '4',
+        name: 'Priya Shah',
+        email: 'priya.shah@marriott.com',
+        initials: 'PS',
+        roleId: 'role-11',
+        roleName: 'Front Office Executive',
+        roleType: 'FrontOffice',
+        lastLogin: 'Today, 10:15 AM',
+        status: 'active',
+        phone: '+91 261 711 7001',
+        department: 'Front Office',
+      },
+      {
+        id: '12',
+        name: 'Amit Singhania',
+        email: 'amit.singhania@marriott.com',
+        initials: 'AS',
+        roleId: 'role-12',
+        roleName: 'Financial Controller',
+        roleType: 'Finance',
+        lastLogin: 'Today, 09:30 AM',
+        status: 'active',
+        phone: '+91 261 711 7002',
+        department: 'Finance & Accounts',
+      },
+      {
+        id: '13',
+        name: 'Sunita Parmar',
+        email: 'sunita.parmar@marriott.com',
+        initials: 'SP',
+        roleId: 'role-13',
+        roleName: 'Executive Housekeeper',
+        roleType: 'Operations',
+        lastLogin: 'Today, 08:45 AM',
+        status: 'active',
+        phone: '+91 261 711 7003',
+        department: 'Housekeeping',
+      },
+      {
+        id: '14',
+        name: 'Rohan Dave',
+        email: 'rohan.dave@marriott.com',
+        initials: 'RD',
+        roleId: 'role-14',
+        roleName: 'Marriott Bonvoy Loyalty Host',
+        roleType: 'FrontOffice',
+        lastLogin: 'Yesterday, 18:00',
+        status: 'active',
+        phone: '+91 261 711 7004',
+        department: 'Guest Experience',
+      },
+      {
+        id: '15',
+        name: 'Vikram Solanki',
+        email: 'vikram.solanki@marriott.com',
+        initials: 'VS',
+        roleId: 'role-15',
+        roleName: 'Banquet & Events Director',
+        roleType: 'Sales',
+        lastLogin: 'Yesterday, 16:30',
+        status: 'active',
+        phone: '+91 261 711 7005',
+        department: 'Banqueting & Sales',
+      },
+    ],
+    emailTemplates: [
+      {
+        id: 'tmpl-surat-1',
+        name: 'Surat Marriott Booking Confirmation',
+        subject: 'Your Surat Marriott Hotel Reservation Confirmation - {{confirmation_no}}',
+        senderName: 'Surat Marriott Reservations',
+        replyTo: 'reservations@suratmarriott.com',
+        status: 'active',
+        triggers: {
+          created: true,
+          updated: false,
+          cancelled: false,
+          dob: false,
+          beforeCheckIn: false,
+          beforeCheckInDays: 0,
+          atCheckIn: false,
+          afterCheckIn: false,
+          afterCheckInDays: 0,
+          beforeCheckOut: false,
+          beforeCheckOutDays: 0,
+          atCheckOut: false,
+          afterCheckOut: false,
+          afterCheckOutDays: 0,
+        },
+        body: `<p>Dear {{guest_name}},</p><p>Namaste from <strong>Surat Marriott Hotel</strong>, Ambika Niketan, Dumas Road, Surat, Gujarat.</p><p>We are delighted to confirm your upcoming stay. Check-in: {{check_in_date}} | Confirmation No: {{confirmation_no}} | Room Type: {{room_type}}</p><p>Property GSTIN: 24AABCS1429B1Z8</p>`,
+        createdAt: 'Jan 15, 2024',
+        updatedAt: 'Mar 10, 2026',
+      },
+      {
+        id: 'tmpl-surat-2',
+        name: 'Marriott Bonvoy Elite Welcome & Lounge Access',
+        subject: 'Welcome to Surat Marriott - Bonvoy Elite Experience',
+        senderName: 'Bonvoy Guest Relations',
+        replyTo: 'bonvoy@suratmarriott.com',
+        status: 'active',
+        triggers: {
+          created: false,
+          updated: false,
+          cancelled: false,
+          dob: false,
+          beforeCheckIn: true,
+          beforeCheckInDays: 1,
+          atCheckIn: false,
+          afterCheckIn: false,
+          afterCheckInDays: 0,
+          beforeCheckOut: false,
+          beforeCheckOutDays: 0,
+          atCheckOut: false,
+          afterCheckOut: false,
+          afterCheckOutDays: 0,
+        },
+        body: `<p>Dear {{guest_name}},</p><p>We look forward to welcoming you to Surat. Complimentary high tea and evening cocktails await you at our executive lounge overlooking the Tapi river.</p>`,
+        createdAt: 'Feb 10, 2024',
+        updatedAt: 'Feb 20, 2026',
+      },
+    ],
   },
 };
 
+// Aliases for backwards compatibility with any legacy string references
+TENANT_DATASETS['DIS_001'] = TENANT_DATASETS['10001'];
+TENANT_DATASETS['STVMC_SURAT'] = TENANT_DATASETS['10002'];
+
 /**
  * Returns isolated initial data for a given property tenant.
- * Falls back safely to Destin Inn & Suite if the client ID is novel.
+ * Falls back safely to Destin Inn & Suite (10001) if the client ID is novel.
  */
 export function getTenantDataset(clientId: string): TenantIsolatedData {
   if (TENANT_DATASETS[clientId]) {
     return TENANT_DATASETS[clientId];
   }
-  const fallback = TENANT_DATASETS['DIS_001'];
+  const fallback = TENANT_DATASETS['10001'] || TENANT_DATASETS['DIS_001'];
   return {
     ...fallback,
     buildings: fallback.buildings.map(b => ({ ...b, id: `${b.id}-${clientId}` })),

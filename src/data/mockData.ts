@@ -4,10 +4,10 @@ export const HOTLINKED_MAP_IMAGE = 'https://lh3.googleusercontent.com/aida-publi
 
 export const INITIAL_PROPERTIES: PropertyData[] = [
   {
-    id: 'DIS_001',
+    id: '10001',
     identity: {
       name: 'Destin Inn & Suites',
-      clientId: 'DIS_001',
+      clientId: '10001',
       region: 'na',
     },
     location: {
@@ -50,16 +50,16 @@ export const INITIAL_PROPERTIES: PropertyData[] = [
     capModel: {
       theoremModel: 'CP',
       isolationLevel: 'database_and_storage_partition',
-      tenantWorkspaceId: 'DIS_001',
+      tenantWorkspaceId: '10001',
       isDataPartitioned: true,
       activeNode: 'us-east-cluster-01',
     },
   },
   {
-    id: 'STVMC_SURAT',
+    id: '10002',
     identity: {
       name: 'Surat Marriott Hotel',
-      clientId: 'STVMC_SURAT',
+      clientId: '10002',
       region: 'apac',
     },
     location: {
@@ -102,7 +102,7 @@ export const INITIAL_PROPERTIES: PropertyData[] = [
     capModel: {
       theoremModel: 'CP',
       isolationLevel: 'database_and_storage_partition',
-      tenantWorkspaceId: 'STVMC_SURAT',
+      tenantWorkspaceId: '10002',
       isDataPartitioned: true,
       activeNode: 'apac-south-cluster-01',
     },
@@ -119,8 +119,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     roleType: 'Admin',
     initials: 'JM',
     department: 'General Hotel Administration',
-    accessiblePropertyIds: ['DIS_001'],
-    defaultPropertyId: 'DIS_001',
+    accessiblePropertyIds: ['10001'],
+    defaultPropertyId: '10001',
     status: 'active',
   },
   {
@@ -132,8 +132,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     roleType: 'FrontOffice',
     initials: 'SJ',
     department: 'Front Desk Operations',
-    accessiblePropertyIds: ['DIS_001'],
-    defaultPropertyId: 'DIS_001',
+    accessiblePropertyIds: ['10001'],
+    defaultPropertyId: '10001',
     status: 'active',
   },
   {
@@ -145,8 +145,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     roleType: 'SuperAdmin',
     initials: 'SA',
     department: 'Corporate Hotel Operations',
-    accessiblePropertyIds: ['STVMC_SURAT'],
-    defaultPropertyId: 'STVMC_SURAT',
+    accessiblePropertyIds: ['10002'],
+    defaultPropertyId: '10002',
     status: 'active',
   },
   {
@@ -158,8 +158,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     roleType: 'FrontOffice',
     initials: 'PS',
     department: 'Front Desk Operations',
-    accessiblePropertyIds: ['STVMC_SURAT'],
-    defaultPropertyId: 'STVMC_SURAT',
+    accessiblePropertyIds: ['10002'],
+    defaultPropertyId: '10002',
     status: 'active',
   },
   {
@@ -171,8 +171,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     roleType: 'Management',
     initials: 'DC',
     department: 'Executive Management',
-    accessiblePropertyIds: ['DIS_001'],
-    defaultPropertyId: 'DIS_001',
+    accessiblePropertyIds: ['10001'],
+    defaultPropertyId: '10001',
     status: 'active',
   },
 ];

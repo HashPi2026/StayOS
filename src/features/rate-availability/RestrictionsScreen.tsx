@@ -15,7 +15,7 @@ interface RestrictionsScreenProps {
 
 export const RestrictionsScreen: React.FC<RestrictionsScreenProps> = ({ onNotify }) => {
   const { currentProperty, roomTypes, rooms, currentPropertyId } = useProperty();
-  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const isSurat = currentPropertyId === '10002' || currentPropertyId === 'STVMC_SURAT';
   const hotelDisplayName = currentProperty?.identity?.name || (isSurat ? 'Surat Marriott Hotel' : 'Destin Inn & Suites');
 
   const [isBulkDrawerOpen, setIsBulkDrawerOpen] = useState(false);

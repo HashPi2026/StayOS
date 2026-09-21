@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useProperty } from '../../context/PropertyContext';
 import { DatePickerField } from './DatePickerField';
 import {
@@ -15,7 +15,7 @@ interface RateMatrixScreenProps {
 
 export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) => {
   const { currentProperty, roomTypes, rooms, currentPropertyId } = useProperty();
-  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const isSurat = currentPropertyId === '10002' || currentPropertyId === 'STVMC_SURAT';
   const currencySymbol = currentProperty?.meta?.currencySymbol || (isSurat ? '₹' : '$');
 
   // Modal / Drawer states
@@ -43,12 +43,24 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
   // Selected Rate Plan
   const [selectedRatePlan, setSelectedRatePlan] = useState('RACK');
 
-  // Dynamic grid state: rowId -> isoDate -> price
-  const [matrixData, setMatrixData] = useState<Record<string, Record<string, number>>>({});
+  // Dynamic grid state: rowId -> isoDate -> price (Strictly tenant-scoped for confidentiality)
+  const [matrixData, setMatrixData] = useState<Record<string, Record<string, number>>>(() => {
+    try {
+      const saved = localStorage.getItem(`stayos_${currentPropertyId}_rate_matrix_data`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
-  // Reset grid state when active hotel changes (strict CAP data isolation)
+  // Load and isolate grid state when active hotel changes (strict multi-tenant confidentiality)
   useEffect(() => {
-    setMatrixData({});
+    try {
+      const saved = localStorage.getItem(`stayos_${currentPropertyId}_rate_matrix_data`);
+      setMatrixData(saved ? JSON.parse(saved) : {});
+    } catch {
+      setMatrixData({});
+    }
     setEditingKey(null);
   }, [currentPropertyId]);
 
@@ -220,14 +232,22 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
   const handleCommitEdit = (rowId: string, d: DateItem) => {
     const num = parseFloat(editValue);
     if (!isNaN(num) && num > 0) {
-      setMatrixData((prev) => ({
-        ...prev,
-        [rowId]: {
-          ...(prev[rowId] || {}),
-          [d.iso]: num,
-        },
-      }));
-      onNotify(`Rate point for ${rowId} on ${d.label} updated to ${currencySymbol}${num}. Synchronized to ARI gateway.`);
+      setMatrixData((prev) => {
+        const next = {
+          ...prev,
+          [rowId]: {
+            ...(prev[rowId] || {}),
+            [d.iso]: num,
+          },
+        };
+        try {
+          localStorage.setItem(`stayos_${currentPropertyId}_rate_matrix_data`, JSON.stringify(next));
+        } catch (e) {
+          console.warn('Storage save warning:', e);
+        }
+        return next;
+      });
+      onNotify(`Rate point for ${rowId} on ${d.label} updated to ${currencySymbol}${num}. Saved confidentially for this property.`);
     }
     setEditingKey(null);
   };
@@ -341,8 +361,13 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
     }
 
     setMatrixData(updated);
+    try {
+      localStorage.setItem(`stayos_${currentPropertyId}_rate_matrix_data`, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Storage save warning:', e);
+    }
     setIsRangeDrawerOpen(false);
-    onNotify(`Range rate operation applied! ${modifiedCount} rate points updated and synced to ARI gateway.`);
+    onNotify(`Range rate operation applied! ${modifiedCount} rate points updated and saved confidentially for this property.`);
   };
 
   // Binding Drawer state
@@ -373,8 +398,13 @@ export const RateMatrixScreen: React.FC<RateMatrixScreenProps> = ({ onNotify }) 
     });
 
     setMatrixData(updated);
+    try {
+      localStorage.setItem(`stayos_${currentPropertyId}_rate_matrix_data`, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Storage save warning:', e);
+    }
     setIsBindingDrawerOpen(false);
-    onNotify(`Room Type Binding applied! ${copyCount} rate points calculated and mapped to ${targetCat.name}.`);
+    onNotify(`Room Type Binding applied! ${copyCount} rate points calculated and mapped to ${targetCat.name}. Saved confidentially.`);
   };
 
   const hotelDisplayName = currentProperty?.identity?.name || 'Destin Inn & Suites';

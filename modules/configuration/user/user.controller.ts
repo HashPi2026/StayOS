@@ -16,7 +16,7 @@ export class UserController {
 
   list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const clientId = (req.query.client_id as string) || req.clientId!;
+      const clientId = req.clientId!;
       const users = await this.service.getUsers(clientId);
       sendSuccess(res, users);
     } catch (err) {

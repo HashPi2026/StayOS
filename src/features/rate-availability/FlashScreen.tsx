@@ -15,7 +15,7 @@ interface FlashScreenProps {
 
 export const FlashScreen: React.FC<FlashScreenProps> = ({ onNotify }) => {
   const { currentProperty, properties, switchProperty, roomTypes, rooms, currentPropertyId } = useProperty();
-  const isSurat = currentPropertyId === 'STVMC_SURAT';
+  const isSurat = currentPropertyId === '10002' || currentPropertyId === 'STVMC_SURAT';
   const currencySymbol = currentProperty?.meta?.currencySymbol || (isSurat ? '₹' : '$');
 
   // Active hotel selector dropdown state

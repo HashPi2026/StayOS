@@ -10,7 +10,8 @@
     "migrate": "node db/migrate.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "node --check server.js"
+    "lint": "node --check server.js",
+    "test": "node test_suite.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

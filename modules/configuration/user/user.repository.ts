@@ -27,7 +27,7 @@ export class UserRepository {
       FROM app_user u
       LEFT JOIN role_privilege r ON u.role_id = r.role_id
       LEFT JOIN user_login_credential c ON u.user_id = c.user_id
-      WHERE u.client_id = $1 OR $1 = '*'
+      WHERE u.client_id = $1
       ORDER BY u.user_id ASC;
     `;
     const res = await query<UserEntity>(text, [clientId]);
@@ -59,7 +59,7 @@ export class UserRepository {
       FROM app_user u
       LEFT JOIN role_privilege r ON u.role_id = r.role_id
       LEFT JOIN user_login_credential c ON u.user_id = c.user_id
-      WHERE (u.client_id = $1 OR $1 = '*') AND u.user_id = $2
+      WHERE u.client_id = $1 AND u.user_id = $2
       LIMIT 1;
     `;
     const res = await query<UserEntity>(text, [clientId, userId]);
@@ -71,11 +71,11 @@ export class UserRepository {
     try {
       await client.query('BEGIN');
 
-      // Resolve role_id if not provided
+      // Resolve role_id if not provided - strictly scoped to clientId
       let roleId = data.role_id;
       if (!roleId && data.role_name) {
         const roleRes = await client.query(
-          `SELECT role_id FROM role_privilege WHERE (client_id = $1 OR client_id = 'DIS_001') AND (LOWER(role_name) = LOWER($2) OR LOWER(short_name) = LOWER($2)) LIMIT 1;`,
+          `SELECT role_id FROM role_privilege WHERE client_id = $1 AND (LOWER(role_name) = LOWER($2) OR LOWER(short_name) = LOWER($2)) LIMIT 1;`,
           [clientId, data.role_name]
         );
         if (roleRes.rows[0]) {
@@ -83,12 +83,11 @@ export class UserRepository {
         }
       }
       if (!roleId) {
-        // Default to Front Desk Associate (role_id 2) or first available
         const defaultRoleRes = await client.query(
-          `SELECT role_id FROM role_privilege WHERE client_id = $1 OR client_id = 'DIS_001' ORDER BY role_id ASC LIMIT 1;`,
+          `SELECT role_id FROM role_privilege WHERE client_id = $1 ORDER BY role_id ASC LIMIT 1;`,
           [clientId]
         );
-        roleId = defaultRoleRes.rows[0]?.role_id || 2;
+        roleId = defaultRoleRes.rows[0]?.role_id || 1;
       }
 
       const initials = data.initials || data.user_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -160,7 +159,7 @@ export class UserRepository {
       let roleId = data.role_id !== undefined ? data.role_id : existing.role_id;
       if (data.role_name && !data.role_id) {
         const roleRes = await client.query(
-          `SELECT role_id FROM role_privilege WHERE (client_id = $1 OR client_id = 'DIS_001') AND (LOWER(role_name) = LOWER($2) OR LOWER(short_name) = LOWER($2)) LIMIT 1;`,
+          `SELECT role_id FROM role_privilege WHERE client_id = $1 AND (LOWER(role_name) = LOWER($2) OR LOWER(short_name) = LOWER($2)) LIMIT 1;`,
           [clientId, data.role_name]
         );
         if (roleRes.rows[0]) {

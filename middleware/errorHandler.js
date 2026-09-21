@@ -57,7 +57,20 @@ next) {
                 });
                 return;
             }
+            // 22008 & 22007: datetime_field_overflow / invalid_datetime_format (e.g. "31-12-2030")
+            case '22007':
+            case '22008': {
+                sendError(res, 400, 'INVALID_DATE_FORMAT', `Date field value out of range or invalid format (expected YYYY-MM-DD): ${err.message}`, {
+                    postgresCode: err.code,
+                    detail: err.message,
+                });
+                return;
+            }
         }
+    }
+    if (err && (err.routine === 'DateTimeParseError' || (err.message && err.message.includes('date/time field value out of range')))) {
+        sendError(res, 400, 'INVALID_DATE_FORMAT', `Date/time format error: ${err.message}`);
+        return;
     }
     // 3. Fallback Unhandled 500
     console.error('[Unhandled Internal Error]:', err);

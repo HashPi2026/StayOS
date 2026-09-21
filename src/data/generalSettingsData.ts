@@ -533,3 +533,103 @@ export const INITIAL_GENERAL_SETTINGS: GeneralSettingsState = {
     ],
   },
 };
+
+export function getTenantGeneralSettings(clientId: string): GeneralSettingsState {
+  const isSurat = clientId === '10002' || clientId === 'STVMC_SURAT';
+
+  if (isSurat) {
+    return {
+      ...INITIAL_GENERAL_SETTINGS,
+      rental: {
+        ...INITIAL_GENERAL_SETTINGS.rental,
+        earlyCheckInAmount: 1500,
+        lateCheckOutAmount: 2500,
+      },
+      nightAudits: {
+        ...INITIAL_GENERAL_SETTINGS.nightAudits,
+        globalDistributionList: ['rajesh.mehta@marriott.com', 'nightaudit@suratmarriott.com'],
+        eodReportRecipients: 'rajesh.mehta@marriott.com, nightaudit@suratmarriott.com',
+      },
+      localization: {
+        ...INITIAL_GENERAL_SETTINGS.localization,
+        country: 'in',
+        currency: 'inr',
+        currencySymbol: '₹',
+        dateFormat: 'ddmmmyyyy',
+        timeFormat: '24h',
+        numberFormat: 'in',
+        timezone: 'Asia/Kolkata',
+        customLabels: {
+          stateField: 'State',
+          zipField: 'Pincode',
+          roomTerminology: 'Suite',
+          rateTerminology: 'Daily Tariff',
+          guestTitles: 'Salutation',
+        },
+        fiscalStartDate: '01 Apr',
+        fiscalEndDate: '31 Mar',
+      },
+      display: {
+        ...INITIAL_GENERAL_SETTINGS.display,
+        checkInWelcomeMessage:
+          'Welcome to Surat Marriott Hotel. We hope you enjoy your stay by the Tapi River and our luxury Bonvoy hospitality.',
+        checkOutThankYouMessage:
+          'Thank you for choosing Surat Marriott Hotel. We look forward to welcoming you back.',
+      },
+      folios: {
+        ...INITIAL_GENERAL_SETTINGS.folios,
+        companyName: 'Surat Marriott Hotel (Chopra Real Estate & Hospitality)',
+        propertyTaxId: 'PAN: AABCS1429B',
+        taxRegistrationNumber: 'GSTIN: 24AABCS1429B1Z8',
+      },
+    };
+  }
+
+  // Default: Destin Inn & Suites (10001)
+  return {
+    ...INITIAL_GENERAL_SETTINGS,
+    rental: {
+      ...INITIAL_GENERAL_SETTINGS.rental,
+      earlyCheckInAmount: 25,
+      lateCheckOutAmount: 40,
+    },
+    nightAudits: {
+      ...INITIAL_GENERAL_SETTINGS.nightAudits,
+      globalDistributionList: ['gm@destininn.com', 'nightaudit@destininn.com'],
+      eodReportRecipients: 'gm@destininn.com, nightaudit@destininn.com',
+    },
+    localization: {
+      ...INITIAL_GENERAL_SETTINGS.localization,
+      country: 'us',
+      currency: 'usd',
+      currencySymbol: '$',
+      dateFormat: 'mmddyyyy',
+      timeFormat: '12h',
+      numberFormat: 'us',
+      timezone: 'America/Chicago',
+      customLabels: {
+        stateField: 'State',
+        zipField: 'Zip Code',
+        roomTerminology: 'Room',
+        rateTerminology: 'Daily Rate',
+        guestTitles: 'Salutation',
+      },
+      fiscalStartDate: '01 Jan',
+      fiscalEndDate: '31 Dec',
+    },
+    display: {
+      ...INITIAL_GENERAL_SETTINGS.display,
+      checkInWelcomeMessage:
+        'Welcome to Destin Inn & Suites. Enjoy the emerald coast and Destin harbor boardwalk.',
+      checkOutThankYouMessage:
+        'Thank you for choosing Destin Inn & Suites. Have a wonderful onward journey.',
+    },
+    folios: {
+      ...INITIAL_GENERAL_SETTINGS.folios,
+      companyName: 'Destin Inn & Suites LLC',
+      propertyTaxId: 'US-EIN-59-1234567',
+      taxRegistrationNumber: 'FL-DOR-68-801234567',
+    },
+  };
+}
+

@@ -4,6 +4,20 @@
   :root {
     --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* Brand and Surface Design Tokens */
+    --color-primary: #4472C4;
+    --color-secondary: #4472C4;
+    --color-secondary-container: #edf3fc;
+    --color-on-secondary-container: #1e3a8a;
+    --color-surface-lowest: #ffffff;
+    --color-surface-low: #f8fafc;
+    --color-surface: #f1f5f9;
+    --color-surface-high: #e2e8f0;
+    --color-surface-highest: #cbd5e1;
+    --color-on-surface: #0f172a;
+    --color-on-surface-variant: #64748b;
+    --color-outline-variant: #e2e8f0;
   }
 
   body {
@@ -14,31 +28,52 @@
   }
 }
 
-/* Custom design system utility tokens */
+/* Ensure Material Symbols are ALWAYS loaded and never overridden by body fonts */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Custom typography tokens */
 .font-data-mono {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
 .text-label-uppercase {
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.05em;
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .text-headline-md {
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 22px;
+  line-height: 28px;
   letter-spacing: -0.01em;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .text-title-sm {
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 22px;
   font-weight: 600;
 }
 
@@ -52,16 +87,121 @@
   line-height: 18px;
 }
 
-/* Material Symbols Icon Sizing Helpers */
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
-  vertical-align: middle;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
+/* Custom Spacing Tokens */
+.px-xs { padding-left: 0.5rem; padding-right: 0.5rem; }
+.px-sm { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-md { padding-left: 1rem; padding-right: 1rem; }
+.px-lg { padding-left: 1.5rem; padding-right: 1.5rem; }
+.px-xl { padding-left: 2rem; padding-right: 2rem; }
+
+.py-xs { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+.py-sm { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-md { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-lg { padding-top: 1rem; padding-bottom: 1rem; }
+.py-xl { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+.p-xs { padding: 0.5rem; }
+.p-sm { padding: 0.75rem; }
+.p-md { padding: 1rem; }
+.p-lg { padding: 1.5rem; }
+.p-xl { padding: 2rem; }
+
+.pt-xs { padding-top: 0.375rem; }
+.pt-sm { padding-top: 0.5rem; }
+.pt-md { padding-top: 1rem; }
+.pt-lg { padding-top: 1.5rem; }
+.pt-xl { padding-top: 2rem; }
+
+.pb-xs { padding-bottom: 0.375rem; }
+.pb-sm { padding-bottom: 0.5rem; }
+.pb-md { padding-bottom: 1rem; }
+.pb-lg { padding-bottom: 1.5rem; }
+.pb-xl { padding-bottom: 2rem; }
+.pb-base { padding-bottom: 0.75rem; }
+
+.pl-xs { padding-left: 0.5rem; }
+.pl-sm { padding-left: 0.75rem; }
+.pl-md { padding-left: 1rem; }
+.pl-lg { padding-left: 1.5rem; }
+.pl-xl { padding-left: 2.5rem; } /* 40px left padding for input with icon */
+
+.pr-xs { padding-right: 0.5rem; }
+.pr-sm { padding-right: 0.75rem; }
+.pr-md { padding-right: 1rem; }
+.pr-lg { padding-right: 1.5rem; }
+.pr-xl { padding-right: 2.5rem; }
+
+.gap-xs { gap: 0.375rem; }
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+.gap-lg { gap: 1.5rem; }
+.gap-xl { gap: 2rem; }
+
+.space-y-xs > :not([hidden]) ~ :not([hidden]) { margin-top: 0.375rem; }
+.space-y-sm > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.space-y-md > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.space-y-lg > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+
+.space-x-xs > :not([hidden]) ~ :not([hidden]) { margin-left: 0.375rem; }
+.space-x-sm > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
+.space-x-md > :not([hidden]) ~ :not([hidden]) { margin-left: 1rem; }
+
+.mt-xs { margin-top: 0.375rem; }
+.mt-sm { margin-top: 0.5rem; }
+.mt-md { margin-top: 1rem; }
+.mt-lg { margin-top: 1.5rem; }
+
+.mb-xs { margin-bottom: 0.375rem; }
+.mb-sm { margin-bottom: 0.5rem; }
+.mb-md { margin-bottom: 1rem; }
+.mb-lg { margin-bottom: 1.5rem; }
+
+.left-xs { left: 0.5rem; }
+.left-sm { left: 0.75rem; }
+.left-md { left: 0.875rem; }
+.left-lg { left: 1.25rem; }
+
+.right-xs { right: 0.5rem; }
+.right-sm { right: 0.75rem; }
+.right-md { right: 1rem; }
+
+/* Custom Surface & Theme Token Classes */
+.bg-surface-container-lowest { background-color: #ffffff; }
+.bg-surface-container-low { background-color: #f8fafc; }
+.bg-surface-container { background-color: #f1f5f9; }
+.bg-surface-container-high { background-color: #e2e8f0; }
+.bg-surface-container-highest { background-color: #cbd5e1; }
+
+.text-on-surface { color: #0f172a; }
+.text-on-surface-variant { color: #64748b; }
+.border-outline-variant { border-color: #e2e8f0; }
+.border-surface-container { border-color: #e2e8f0; }
+
+.text-secondary { color: #4472C4; }
+.bg-secondary { background-color: #4472C4; }
+.bg-secondary-container { background-color: #edf3fc; }
+.text-on-secondary { color: #ffffff; }
+.text-on-secondary-container { color: #1e3a8a; }
+
+.bg-secondary-fixed { background-color: #dbeafe; }
+.bg-secondary-fixed-dim { background-color: #bfdbfe; }
+.text-on-secondary-fixed-variant { color: #1e40af; }
+
+.bg-primary { background-color: #4472C4; }
+.text-on-primary { color: #ffffff; }
+
+.bg-tertiary-container { background-color: #1e293b; }
+.text-on-tertiary { color: #f8fafc; }
+.text-secondary-fixed { color: #93c5fd; }
+.text-tertiary-fixed { color: #cbd5e1; }
+.text-tertiary-fixed-dim { color: #94a3b8; }
+
+.bg-tertiary-fixed { background-color: #e0e7ff; }
+.text-on-tertiary-fixed { color: #3730a3; }
+
+.text-error { color: #dc2626; }
+.bg-error-container { background-color: #fee2e2; }
+.text-on-error-container { color: #991b1b; }
 
 /* Visible Custom Scrollbars */
 ::-webkit-scrollbar {
@@ -84,4 +224,3 @@
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
-

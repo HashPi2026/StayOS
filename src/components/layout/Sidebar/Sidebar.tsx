@@ -104,6 +104,7 @@ export const Sidebar: React.FC = () => {
     {
       title: 'Miscellaneous',
       items: [
+        { id: 'reservation-logs', label: 'Reservation Log', icon: 'assignment' },
         { id: 'audit-logs', label: 'Audit Logs', icon: 'history' },
         { id: 'system-health', label: 'System Health', icon: 'health_and_safety' },
       ],

@@ -48,11 +48,12 @@ export const UserManagementView: React.FC = () => {
 
   // Filter users
   const filteredUsers = users.filter((u) => {
+    const term = (searchTerm || '').toLowerCase();
     const matchesSearch =
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.roleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (u.department && u.department.toLowerCase().includes(searchTerm.toLowerCase()));
+      (u.name || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.roleName || '').toLowerCase().includes(term) ||
+      (u.department ? u.department.toLowerCase().includes(term) : false);
 
     const matchesRole =
       selectedRoleFilter === 'ALL' || u.roleId === selectedRoleFilter;

@@ -1,5 +1,6 @@
 import { pool } from '../../../db/pool.js';
 import { NotFoundError, ValidationError } from '../../../utils/errors.js';
+import { parseSafeIsoDate } from '../guest/guest.service.js';
 
 export class ContactService {
   async listContacts(clientId, filters = {}) {
@@ -104,7 +105,7 @@ export class ContactService {
       clientId,
       catId,
       full_name.trim(),
-      birth_date || null,
+      parseSafeIsoDate(birth_date),
       company?.trim() || null,
     ];
 
@@ -154,7 +155,7 @@ export class ContactService {
     const values = [
       catId,
       fullName,
-      data.birth_date !== undefined ? data.birth_date || null : current.birth_date,
+      data.birth_date !== undefined ? parseSafeIsoDate(data.birth_date) : current.birth_date,
       data.company !== undefined ? data.company?.trim() || null : current.company,
       contactId,
       clientId,

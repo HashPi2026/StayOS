@@ -24,6 +24,65 @@ export interface PmsModuleInfo {
   subItems?: PmsSubMenuItem[];
 }
 
+export const FRONT_DESK_SUBMENUS: PmsSubMenuItem[] = [
+  {
+    key: 'search-reservation',
+    path: 'search-reservation',
+    displayName: 'Search Reservation',
+    materialIcon: 'manage_search',
+    description: 'Advanced multi-criteria reservation filtering, folios, guest history, and instant confirmation lookups.',
+    badge: 'Directory',
+  },
+  {
+    key: 'guest-ledger',
+    path: 'guest-ledger',
+    displayName: 'Guest Ledger',
+    materialIcon: 'menu_book',
+    description: 'Live operational ledger across In-House, To Check Out, Checked Out, Reservations, Room Changes, and Late Checkouts.',
+    badge: 'Live Ledger',
+  },
+  {
+    key: 'batch-folio',
+    path: 'batch-folio',
+    displayName: 'Batch Folio',
+    materialIcon: 'receipt_long',
+    description: 'Bulk folio generation, print spooling, registration forms, and mass guest email dispatch.',
+    badge: 'Bulk Ops',
+  },
+  {
+    key: 'change-room-status',
+    path: 'change-room-status',
+    displayName: 'Change Room Status',
+    materialIcon: 'published_with_changes',
+    description: 'Floor-by-floor interactive room cards with instant HK status update and occupancy conflict warnings.',
+    badge: 'Room Rack',
+  },
+  {
+    key: 'block-room',
+    path: 'block-room',
+    displayName: 'Block Room',
+    materialIcon: 'domain_disabled',
+    description: 'Maintenance holds, out-of-order designations, scheduled room blocks, and reservation conflict warnings.',
+    badge: 'OOO / OOS',
+  },
+  {
+    key: 'edit-group',
+    path: 'edit-group',
+    displayName: 'Edit Group',
+    materialIcon: 'groups',
+    description: 'Master corporate billing directives, AR headroom management, and group member reservation coordination.',
+    badge: 'Groups',
+  },
+  {
+    key: 'room-comments',
+    path: 'room-comments',
+    displayName: 'Room Comments',
+    materialIcon: 'rate_review',
+    description: 'Strictly append-only room operational audit log, shift handoffs, and guest preferences.',
+    badge: 'Audit Trail',
+  },
+];
+
 export const RATE_AVAILABILITY_SUBMENUS: PmsSubMenuItem[] = [
   {
     key: 'flash',
@@ -129,6 +188,41 @@ export const GUEST_SUBMENUS: PmsSubMenuItem[] = [
       'Guest Restitution & Verification Workflow',
       'Statutory Disposition & Donation Clearing',
     ],
+  },
+];
+
+export const HOUSEKEEPING_SUBMENUS: PmsSubMenuItem[] = [
+  {
+    key: 'groups',
+    path: 'housekeeping' as NavigationPath,
+    displayName: 'Groups',
+    materialIcon: 'groups',
+    description: 'Operational housekeeping squads, shifts, and team parameters.',
+    badge: 'Teams',
+  },
+  {
+    key: 'members',
+    path: 'housekeeping-members' as NavigationPath,
+    displayName: 'Group Members',
+    materialIcon: 'badge',
+    description: 'Attendants duty rosters and task assignment capabilities matrix.',
+    badge: 'Matrix',
+  },
+  {
+    key: 'assignment',
+    path: 'housekeeping-assignment' as NavigationPath,
+    displayName: 'Room Assignment',
+    materialIcon: 'meeting_room',
+    description: 'Interactive room turnover quotas and live attendant load balancing.',
+    badge: 'Live Board',
+  },
+  {
+    key: 'tasks',
+    path: 'housekeeping-tasks' as NavigationPath,
+    displayName: 'Tasks',
+    materialIcon: 'task_alt',
+    description: 'Housekeeping routine checklist workflows and SOP specifications.',
+    badge: 'Workflows',
   },
 ];
 

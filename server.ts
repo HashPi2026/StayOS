@@ -5,6 +5,8 @@ import { testConnection } from './db/pool';
 import { runMigrations } from './db/migrate';
 import { configurationRouter } from './modules/configuration';
 import { shellRouter } from './modules/shell';
+import { rateAvailabilityRouter } from './modules/rate_availability';
+import { guestRouter } from './modules/guest';
 import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler';
 import { sendSuccess } from './utils/response';
@@ -72,6 +74,14 @@ async function startServer() {
   // Mount StayOS Configuration REST Modules (guarded by role access)
   app.use('/api/v1/configuration', requireModuleAccess('configuration'), configurationRouter);
   app.use('/api/configuration', requireModuleAccess('configuration'), configurationRouter); // Version-agnostic fallback
+
+  // Mount Rate & Availability Module
+  app.use('/api/v1/rate-availability', rateAvailabilityRouter);
+  app.use('/api/rate-availability', rateAvailabilityRouter);
+
+  // Mount Guest Module
+  app.use('/api/v1/guest', guestRouter);
+  app.use('/api/guest', guestRouter);
 
   // ==================== STATIC / VITE MIDDLEWARE ====================
   if (process.env.NODE_ENV !== 'production') {

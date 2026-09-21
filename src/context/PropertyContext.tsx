@@ -62,7 +62,7 @@ import {
   INITIAL_GUEST_CATEGORIES,
   HOTLINKED_MAP_IMAGE,
 } from '../data/mockData';
-import { INITIAL_GENERAL_SETTINGS } from '../data/generalSettingsData';
+import { INITIAL_GENERAL_SETTINGS, getTenantGeneralSettings } from '../data/generalSettingsData';
 import { databaseApi } from '../services/api/database';
 
 export interface ToastItem {
@@ -532,7 +532,16 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const valid = parsed.filter((p: any) => p.id === 'DIS_001' || p.id === 'STVMC_SURAT');
+          const valid = parsed
+            .map((p: any) => ({
+              ...p,
+              id: p.id === 'DIS_001' ? '10001' : (p.id === 'STVMC_SURAT' ? '10002' : String(p.id)),
+              identity: {
+                ...p.identity,
+                clientId: p.identity?.clientId === 'DIS_001' ? '10001' : (p.identity?.clientId === 'STVMC_SURAT' ? '10002' : String(p.identity?.clientId || p.id)),
+              },
+            }))
+            .filter((p: any) => p.id === '10001' || p.id === '10002');
           if (valid.length > 0) return valid;
         }
       } catch (e) {
@@ -543,7 +552,9 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [currentPropertyId, setCurrentPropertyId] = useState<string>(() => {
     const saved = localStorage.getItem('stayos_current_prop_id');
-    return (saved === 'DIS_001' || saved === 'STVMC_SURAT') ? saved : 'DIS_001';
+    if (saved === 'DIS_001') return '10001';
+    if (saved === 'STVMC_SURAT') return '10002';
+    return (saved === '10001' || saved === '10002') ? saved : '10001';
   });
   const currentProperty = properties.find((p) => p.id === currentPropertyId) || properties[0];
 
@@ -610,8 +621,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Room Statuses State
   const [roomStatuses, setRoomStatuses] = useState<RoomStatusConfig[]>(() => {
-    const saved = localStorage.getItem('stayos_room_statuses');
-    return saved ? JSON.parse(saved) : INITIAL_ROOM_STATUSES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_room_statuses`);
+    return saved ? JSON.parse(saved) : (initialTenantData.roomStatuses || INITIAL_ROOM_STATUSES);
   });
   const [isRoomStatusDrawerOpen, setIsRoomStatusDrawerOpen] = useState(false);
   const [drawerRoomStatus, setDrawerRoomStatus] = useState<RoomStatusConfig | null>(null);
@@ -679,8 +690,15 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Rate Types State
   const [rateTypes, setRateTypes] = useState<RateTypeItem[]>(() => {
     const saved = localStorage.getItem(`stayos_${currentPropertyId}_rate_types`);
-    const raw = saved ? JSON.parse(saved) : (initialTenantData.rateTypes || INITIAL_RATE_TYPES);
-    return Array.isArray(raw) ? raw.map(sanitizeRateType) : INITIAL_RATE_TYPES;
+    if (saved) {
+      try {
+        const raw = JSON.parse(saved);
+        return Array.isArray(raw) ? raw.map(sanitizeRateType) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
   const [isRateTypeDrawerOpen, setIsRateTypeDrawerOpen] = useState(false);
   const [drawerRateType, setDrawerRateType] = useState<RateTypeItem | null>(null);
@@ -690,8 +708,15 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Packages State
   const [packages, setPackages] = useState<PackageItem[]>(() => {
     const saved = localStorage.getItem(`stayos_${currentPropertyId}_packages`);
-    const raw = saved ? JSON.parse(saved) : (initialTenantData.packages || []);
-    return Array.isArray(raw) ? raw.map(sanitizePackage) : [];
+    if (saved) {
+      try {
+        const raw = JSON.parse(saved);
+        return Array.isArray(raw) ? raw.map(sanitizePackage) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
   const [isPackageDrawerOpen, setIsPackageDrawerOpen] = useState(false);
   const [drawerPackage, setDrawerPackage] = useState<PackageItem | null>(null);
@@ -701,7 +726,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Policies State
   const [policies, setPolicies] = useState<PolicyItem[]>(() => {
     const saved = localStorage.getItem(`stayos_${currentPropertyId}_policies`);
-    return saved ? JSON.parse(saved) : initialTenantData.policies;
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
   const [isPolicyDrawerOpen, setIsPolicyDrawerOpen] = useState(false);
@@ -712,7 +737,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Guest Categories State
   const [guestCategories, setGuestCategories] = useState<GuestCategoryItem[]>(() => {
     const saved = localStorage.getItem(`stayos_${currentPropertyId}_guest_categories`);
-    return saved ? JSON.parse(saved) : initialTenantData.guestCategories;
+    return saved ? JSON.parse(saved) : [];
   });
 
   // SaaS Tenant Data Switcher on property change: loads strictly isolated tenant dataset
@@ -738,24 +763,99 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setTaxes(savedTax ? JSON.parse(savedTax) : tenantDataset.taxes);
 
     const savedRates = localStorage.getItem(`stayos_${currentPropertyId}_rate_types`);
-    const rawRates = savedRates ? JSON.parse(savedRates) : tenantDataset.rateTypes;
-    setRateTypes(Array.isArray(rawRates) ? rawRates.map(sanitizeRateType) : INITIAL_RATE_TYPES);
+    const rawRates = savedRates ? JSON.parse(savedRates) : [];
+    setRateTypes(Array.isArray(rawRates) ? rawRates.map(sanitizeRateType) : []);
 
     const savedPkgs = localStorage.getItem(`stayos_${currentPropertyId}_packages`);
-    const rawPkgs = savedPkgs ? JSON.parse(savedPkgs) : tenantDataset.packages;
+    const rawPkgs = savedPkgs ? JSON.parse(savedPkgs) : [];
     setPackages(Array.isArray(rawPkgs) ? rawPkgs.map(sanitizePackage) : []);
 
     const savedPol = localStorage.getItem(`stayos_${currentPropertyId}_policies`);
-    setPolicies(savedPol ? JSON.parse(savedPol) : tenantDataset.policies);
+    setPolicies(savedPol ? JSON.parse(savedPol) : []);
 
     const savedGc = localStorage.getItem(`stayos_${currentPropertyId}_guest_categories`);
-    setGuestCategories(savedGc ? JSON.parse(savedGc) : tenantDataset.guestCategories);
+    setGuestCategories(savedGc ? JSON.parse(savedGc) : []);
 
     const savedAudit = localStorage.getItem(`stayos_${currentPropertyId}_audit_logs`);
     setAuditLogs(savedAudit ? JSON.parse(savedAudit) : tenantDataset.auditLogs);
 
     const savedNotifs = localStorage.getItem(`stayos_${currentPropertyId}_notifications`);
     setNotifications(savedNotifs ? JSON.parse(savedNotifs) : tenantDataset.notifications);
+
+    // Isolated Configuration Data for active property
+    const savedRs = localStorage.getItem(`stayos_${currentPropertyId}_room_statuses`);
+    setRoomStatuses(savedRs ? JSON.parse(savedRs) : (tenantDataset.roomStatuses || INITIAL_ROOM_STATUSES));
+
+    const savedDoc = localStorage.getItem(`stayos_${currentPropertyId}_document_types`);
+    setDocumentTypes(savedDoc ? JSON.parse(savedDoc) : []);
+
+    const savedOcc = localStorage.getItem(`stayos_${currentPropertyId}_other_charge_categories`);
+    setOtherChargeCategories(savedOcc ? JSON.parse(savedOcc) : []);
+
+    const savedOc = localStorage.getItem(`stayos_${currentPropertyId}_other_charges`);
+    setOtherCharges(savedOc ? JSON.parse(savedOc) : []);
+
+    const savedMu = localStorage.getItem(`stayos_${currentPropertyId}_measurement_units`);
+    setMeasurementUnits(savedMu ? JSON.parse(savedMu) : []);
+
+    const savedPt = localStorage.getItem(`stayos_${currentPropertyId}_payment_types`);
+    setPaymentTypes(savedPt ? JSON.parse(savedPt) : []);
+
+    const savedXr = localStorage.getItem(`stayos_${currentPropertyId}_exchange_rates`);
+    setExchangeRates(savedXr ? JSON.parse(savedXr) : []);
+
+    const savedRoles = localStorage.getItem(`stayos_${currentPropertyId}_roles`);
+    setRoles(savedRoles ? JSON.parse(savedRoles) : (tenantDataset.roles || INITIAL_ROLES));
+
+    const savedUsers = localStorage.getItem(`stayos_${currentPropertyId}_users`);
+    setUsers(savedUsers ? JSON.parse(savedUsers) : (tenantDataset.users || INITIAL_USERS));
+
+    const savedTmpl = localStorage.getItem(`stayos_${currentPropertyId}_email_templates`);
+    setEmailTemplates(savedTmpl ? JSON.parse(savedTmpl) : []);
+
+    const savedGs = localStorage.getItem(`stayos_${currentPropertyId}_general_settings`);
+    const tenantDefaultGs = getTenantGeneralSettings(currentPropertyId);
+    if (savedGs) {
+      try {
+        const parsed = JSON.parse(savedGs);
+        setGeneralSettings({
+          ...tenantDefaultGs,
+          ...parsed,
+          rental: { ...tenantDefaultGs.rental, ...(parsed.rental || {}) },
+          feature: { ...tenantDefaultGs.feature, ...(parsed.feature || {}) },
+          nightAudits: {
+            ...tenantDefaultGs.nightAudits,
+            ...(parsed.nightAudits || {}),
+            automatedReports: {
+              ...tenantDefaultGs.nightAudits.automatedReports,
+              ...(parsed.nightAudits?.automatedReports || {}),
+            },
+            globalDistributionList: parsed.nightAudits?.globalDistributionList || tenantDefaultGs.nightAudits.globalDistributionList,
+          },
+          localization: {
+            ...tenantDefaultGs.localization,
+            ...(parsed.localization || {}),
+            customLabels: {
+              ...tenantDefaultGs.localization.customLabels,
+              ...(parsed.localization?.customLabels || {}),
+            },
+            weekendDays: parsed.localization?.weekendDays || tenantDefaultGs.localization.weekendDays,
+          },
+          display: { ...tenantDefaultGs.display, ...(parsed.display || {}) },
+          folios: {
+            ...tenantDefaultGs.folios,
+            ...(parsed.folios || {}),
+            numberingSeries: parsed.folios?.numberingSeries || tenantDefaultGs.folios.numberingSeries,
+          },
+          creditCards: { ...tenantDefaultGs.creditCards, ...(parsed.creditCards || {}) },
+          emails: { ...tenantDefaultGs.emails, ...(parsed.emails || {}) },
+        });
+      } catch {
+        setGeneralSettings(tenantDefaultGs);
+      }
+    } else {
+      setGeneralSettings(tenantDefaultGs);
+    }
   }, [currentPropertyId]);
   const [editingGuestCategoryId, setEditingGuestCategoryId] = useState<string | null>(null);
   const [isGuestCategoryDrawerOpen, setIsGuestCategoryDrawerOpen] = useState(false);
@@ -765,8 +865,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Document Types State
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeItem[]>(() => {
-    const saved = localStorage.getItem('stayos_document_types');
-    return saved ? JSON.parse(saved) : INITIAL_DOCUMENT_TYPES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_document_types`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingDocumentTypeId, setEditingDocumentTypeId] = useState<string | null>(null);
   const [isDocumentTypeDrawerOpen, setIsDocumentTypeDrawerOpen] = useState(false);
@@ -776,8 +876,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Other Charges Categories State
   const [otherChargeCategories, setOtherChargeCategories] = useState<OtherChargeCategoryItem[]>(() => {
-    const saved = localStorage.getItem('stayos_other_charge_categories');
-    return saved ? JSON.parse(saved) : INITIAL_OTHER_CHARGE_CATEGORIES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_other_charge_categories`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingOtherChargeCategoryId, setEditingOtherChargeCategoryId] = useState<string | null>(null);
   const [isOtherChargeCategoryDrawerOpen, setIsOtherChargeCategoryDrawerOpen] = useState(false);
@@ -787,8 +887,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Other Charges State
   const [otherCharges, setOtherCharges] = useState<OtherChargeItem[]>(() => {
-    const saved = localStorage.getItem('stayos_other_charges');
-    return saved ? JSON.parse(saved) : INITIAL_OTHER_CHARGES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_other_charges`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingOtherChargeId, setEditingOtherChargeId] = useState<string | null>(null);
   const [isOtherChargeDrawerOpen, setIsOtherChargeDrawerOpen] = useState(false);
@@ -798,8 +898,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Measurement Units State
   const [measurementUnits, setMeasurementUnits] = useState<MeasurementUnitItem[]>(() => {
-    const saved = localStorage.getItem('stayos_measurement_units');
-    return saved ? JSON.parse(saved) : INITIAL_MEASUREMENT_UNITS;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_measurement_units`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingMeasurementUnitId, setEditingMeasurementUnitId] = useState<string | null>(null);
   const [isMeasurementUnitDrawerOpen, setIsMeasurementUnitDrawerOpen] = useState(false);
@@ -809,8 +909,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Payment Types State
   const [paymentTypes, setPaymentTypes] = useState<PaymentTypeItem[]>(() => {
-    const saved = localStorage.getItem('stayos_payment_types');
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENT_TYPES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_payment_types`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingPaymentTypeId, setEditingPaymentTypeId] = useState<string | null>(null);
   const [isPaymentTypeDrawerOpen, setIsPaymentTypeDrawerOpen] = useState(false);
@@ -820,8 +920,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Exchange Rates State
   const [exchangeRates, setExchangeRates] = useState<ExchangeRateItem[]>(() => {
-    const saved = localStorage.getItem('stayos_exchange_rates');
-    return saved ? JSON.parse(saved) : INITIAL_EXCHANGE_RATES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_exchange_rates`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingExchangeRateId, setEditingExchangeRateId] = useState<string | null>(null);
   const [isExchangeRateDrawerOpen, setIsExchangeRateDrawerOpen] = useState(false);
@@ -831,8 +931,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Roles & Privileges State
   const [roles, setRoles] = useState<RoleItem[]>(() => {
-    const saved = localStorage.getItem('stayos_roles');
-    return saved ? JSON.parse(saved) : INITIAL_ROLES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_roles`);
+    return saved ? JSON.parse(saved) : (initialTenantData.roles || INITIAL_ROLES);
   });
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [isRoleDrawerOpen, setIsRoleDrawerOpen] = useState(false);
@@ -842,8 +942,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Users & Permissions State
   const [users, setUsers] = useState<UserAccountItem[]>(() => {
-    const saved = localStorage.getItem('stayos_users');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_users`);
+    return saved ? JSON.parse(saved) : (initialTenantData.users || INITIAL_USERS);
   });
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false);
@@ -851,8 +951,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Email Templates State
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplateItem[]>(() => {
-    const saved = localStorage.getItem('stayos_email_templates');
-    return saved ? JSON.parse(saved) : INITIAL_EMAIL_TEMPLATES;
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_email_templates`);
+    return saved ? JSON.parse(saved) : [];
   });
   const [editingEmailTemplateId, setEditingEmailTemplateId] = useState<string | null>(null);
   const [isEmailTemplateDrawerOpen, setIsEmailTemplateDrawerOpen] = useState(false);
@@ -866,44 +966,45 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // General Settings State
   const [generalSettings, setGeneralSettings] = useState<GeneralSettingsState>(() => {
-    const saved = localStorage.getItem('stayos_general_settings');
-    if (!saved) return INITIAL_GENERAL_SETTINGS;
+    const tenantDefaultGs = getTenantGeneralSettings(currentPropertyId);
+    const saved = localStorage.getItem(`stayos_${currentPropertyId}_general_settings`);
+    if (!saved) return tenantDefaultGs;
     try {
       const parsed = JSON.parse(saved);
       return {
-        ...INITIAL_GENERAL_SETTINGS,
+        ...tenantDefaultGs,
         ...parsed,
-        rental: { ...INITIAL_GENERAL_SETTINGS.rental, ...(parsed.rental || {}) },
-        feature: { ...INITIAL_GENERAL_SETTINGS.feature, ...(parsed.feature || {}) },
+        rental: { ...tenantDefaultGs.rental, ...(parsed.rental || {}) },
+        feature: { ...tenantDefaultGs.feature, ...(parsed.feature || {}) },
         nightAudits: {
-          ...INITIAL_GENERAL_SETTINGS.nightAudits,
+          ...tenantDefaultGs.nightAudits,
           ...(parsed.nightAudits || {}),
           automatedReports: {
-            ...INITIAL_GENERAL_SETTINGS.nightAudits.automatedReports,
+            ...tenantDefaultGs.nightAudits.automatedReports,
             ...(parsed.nightAudits?.automatedReports || {}),
           },
-          globalDistributionList: parsed.nightAudits?.globalDistributionList || INITIAL_GENERAL_SETTINGS.nightAudits.globalDistributionList,
+          globalDistributionList: parsed.nightAudits?.globalDistributionList || tenantDefaultGs.nightAudits.globalDistributionList,
         },
         localization: {
-          ...INITIAL_GENERAL_SETTINGS.localization,
+          ...tenantDefaultGs.localization,
           ...(parsed.localization || {}),
           customLabels: {
-            ...INITIAL_GENERAL_SETTINGS.localization.customLabels,
+            ...tenantDefaultGs.localization.customLabels,
             ...(parsed.localization?.customLabels || {}),
           },
-          weekendDays: parsed.localization?.weekendDays || INITIAL_GENERAL_SETTINGS.localization.weekendDays,
+          weekendDays: parsed.localization?.weekendDays || tenantDefaultGs.localization.weekendDays,
         },
-        display: { ...INITIAL_GENERAL_SETTINGS.display, ...(parsed.display || {}) },
+        display: { ...tenantDefaultGs.display, ...(parsed.display || {}) },
         folios: {
-          ...INITIAL_GENERAL_SETTINGS.folios,
+          ...tenantDefaultGs.folios,
           ...(parsed.folios || {}),
-          numberingSeries: parsed.folios?.numberingSeries || INITIAL_GENERAL_SETTINGS.folios.numberingSeries,
+          numberingSeries: parsed.folios?.numberingSeries || tenantDefaultGs.folios.numberingSeries,
         },
-        creditCards: { ...INITIAL_GENERAL_SETTINGS.creditCards, ...(parsed.creditCards || {}) },
-        emails: { ...INITIAL_GENERAL_SETTINGS.emails, ...(parsed.emails || {}) },
+        creditCards: { ...tenantDefaultGs.creditCards, ...(parsed.creditCards || {}) },
+        emails: { ...tenantDefaultGs.emails, ...(parsed.emails || {}) },
       };
     } catch {
-      return INITIAL_GENERAL_SETTINGS;
+      return tenantDefaultGs;
     }
   });
   const [activeGeneralSettingsTab, setActiveGeneralSettingsTab] = useState<GeneralSettingsTab>('rental');
@@ -920,7 +1021,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           ...updates,
         },
       };
-      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      localStorage.setItem(`stayos_${currentPropertyId}_general_settings`, JSON.stringify(updated));
       return updated;
     });
   };
@@ -943,25 +1044,26 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           fields: updatedFields,
         },
       };
-      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      localStorage.setItem(`stayos_${currentPropertyId}_general_settings`, JSON.stringify(updated));
       return updated;
     });
   };
 
   const resetGeneralSettingsSection = (section: keyof GeneralSettingsState) => {
+    const tenantDefaultGs = getTenantGeneralSettings(currentPropertyId);
     setGeneralSettings((prev) => {
       const updated: GeneralSettingsState = {
         ...prev,
-        [section]: INITIAL_GENERAL_SETTINGS[section],
+        [section]: tenantDefaultGs[section] || INITIAL_GENERAL_SETTINGS[section],
       };
-      localStorage.setItem('stayos_general_settings', JSON.stringify(updated));
+      localStorage.setItem(`stayos_${currentPropertyId}_general_settings`, JSON.stringify(updated));
       return updated;
     });
     addToast(`Reset ${section} settings to factory defaults`, 'info');
   };
 
   const saveGeneralSettings = () => {
-    localStorage.setItem('stayos_general_settings', JSON.stringify(generalSettings));
+    localStorage.setItem(`stayos_${currentPropertyId}_general_settings`, JSON.stringify(generalSettings));
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
@@ -1003,12 +1105,13 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const propsRes = await databaseApi.getProperties();
       if (propsRes.data && Array.isArray(propsRes.data) && propsRes.data.length > 0) {
         const dbProps: PropertyData[] = propsRes.data.map((p: any) => {
-          const isDestin = p.client_id === 'DIS_001';
+          const clientIdStr = String(p.client_id);
+          const isDestin = clientIdStr === '10001' || clientIdStr === 'DIS_001';
           return {
-            id: p.client_id,
+            id: clientIdStr,
             identity: {
               name: p.property_name,
-              clientId: p.client_id,
+              clientId: clientIdStr,
               region: (p.region as any) || (isDestin ? 'na' : 'apac'),
             },
             location: {
@@ -1119,7 +1222,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // 4. Fetch Room Types for active client
       const rtRes = await databaseApi.getRoomTypes(clientId);
       let loadedRoomTypes: RoomType[] = [];
-      const isSurat = clientId === 'STVMC_SURAT';
+      const isSurat = clientId === '10002' || clientId === 'STVMC_SURAT';
       const defaultTenantRate = isSurat ? 12500 : 185;
 
       if (rtRes.data && Array.isArray(rtRes.data) && rtRes.data.length > 0) {
@@ -1222,7 +1325,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
         }));
         setRoomStatuses(loadedStatuses);
-        localStorage.setItem('stayos_room_statuses', JSON.stringify(loadedStatuses));
+        localStorage.setItem(`stayos_${clientId}_room_statuses`, JSON.stringify(loadedStatuses));
       }
 
       // 8. Fetch Users & Permissions for active client from PostgreSQL
@@ -1285,7 +1388,6 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         setUsers(loadedUsers);
         localStorage.setItem(`stayos_${clientId}_users`, JSON.stringify(loadedUsers));
-        localStorage.setItem('stayos_users', JSON.stringify(loadedUsers));
 
         // Dynamically update role user counts based on actual database rows
         setRoles((prev) =>
@@ -1296,6 +1398,244 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             ).length,
           }))
         );
+      }
+
+      // 9. Fetch Rate Types from PostgreSQL
+      const rateTypesRes = await databaseApi.getRateTypes(clientId);
+      if (rateTypesRes.data && Array.isArray(rateTypesRes.data) && rateTypesRes.data.length > 0) {
+        const loadedRateTypes: RateTypeItem[] = rateTypesRes.data.map((rt: any) => ({
+          id: String(rt.rate_type_id),
+          shortName: rt.short_name,
+          name: rt.rate_type_name,
+          description: rt.description || '',
+          bindPercentage: Number(rt.bind_with_rate) || 0,
+          isHourly: Boolean(rt.is_hourly),
+          isCrsTaxInclusive: Boolean(rt.is_crs_tax_inclusive),
+          isCrsEnabled: Boolean(rt.crs_enable),
+          rateCode: rt.code || rt.short_name,
+          status: rt.is_active ? 'active' : 'inactive',
+          createdAt: rt.created_at
+            ? new Date(rt.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+          updatedAt: rt.updated_at
+            ? new Date(rt.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+        }));
+        setRateTypes(loadedRateTypes);
+        localStorage.setItem(`stayos_${clientId}_rate_types`, JSON.stringify(loadedRateTypes));
+      }
+
+      // 10. Fetch Packages from PostgreSQL
+      const pkgRes = await databaseApi.getPackages(clientId);
+      if (pkgRes.data && Array.isArray(pkgRes.data) && pkgRes.data.length > 0) {
+        const loadedPackages: PackageItem[] = pkgRes.data.map((pkg: any) => ({
+          id: String(pkg.package_id),
+          code: pkg.code,
+          name: pkg.name,
+          description: pkg.description || '',
+          rateTypeId: pkg.rate_type_id ? String(pkg.rate_type_id) : undefined,
+          rateTypeName: pkg.rate_type_name || '',
+          packageType: pkg.package_type || 'meal',
+          inclusions: Array.isArray(pkg.inclusions) ? pkg.inclusions : [],
+          basePrice: Number(pkg.base_price) || 0,
+          extraAdultPrice: Number(pkg.extra_adult_price) || 0,
+          extraChildPrice: Number(pkg.extra_child_price) || 0,
+          validFrom: pkg.valid_from ? new Date(pkg.valid_from).toISOString().split('T')[0] : undefined,
+          validTo: pkg.valid_to ? new Date(pkg.valid_to).toISOString().split('T')[0] : undefined,
+          minStayNights: Number(pkg.min_stay_nights) || 1,
+          isActive: Boolean(pkg.is_active),
+          isCrsEnabled: Boolean(pkg.is_crs_enabled),
+          createdAt: pkg.created_at
+            ? new Date(pkg.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+          updatedAt: pkg.updated_at
+            ? new Date(pkg.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+        }));
+        setPackages(loadedPackages);
+        localStorage.setItem(`stayos_${clientId}_packages`, JSON.stringify(loadedPackages));
+      }
+
+      // 11. Fetch Policies from PostgreSQL
+      const polRes = await databaseApi.getPolicies(clientId);
+      if (polRes.data && Array.isArray(polRes.data) && polRes.data.length > 0) {
+        const loadedPolicies: PolicyItem[] = polRes.data.map((p: any) => ({
+          id: String(p.policy_id),
+          roomTypeId: '',
+          roomTypeName: p.title || 'All Room Types',
+          rateTypeId: '',
+          rateTypeName: p.category || 'General',
+          content: p.description || '',
+          policyType: (p.category || 'general').toLowerCase(),
+          createdAt: p.created_at
+            ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+          updatedAt: p.updated_at
+            ? new Date(p.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            : 'Jan 15, 2026',
+        }));
+        setPolicies(loadedPolicies);
+        localStorage.setItem(`stayos_${clientId}_policies`, JSON.stringify(loadedPolicies));
+      }
+
+      // 12. Fetch Guest Categories from PostgreSQL
+      const gcRes = await databaseApi.getGuestCategories(clientId);
+      if (gcRes.data && Array.isArray(gcRes.data) && gcRes.data.length > 0) {
+        const loadedGc: GuestCategoryItem[] = gcRes.data.map((gc: any) => ({
+          id: String(gc.guest_category_id),
+          name: gc.category_name,
+          shortName: gc.short_name || gc.category_name.slice(0, 3).toUpperCase(),
+          description: gc.description || '',
+          color: gc.color_code || '#3b82f6',
+          isHighlight: Boolean(gc.is_highlight),
+          status: 'active',
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setGuestCategories(loadedGc);
+        localStorage.setItem(`stayos_${clientId}_guest_categories`, JSON.stringify(loadedGc));
+      }
+
+      // 13. Fetch Document Types from PostgreSQL
+      const dtRes = await databaseApi.getDocumentTypes(clientId);
+      if (dtRes.data && Array.isArray(dtRes.data) && dtRes.data.length > 0) {
+        const loadedDt: DocumentTypeItem[] = dtRes.data.map((dt: any) => ({
+          id: String(dt.document_type_id),
+          shortName: dt.short_name,
+          name: dt.document_name,
+          category: dt.document_category || 'Identity',
+          description: dt.description || '',
+          isDefault: Boolean(dt.is_default),
+          isActive: true,
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setDocumentTypes(loadedDt);
+        localStorage.setItem(`stayos_${clientId}_document_types`, JSON.stringify(loadedDt));
+      }
+
+      // 14. Fetch Payment Types from PostgreSQL
+      const ptRes = await databaseApi.getPaymentTypes(clientId);
+      if (ptRes.data && Array.isArray(ptRes.data) && ptRes.data.length > 0) {
+        const loadedPt: PaymentTypeItem[] = ptRes.data.map((pt: any) => ({
+          id: String(pt.payment_type_id),
+          shortName: pt.short_name,
+          name: pt.payment_type_name,
+          category: pt.category_name || 'Credit Card',
+          description: pt.description || '',
+          ccProcessing: Boolean(pt.credit_card_processing),
+          status: 'Active',
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setPaymentTypes(loadedPt);
+        localStorage.setItem(`stayos_${clientId}_payment_types`, JSON.stringify(loadedPt));
+      }
+
+      // 15. Fetch Other Charge Categories & Charges from PostgreSQL
+      const occRes = await databaseApi.getOtherChargeCategories(clientId);
+      if (occRes.data && Array.isArray(occRes.data) && occRes.data.length > 0) {
+        const loadedOcc: OtherChargeCategoryItem[] = occRes.data.map((occ: any) => ({
+          id: String(occ.occ_id),
+          shortName: occ.short_name,
+          name: occ.category_name,
+          description: occ.description || '',
+          isDefault: Boolean(occ.is_default),
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setOtherChargeCategories(loadedOcc);
+        localStorage.setItem(`stayos_${clientId}_other_charge_categories`, JSON.stringify(loadedOcc));
+      }
+
+      const ocRes = await databaseApi.getOtherCharges(clientId);
+      if (ocRes.data && Array.isArray(ocRes.data) && ocRes.data.length > 0) {
+        const loadedOc: OtherChargeItem[] = ocRes.data.map((oc: any) => ({
+          id: String(oc.oc_id),
+          shortName: oc.short_name,
+          name: oc.charge_name,
+          category: oc.category_name || '',
+          price: Number(oc.price) || 0,
+          taxable: Boolean(oc.taxable),
+          alwaysCharge: Boolean(oc.always_charge),
+          reoccur: Boolean(oc.reoccur_charge),
+          reoccurFrequency: oc.reoccur_frequency || 'Daily',
+          crsCharge: Boolean(oc.crs_charge),
+          callLoggingCharge: Boolean(oc.call_logging_charge),
+          posCharge: Boolean(oc.pos_charge),
+          forecastingRevenue: Boolean(oc.forecasting_revenue),
+          description: oc.description || '',
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setOtherCharges(loadedOc);
+        localStorage.setItem(`stayos_${clientId}_other_charges`, JSON.stringify(loadedOc));
+      }
+
+      // 16. Fetch Measurement Units from PostgreSQL
+      const muRes = await databaseApi.getMeasurementUnits(clientId);
+      if (muRes.data && Array.isArray(muRes.data) && muRes.data.length > 0) {
+        const loadedMu: MeasurementUnitItem[] = muRes.data.map((mu: any) => ({
+          id: String(mu.measurement_id),
+          name: mu.measurement,
+          shortName: mu.short_name || mu.measurement.slice(0, 3).toUpperCase(),
+          description: mu.description || '',
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setMeasurementUnits(loadedMu);
+        localStorage.setItem(`stayos_${clientId}_measurement_units`, JSON.stringify(loadedMu));
+      }
+
+      // 17. Fetch Exchange Rates from PostgreSQL
+      const xrRes = await databaseApi.getExchangeRates(clientId);
+      if (xrRes.data && Array.isArray(xrRes.data) && xrRes.data.length > 0) {
+        const loadedXr: ExchangeRateItem[] = xrRes.data.map((xr: any) => ({
+          id: String(xr.exchange_rate_id),
+          country: xr.country_name || 'International',
+          currency: xr.currency_name,
+          sign: xr.currency_sign || '$',
+          rate: Number(xr.rate) || 1,
+          isBaseRate: Boolean(xr.is_base_rate),
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setExchangeRates(loadedXr);
+        localStorage.setItem(`stayos_${clientId}_exchange_rates`, JSON.stringify(loadedXr));
+      }
+
+      // 18. Fetch Email Templates from PostgreSQL
+      const tmplRes = await databaseApi.getEmailTemplates(clientId);
+      if (tmplRes.data && Array.isArray(tmplRes.data) && tmplRes.data.length > 0) {
+        const loadedTmpl: EmailTemplateItem[] = tmplRes.data.map((et: any) => ({
+          id: String(et.template_id),
+          name: et.template_name,
+          subject: et.subject || `${et.template_name} - StayOS Notification`,
+          body: et.body || `Dear {guest_name},\n\nThank you for choosing StayOS.`,
+          senderName: et.sender_name || 'Front Desk',
+          replyTo: et.reply_to || 'reservations@stayos.com',
+          triggers: {
+            created: Boolean(et.trigger_reservation),
+            updated: Boolean(et.trigger_reservation_update),
+            cancelled: Boolean(et.trigger_reservation_cancel),
+            dob: Boolean(et.trigger_date_of_birth),
+            beforeCheckIn: Boolean(et.trigger_before_check_in),
+            beforeCheckInDays: 2,
+            atCheckIn: Boolean(et.trigger_check_in),
+            afterCheckIn: Boolean(et.trigger_after_check_in),
+            afterCheckInDays: 1,
+            beforeCheckOut: Boolean(et.trigger_before_check_out),
+            beforeCheckOutDays: 1,
+            atCheckOut: Boolean(et.trigger_check_out),
+            afterCheckOut: Boolean(et.trigger_after_check_out),
+            afterCheckOutDays: 2,
+          },
+          status: 'active',
+          createdAt: 'Jan 15, 2026',
+          updatedAt: 'Jan 15, 2026',
+        }));
+        setEmailTemplates(loadedTmpl);
+        localStorage.setItem(`stayos_${clientId}_email_templates`, JSON.stringify(loadedTmpl));
       }
 
       setIsDbConnected(true);
@@ -1386,7 +1726,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const backendUser = resJson.data?.user;
       if (backendUser) {
-        const singlePropId = backendUser.clientId || 'DIS_001';
+        const rawClientId = backendUser.clientId ? String(backendUser.clientId) : '10001';
+        const singlePropId = (rawClientId === 'DIS_001' ? '10001' : (rawClientId === 'STVMC_SURAT' ? '10002' : rawClientId));
         const roleId = Number(backendUser.roleId) || 1;
         const loggedUser: AuthUser = {
           id: String(backendUser.userId),
@@ -1425,13 +1766,13 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // 2. Strict fallback verification with correct credentials
-    const validCredentials: Record<string, string> = {
+    const validCredentials: Record<string, string | string[]> = {
       'jaymistry1804@gmail.com': 'Destin@2026!',
       'jaymistry.destin_admin@example.com': 'Destin@2026!',
       'sarah.jenkins@destininn.com': 'Destin@2026!',
       'sarah.j@destininn.com': 'Destin@2026!',
       'superadmin@stayos.com': 'SuperAdmin@2026!',
-      'rajesh.mehta@marriott.com': 'SuperAdmin@2026!',
+      'rajesh.mehta@marriott.com': ['Marriott@2026!', 'SuperAdmin@2026!'],
       'priya.shah@marriott.com': 'Marriott@2026!',
       'd.chen@destininn.com': 'Destin@2026!',
       'marcus.vance@grandmetropole.com': 'StayOS2026!Secure',
@@ -1452,14 +1793,19 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     const expectedPass = validCredentials[foundUser.email.toLowerCase()];
-    if (!expectedPass || password !== expectedPass) {
+    const isPassValid = Array.isArray(expectedPass)
+      ? expectedPass.includes(password || '')
+      : expectedPass === password;
+
+    if (!expectedPass || !isPassValid) {
       return { success: false, message: 'The email address or password entered does not match our records.' };
     }
 
     setCurrentUser(foundUser);
     localStorage.setItem('stayos_current_user', JSON.stringify(foundUser));
 
-    const singlePropId = foundUser.accessiblePropertyIds?.[0] || foundUser.defaultPropertyId || 'DIS_001';
+    const rawPropId = foundUser.accessiblePropertyIds?.[0] || foundUser.defaultPropertyId || '10001';
+    const singlePropId = (rawPropId === 'DIS_001' ? '10001' : (rawPropId === 'STVMC_SURAT' ? '10002' : rawPropId));
     setCurrentPropertyId(singlePropId);
     localStorage.setItem('stayos_current_prop_id', singlePropId);
     setIsAuthenticated(true);
@@ -1474,7 +1820,8 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const switchUser = (user: AuthUser) => {
     setCurrentUser(user);
     localStorage.setItem('stayos_current_user', JSON.stringify(user));
-    const singlePropId = user.accessiblePropertyIds?.[0] || user.defaultPropertyId || 'DIS_001';
+    const rawPropId = user.accessiblePropertyIds?.[0] || user.defaultPropertyId || '10001';
+    const singlePropId = (rawPropId === 'DIS_001' ? '10001' : (rawPropId === 'STVMC_SURAT' ? '10002' : rawPropId));
     setCurrentPropertyId(singlePropId);
     localStorage.setItem('stayos_current_prop_id', singlePropId);
     // Explicitly invalidate cache and re-sync database for the new property
@@ -1607,7 +1954,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newBuilding, ...buildings];
     setBuildings(updated);
-    localStorage.setItem('stayos_buildings', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_buildings`, JSON.stringify(updated));
 
     // Persist directly to PostgreSQL database
     databaseApi
@@ -1658,7 +2005,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     setBuildings(updated);
-    localStorage.setItem('stayos_buildings', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_buildings`, JSON.stringify(updated));
 
     const numericId = Number(id);
     if (!isNaN(numericId)) {
@@ -1696,7 +2043,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = buildings.filter((b) => b.id !== id);
     setBuildings(updated);
-    localStorage.setItem('stayos_buildings', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_buildings`, JSON.stringify(updated));
 
     const numericId = Number(id);
     if (!isNaN(numericId)) {
@@ -1949,7 +2296,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newRoomType, ...roomTypes];
     setRoomTypes(updated);
-    localStorage.setItem('stayos_room_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_types`, JSON.stringify(updated));
 
     // Persist directly to PostgreSQL database
     const bldIdNum = Number(data.buildingId) || 1;
@@ -2013,7 +2360,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     setRoomTypes(updated);
-    localStorage.setItem('stayos_room_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2043,7 +2390,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = roomTypes.filter((rt) => rt.id !== id);
     setRoomTypes(updated);
-    localStorage.setItem('stayos_room_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2085,7 +2432,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [duplicated, ...roomTypes];
     setRoomTypes(updated);
-    localStorage.setItem('stayos_room_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_types`, JSON.stringify(updated));
 
     addToast(`Duplicated into "${duplicated.name}"`, 'success');
     return true;
@@ -2151,7 +2498,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [...roomStatuses, newStatus];
     setRoomStatuses(updated);
-    localStorage.setItem('stayos_room_statuses', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_statuses`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2192,7 +2539,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
 
     setRoomStatuses(updated);
-    localStorage.setItem('stayos_room_statuses', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_statuses`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2215,7 +2562,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = roomStatuses.filter((s) => s.id !== id);
     setRoomStatuses(filtered);
-    localStorage.setItem('stayos_room_statuses', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_room_statuses`, JSON.stringify(filtered));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2268,7 +2615,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newTax, ...taxes];
     setTaxes(updated);
-    localStorage.setItem('stayos_taxes', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_taxes`, JSON.stringify(updated));
 
     // Audit Log
     const newLog: AuditLog = {
@@ -2297,7 +2644,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : t
     );
     setTaxes(updated);
-    localStorage.setItem('stayos_taxes', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_taxes`, JSON.stringify(updated));
 
     const target = taxes.find((t) => t.id === id);
     const newLog: AuditLog = {
@@ -2319,7 +2666,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = taxes.find((t) => t.id === id);
     const updated = taxes.filter((t) => t.id !== id);
     setTaxes(updated);
-    localStorage.setItem('stayos_taxes', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_taxes`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2397,7 +2744,20 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newRateType, ...rateTypes];
     setRateTypes(updated);
-    localStorage.setItem('stayos_rate_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rate_types`, JSON.stringify(updated));
+
+    // Persist directly to PostgreSQL database
+    databaseApi
+      .createRateType(currentPropertyId, newRateType)
+      .then((res) => {
+        if (res.data?.rate_type_id) {
+          const dbId = String(res.data.rate_type_id);
+          setRateTypes((prev) =>
+            prev.map((r) => (r.id === newRateType.id ? { ...r, id: dbId } : r))
+          );
+        }
+      })
+      .catch((err) => console.warn('RateType create DB warning:', err));
 
     // Audit Log
     const newLog: AuditLog = {
@@ -2426,7 +2786,12 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : rt
     );
     setRateTypes(updated);
-    localStorage.setItem('stayos_rate_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rate_types`, JSON.stringify(updated));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi.updateRateType(currentPropertyId, numericId, updates).catch((err) => console.warn('RateType update DB warning:', err));
+    }
 
     const target = rateTypes.find((rt) => rt.id === id);
     const newLog: AuditLog = {
@@ -2448,7 +2813,12 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = rateTypes.find((rt) => rt.id === id);
     const updated = rateTypes.filter((rt) => rt.id !== id);
     setRateTypes(updated);
-    localStorage.setItem('stayos_rate_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rate_types`, JSON.stringify(updated));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi.deleteRateType(currentPropertyId, numericId).catch((err) => console.warn('RateType delete DB warning:', err));
+    }
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2503,6 +2873,19 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setPackages(updated);
     localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
 
+    // Persist directly to PostgreSQL database
+    databaseApi
+      .createPackage(currentPropertyId, newPackage)
+      .then((res) => {
+        if (res.data?.package_id) {
+          const dbId = String(res.data.package_id);
+          setPackages((prev) =>
+            prev.map((p) => (p.id === newPackage.id ? { ...p, id: dbId } : p))
+          );
+        }
+      })
+      .catch((err) => console.warn('Package create DB warning:', err));
+
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString(),
@@ -2531,6 +2914,11 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setPackages(updated);
     localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
 
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi.updatePackage(currentPropertyId, numericId, updates).catch((err) => console.warn('Package update DB warning:', err));
+    }
+
     const target = packages.find((p) => p.id === id);
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2552,6 +2940,11 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updated = packages.filter((pkg) => pkg.id !== id);
     setPackages(updated);
     localStorage.setItem(`stayos_${currentPropertyId}_packages`, JSON.stringify(updated));
+
+    const numericId = Number(id);
+    if (!isNaN(numericId)) {
+      databaseApi.deletePackage(currentPropertyId, numericId).catch((err) => console.warn('Package delete DB warning:', err));
+    }
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2605,7 +2998,26 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newPolicy, ...policies];
     setPolicies(updated);
-    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_policies`, JSON.stringify(updated));
+
+    // Persist directly to PostgreSQL database
+    databaseApi
+      .createPolicy(currentPropertyId, {
+        policy_id: newPolicy.id,
+        title: `${newPolicy.roomTypeName} - ${newPolicy.rateTypeName}`,
+        category: newPolicy.policyType || 'general',
+        description: newPolicy.content,
+        is_active: true,
+      })
+      .then((res) => {
+        if (res.data?.policy_id) {
+          const dbId = String(res.data.policy_id);
+          setPolicies((prev) =>
+            prev.map((p) => (p.id === newPolicy.id ? { ...p, id: dbId } : p))
+          );
+        }
+      })
+      .catch((err) => console.warn('Policy create DB warning:', err));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2637,7 +3049,15 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : p
     );
     setPolicies(updated);
-    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_policies`, JSON.stringify(updated));
+
+    databaseApi
+      .updatePolicy(currentPropertyId, id, {
+        title: updates.roomTypeName ? `${updates.roomTypeName} - ${updates.rateTypeName || target.rateTypeName}` : undefined,
+        category: updates.policyType,
+        description: updates.content,
+      })
+      .catch((err) => console.warn('Policy update DB warning:', err));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2660,7 +3080,9 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = policies.filter((p) => p.id !== id);
     setPolicies(updated);
-    localStorage.setItem('stayos_policies', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_policies`, JSON.stringify(updated));
+
+    databaseApi.deletePolicy(currentPropertyId, id).catch((err) => console.warn('Policy delete DB warning:', err));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2715,7 +3137,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newCategory, ...guestCategories];
     setGuestCategories(updated);
-    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_guest_categories`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2744,7 +3166,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = guestCategories.map((c) => (c.id === id ? updatedCategory : c));
     setGuestCategories(updated);
-    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_guest_categories`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2767,7 +3189,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = guestCategories.filter((c) => c.id !== id);
     setGuestCategories(updated);
-    localStorage.setItem('stayos_guest_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_guest_categories`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2837,7 +3259,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newDocType, ...updatedList];
     setDocumentTypes(updated);
-    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_document_types`, JSON.stringify(updated));
 
     // Audit log
     const newLog: AuditLog = {
@@ -2873,7 +3295,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : d
     );
     setDocumentTypes(updated);
-    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_document_types`, JSON.stringify(updated));
 
     const target = documentTypes.find((d) => d.id === id);
     const newLog: AuditLog = {
@@ -2895,7 +3317,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = documentTypes.find((d) => d.id === id);
     const updated = documentTypes.filter((d) => d.id !== id);
     setDocumentTypes(updated);
-    localStorage.setItem('stayos_document_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_document_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2966,7 +3388,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newCategory, ...updatedList];
     setOtherChargeCategories(updated);
-    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charge_categories`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -2999,7 +3421,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : c
     );
     setOtherChargeCategories(updated);
-    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charge_categories`, JSON.stringify(updated));
 
     const target = otherChargeCategories.find((c) => c.id === id);
     const newLog: AuditLog = {
@@ -3021,7 +3443,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = otherChargeCategories.find((c) => c.id === id);
     const updated = otherChargeCategories.filter((c) => c.id !== id);
     setOtherChargeCategories(updated);
-    localStorage.setItem('stayos_other_charge_categories', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charge_categories`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3080,7 +3502,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newCharge, ...otherCharges];
     setOtherCharges(updated);
-    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charges`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3108,7 +3530,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : c
     );
     setOtherCharges(updated);
-    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charges`, JSON.stringify(updated));
 
     const target = otherCharges.find((c) => c.id === id);
     const newLog: AuditLog = {
@@ -3130,7 +3552,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = otherCharges.find((c) => c.id === id);
     const updated = otherCharges.filter((c) => c.id !== id);
     setOtherCharges(updated);
-    localStorage.setItem('stayos_other_charges', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_other_charges`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3209,7 +3631,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newUnit, ...measurementUnits];
     setMeasurementUnits(updated);
-    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_measurement_units`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3249,7 +3671,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : m
     );
     setMeasurementUnits(updated);
-    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_measurement_units`, JSON.stringify(updated));
 
     const target = measurementUnits.find((m) => m.id === id);
     const newLog: AuditLog = {
@@ -3271,7 +3693,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = measurementUnits.find((m) => m.id === id);
     const updated = measurementUnits.filter((m) => m.id !== id);
     setMeasurementUnits(updated);
-    localStorage.setItem('stayos_measurement_units', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_measurement_units`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3350,7 +3772,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newPaymentType, ...paymentTypes];
     setPaymentTypes(updated);
-    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_payment_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3390,7 +3812,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : p
     );
     setPaymentTypes(updated);
-    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_payment_types`, JSON.stringify(updated));
 
     const target = paymentTypes.find((p) => p.id === id);
     const newLog: AuditLog = {
@@ -3419,7 +3841,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const target = paymentTypes.find((p) => p.id === id);
     const updated = paymentTypes.filter((p) => p.id !== id);
     setPaymentTypes(updated);
-    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_payment_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3439,7 +3861,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const bulkDeletePaymentTypes = (ids: string[]): boolean => {
     const updated = paymentTypes.filter((p) => !ids.includes(p.id));
     setPaymentTypes(updated);
-    localStorage.setItem('stayos_payment_types', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_payment_types`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3516,7 +3938,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     setExchangeRates(updated);
-    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_exchange_rates`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3561,7 +3983,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     setExchangeRates(updated);
-    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_exchange_rates`, JSON.stringify(updated));
 
     const target = exchangeRates.find((xr) => xr.id === id);
     const newLog: AuditLog = {
@@ -3591,7 +4013,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
 
     setExchangeRates(updated);
-    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_exchange_rates`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3619,7 +4041,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = exchangeRates.filter((xr) => xr.id !== id);
     setExchangeRates(updated);
-    localStorage.setItem('stayos_exchange_rates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_exchange_rates`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3696,7 +4118,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newRole, ...roles];
     setRoles(updated);
-    localStorage.setItem('stayos_roles', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_roles`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3737,7 +4159,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : r
     );
     setRoles(updated);
-    localStorage.setItem('stayos_roles', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_roles`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3770,7 +4192,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = roles.filter((r) => r.id !== id);
     setRoles(filtered);
-    localStorage.setItem('stayos_roles', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_roles`, JSON.stringify(filtered));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -3796,7 +4218,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = roles.filter((r) => !ids.includes(r.id));
     setRoles(filtered);
-    localStorage.setItem('stayos_roles', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_roles`, JSON.stringify(filtered));
     addToast(`Deleted ${ids.length} roles`, 'info');
     return true;
   };
@@ -3842,7 +4264,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newUser, ...users];
     setUsers(updated);
-    localStorage.setItem('stayos_users', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_users`, JSON.stringify(updated));
 
     // Update role usersCount
     setRoles((prev) =>
@@ -3907,7 +4329,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
     setUsers(updated);
-    localStorage.setItem('stayos_users', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_users`, JSON.stringify(updated));
 
     // Persist directly to PostgreSQL database
     const numericUserId = parseInt(id.replace('usr-', ''), 10);
@@ -3960,7 +4382,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = users.filter((u) => u.id !== id);
     setUsers(filtered);
-    localStorage.setItem('stayos_users', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_users`, JSON.stringify(filtered));
 
     // Persist directly to PostgreSQL database
     const numericUserId = parseInt(id.replace('usr-', ''), 10);
@@ -4040,7 +4462,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newTemplate, ...emailTemplates];
     setEmailTemplates(updated);
-    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_email_templates`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -4082,7 +4504,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : t
     );
     setEmailTemplates(updated);
-    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_email_templates`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -4105,7 +4527,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = emailTemplates.filter((t) => t.id !== id);
     setEmailTemplates(filtered);
-    localStorage.setItem('stayos_email_templates', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_email_templates`, JSON.stringify(filtered));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -4145,7 +4567,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [copy, ...emailTemplates];
     setEmailTemplates(updated);
-    localStorage.setItem('stayos_email_templates', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_email_templates`, JSON.stringify(updated));
 
     addToast(`Duplicated template as "${finalName}"`, 'success');
     return true;
@@ -4220,7 +4642,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [newRoom, ...rooms];
     setRooms(updated);
-    localStorage.setItem('stayos_rooms', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rooms`, JSON.stringify(updated));
 
     // Persist directly to PostgreSQL database
     const bldIdNum = Number(data.buildingId) || 1;
@@ -4302,7 +4724,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = [...newRooms, ...rooms];
     setRooms(updated);
-    localStorage.setItem('stayos_rooms', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rooms`, JSON.stringify(updated));
 
     // Update room types count
     const countsByRoomType: Record<string, number> = {};
@@ -4357,7 +4779,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : r
     );
     setRooms(updated);
-    localStorage.setItem('stayos_rooms', JSON.stringify(updated));
+    localStorage.setItem(`stayos_${currentPropertyId}_rooms`, JSON.stringify(updated));
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -4380,7 +4802,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const filtered = rooms.filter((r) => r.id !== id);
     setRooms(filtered);
-    localStorage.setItem('stayos_rooms', JSON.stringify(filtered));
+    localStorage.setItem(`stayos_${currentPropertyId}_rooms`, JSON.stringify(filtered));
 
     // Update room type total units
     const rt = roomTypes.find((t) => t.id === target.roomTypeId);

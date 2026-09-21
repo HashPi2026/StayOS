@@ -44,6 +44,7 @@ export interface GuestDocument {
 
 export interface GuestRecord {
   id: string;
+  dbGuestId?: number;
   title: string;
   firstName: string;
   middleName?: string;

@@ -15,7 +15,7 @@ export function tenantMiddleware(req: Request, res: Response, next: NextFunction
   const headerClientId = req.header('x-client-id') || req.header('X-Client-Id');
   const queryClientId = req.query.clientId as string | undefined;
 
-  const clientId = (headerClientId || queryClientId)?.trim();
+  let clientId = (headerClientId || queryClientId)?.trim();
 
   if (!clientId) {
     sendError(
@@ -28,12 +28,17 @@ export function tenantMiddleware(req: Request, res: Response, next: NextFunction
     return;
   }
 
-  if (clientId.length > 50) {
+  // Gracefully map legacy string identifiers if present
+  if (clientId === 'DIS_001') clientId = '10001';
+  if (clientId === 'STVMC_SURAT') clientId = '10002';
+
+  const numericId = parseInt(clientId, 10);
+  if (isNaN(numericId) || numericId < 10000 || numericId > 99999 || String(numericId) !== clientId) {
     sendError(
       res,
       400,
       'INVALID_TENANT_ID',
-      'Tenant identifier exceeds the maximum allowed length of 50 characters.',
+      'Property ID (Client_ID) must be a unique 5-digit number (10000-99999).',
       { clientId }
     );
     return;

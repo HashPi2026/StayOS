@@ -1,6 +1,6 @@
 {
   "name": "StayOS",
-  "description": "Enterprise hospitality management and property PMS system featuring Property Master, Configuration, Rate & Availability engine, and Guest module (Guest Database, Commercial Contacts Directory, and Lost & Found custody log).",
+  "description": "Enterprise hospitality management and property PMS system featuring Front Desk operations, Property Master, Configuration, Rate & Availability engine, and Guest management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

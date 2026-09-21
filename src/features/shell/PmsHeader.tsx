@@ -54,19 +54,22 @@ export const PmsHeader: React.FC<PmsHeaderProps> = ({ isSidebarCollapsed }) => {
       });
       const resJson = await res.json();
       if (!res.ok || resJson.error) {
-        const validCredentials: Record<string, string> = {
+        const validCredentials: Record<string, string | string[]> = {
           'jaymistry1804@gmail.com': 'Destin@2026!',
           'jaymistry.destin_admin@example.com': 'Destin@2026!',
           'sarah.jenkins@destininn.com': 'Destin@2026!',
           'sarah.j@destininn.com': 'Destin@2026!',
           'superadmin@stayos.com': 'SuperAdmin@2026!',
-          'rajesh.mehta@marriott.com': 'SuperAdmin@2026!',
+          'rajesh.mehta@marriott.com': ['Marriott@2026!', 'SuperAdmin@2026!'],
           'priya.shah@marriott.com': 'Marriott@2026!',
           'd.chen@destininn.com': 'Destin@2026!',
           'marcus.vance@grandmetropole.com': 'StayOS2026!Secure',
         };
         const expected = validCredentials[targetUser.email.toLowerCase()];
-        if (switchPassword !== expected) {
+        const isPassValid = Array.isArray(expected)
+          ? expected.includes(switchPassword)
+          : expected === switchPassword;
+        if (!expected || !isPassValid) {
           setIsVerifyingSwitch(false);
           setSwitchError('Authentication failed: Password does not match this user account.');
           return;

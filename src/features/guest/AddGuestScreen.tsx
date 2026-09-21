@@ -156,6 +156,17 @@ export const AddGuestScreen: React.FC<AddGuestScreenProps> = ({ onSave, onCancel
       return;
     }
 
+    const formatToYmd = (val?: string) => {
+      if (!val) return undefined;
+      const str = val.trim();
+      const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (dmyMatch) {
+        const [, d, m, y] = dmyMatch;
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+      return str;
+    };
+
     const newGuest: GuestRecord = {
       id: `GST-${Math.floor(100000 + Math.random() * 900000)}`,
       title,
@@ -163,7 +174,7 @@ export const AddGuestScreen: React.FC<AddGuestScreenProps> = ({ onSave, onCancel
       middleName: middleName.trim() || undefined,
       lastName: lastName.trim(),
       suffix: suffix.trim() || undefined,
-      birthDate,
+      birthDate: formatToYmd(birthDate),
       gender,
       nationality,
       company: company.trim() || undefined,
@@ -190,6 +201,7 @@ export const AddGuestScreen: React.FC<AddGuestScreenProps> = ({ onSave, onCancel
       })),
       documents: documents.map((d) => ({
         ...d,
+        validTill: formatToYmd(d.validTill) || d.validTill,
         nameOnDocument: d.nameOnDocument || `${firstName.toUpperCase()} ${lastName.toUpperCase()}`,
         documentNumber: d.documentNumber || `DOC-${Math.floor(100000 + Math.random() * 900000)}`,
       })),

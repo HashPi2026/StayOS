@@ -6,6 +6,7 @@ import { runMigrations } from './db/migrate.js';
 import { configurationRouter } from './modules/configuration/index.js';
 import { rateAvailabilityRouter } from './modules/rate_availability/index.js';
 import { guestRouter } from './modules/guest/index.js';
+import { reservationRouter } from './modules/reservation/index.js';
 import { shellRouter } from './modules/shell/index.js';
 import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -79,7 +80,14 @@ async function startServer() {
     // Mount StayOS Guest REST Modules (API Gateway Base URL: https://api.stayos.io/v1/guest)
     app.use('/api/v1/guest', guestRouter);
     app.use('/api/guest', guestRouter);
-    // Direct endpoint aliases (/api/v1/guests, /api/v1/contacts, etc.)
+
+    // Mount StayOS Reservation REST Modules (API Gateway Base URL: https://api.stayos.io/v1/reservation)
+    app.use('/api/v1/reservation', reservationRouter);
+    app.use('/api/reservation', reservationRouter);
+    app.use('/api/v1/group', reservationRouter);
+    app.use('/api/group', reservationRouter);
+
+    // Direct endpoint aliases (/api/v1/guests, /api/v1/reservations, /api/v1/groups, etc.)
     app.use(['/api/v1', '/api'], (req, res, next) => {
         const p = req.path;
         if (
@@ -93,6 +101,19 @@ async function startServer() {
             p.startsWith('/lost-found-items')
         ) {
             return guestRouter(req, res, next);
+        }
+        if (
+            p.startsWith('/reservations') ||
+            p.startsWith('/rental-details') ||
+            p.startsWith('/reservation-guests') ||
+            p.startsWith('/other-charges') ||
+            p.startsWith('/payments') ||
+            p.startsWith('/vehicles') ||
+            p.startsWith('/groups') ||
+            p.startsWith('/group-contacts') ||
+            p.startsWith('/group-documents')
+        ) {
+            return reservationRouter(req, res, next);
         }
         next();
     });

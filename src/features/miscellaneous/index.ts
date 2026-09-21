@@ -5,3 +5,4 @@ export {
   SystemHealthView,
   GenericSettingsView,
 } from './OtherViews';
+export { ReservationLogView } from './ReservationLogView';

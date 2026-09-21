@@ -6,7 +6,7 @@
 import React from 'react';
 import { PropertyProvider, useProperty } from './context/PropertyContext';
 import { Sidebar, Header } from './components/layout';
-import { ToastContainer, GlobalSearchModal, VerifyPinModal } from './components/shared';
+import { ToastContainer, GlobalSearchModal, VerifyPinModal, ErrorBoundary } from './components/shared';
 import { MainPmsShell } from './features/shell';
 
 // Property Features
@@ -121,6 +121,7 @@ import { CrsTaxExemptView } from './features/settings/crs-tax-exempt';
 import {
   AmenitiesView,
   AuditLogsView,
+  ReservationLogView,
   SystemHealthView,
   GenericSettingsView,
 } from './features/miscellaneous';
@@ -279,8 +280,28 @@ const MainLayout: React.FC = () => {
         );
       case 'audit-logs':
         return <AuditLogsView />;
+      case 'reservation-logs':
+        return <ReservationLogView />;
       case 'system-health':
         return <SystemHealthView />;
+      case 'front_desk':
+      case 'front-desk':
+      case 'frontdesk':
+      case 'search-reservation':
+      case 'guest-ledger':
+      case 'batch-folio':
+      case 'change-room-status':
+      case 'block-room':
+      case 'edit-group':
+      case 'room-comments':
+      case 'front-desk-search-reservation':
+      case 'front-desk-guest-ledger':
+      case 'front-desk-batch-folio':
+      case 'front-desk-change-room-status':
+      case 'front-desk-block-room':
+      case 'front-desk-edit-group':
+      case 'front-desk-room-comments':
+        return <MainPmsShell />;
       default:
         return <PropertyMasterView />;
     }
@@ -292,6 +313,21 @@ const MainLayout: React.FC = () => {
     'reservation',
     'front_desk',
     'front-desk',
+    'frontdesk',
+    'search-reservation',
+    'guest-ledger',
+    'batch-folio',
+    'change-room-status',
+    'block-room',
+    'edit-group',
+    'room-comments',
+    'front-desk-search-reservation',
+    'front-desk-guest-ledger',
+    'front-desk-batch-folio',
+    'front-desk-change-room-status',
+    'front-desk-block-room',
+    'front-desk-edit-group',
+    'front-desk-room-comments',
     'rate_availability',
     'rate-availability',
     'rate-availability-flash',
@@ -323,12 +359,24 @@ const MainLayout: React.FC = () => {
     'utility',
     'reports',
   ].includes(normalizedPath) ||
+    normalizedPath.startsWith('front-desk') ||
+    normalizedPath.startsWith('front_desk') ||
+    normalizedPath.startsWith('frontdesk') ||
+    normalizedPath.startsWith('search-reservation') ||
+    normalizedPath.startsWith('guest-ledger') ||
+    normalizedPath.startsWith('batch-folio') ||
+    normalizedPath.startsWith('change-room-status') ||
+    normalizedPath.startsWith('block-room') ||
+    normalizedPath.startsWith('edit-group') ||
+    normalizedPath.startsWith('room-comments') ||
     normalizedPath.startsWith('guest') ||
     normalizedPath.startsWith('contacts') ||
     normalizedPath.startsWith('lost-and-found') ||
     normalizedPath.startsWith('lost_and_found') ||
     normalizedPath.startsWith('rate-availability') ||
-    normalizedPath.startsWith('rate_availability');
+    normalizedPath.startsWith('rate_availability') ||
+    normalizedPath.startsWith('housekeeping') ||
+    normalizedPath.startsWith('house-keeping');
 
   if (isPmsShellView) {
     return (
@@ -350,7 +398,9 @@ const MainLayout: React.FC = () => {
       <div className="pl-[240px] flex-1 flex flex-col min-w-0">
         <Header />
         <main className="relative pt-16 flex-1 min-h-screen bg-[#f7f9fb]">
-          {renderActiveScreen()}
+          <ErrorBoundary fallbackTitle="Configuration View Error">
+            {renderActiveScreen()}
+          </ErrorBoundary>
         </main>
       </div>
 
