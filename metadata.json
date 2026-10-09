@@ -1,6 +1,6 @@
 {
   "name": "StayOS",
-  "description": "Enterprise hospitality management and property PMS system featuring Front Desk operations, Property Master, Configuration, Rate & Availability engine, and Guest management.",
+  "description": "Enterprise hospitality management and property PMS system featuring Front Desk operations, Business Channels, Property Master, Configuration, Rate & Availability engine, and Guest management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -226,6 +226,41 @@ export const HOUSEKEEPING_SUBMENUS: PmsSubMenuItem[] = [
   },
 ];
 
+export const BUSINESS_CHANNELS_SUBMENUS: PmsSubMenuItem[] = [
+  {
+    key: 'category',
+    path: 'business-channels-category' as NavigationPath,
+    displayName: 'Category',
+    materialIcon: 'category',
+    description: 'Channel taxonomy, commission eligibility, and credit allowance classification.',
+    badge: 'Structure',
+  },
+  {
+    key: 'business-source',
+    path: 'business-source' as NavigationPath,
+    displayName: 'Business Source',
+    materialIcon: 'corporate_fare',
+    description: 'OTA partner directory, corporate client accounts, IATA credentials, and credit limits.',
+    badge: 'Accounts',
+  },
+  {
+    key: 'invoice',
+    path: 'channel-invoice' as NavigationPath,
+    displayName: 'Invoice',
+    materialIcon: 'receipt_long',
+    description: 'City ledger master invoices, corporate room folios, direct billing, and payment processing.',
+    badge: 'Billing',
+  },
+  {
+    key: 'commission-invoice',
+    path: 'commission-invoice' as NavigationPath,
+    displayName: 'Commission Invoice',
+    materialIcon: 'percent',
+    description: 'Agency commission audit, OTA transaction fees, and remittance voucher disbursements.',
+    badge: 'Payouts',
+  },
+];
+
 export const PMS_MODULES_CONFIG: Record<string, {
   materialIcon: string;
   description: string;

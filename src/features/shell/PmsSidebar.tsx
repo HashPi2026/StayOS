@@ -19,6 +19,8 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
     front_desk: true,
     rate_availability: true,
     guest: true,
+    business_channels: true,
+    housekeeping: true,
   });
 
   const toggleSubMenu = (key: string) => {
@@ -57,7 +59,23 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
           activePath === `rate_availability_${sub.key}` ||
           activePath === `guest-${sub.key}` ||
           activePath === `guest_${sub.key}` ||
-          (mod.moduleKey === 'guest' && (activePath === sub.key || activePath === sub.path))
+          (mod.moduleKey === 'guest' && (activePath === sub.key || activePath === sub.path)) ||
+          (mod.moduleKey === 'business_channels' && (
+            activePath === sub.path ||
+            activePath === sub.key ||
+            (sub.key === 'category' && (activePath === 'business_channels' || activePath === 'business-channels' || activePath === 'business-channels-category')) ||
+            (sub.key === 'business-source' && (activePath === 'business-source' || activePath === 'business-sources')) ||
+            (sub.key === 'invoice' && (activePath === 'channel-invoice' || activePath === 'invoice')) ||
+            (sub.key === 'commission-invoice' && (activePath === 'commission-invoice' || activePath === 'commission-invoices'))
+          )) ||
+          (mod.moduleKey === 'housekeeping' && (
+            activePath === sub.path ||
+            activePath === sub.key ||
+            (sub.key === 'groups' && (activePath === 'housekeeping' || activePath === 'house-keeping' || activePath === 'housekeeping-groups')) ||
+            (sub.key === 'members' && activePath === 'housekeeping-members') ||
+            (sub.key === 'assignment' && activePath === 'housekeeping-assignment') ||
+            (sub.key === 'tasks' && activePath === 'housekeeping-tasks')
+          ))
       );
       if (!isAlreadyInSub) {
         navigate(mod.subItems[0].path);
@@ -133,6 +151,34 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
         activePath === 'lost-and-found' ||
         activePath === 'add-guest' ||
         activePath === 'edit-guest'
+      );
+    }
+    if (mod.moduleKey === 'business_channels' || mod.moduleKey === 'business-channels') {
+      return (
+        activePath === 'business_channels' ||
+        activePath === 'business-channels' ||
+        activePath === 'business-channels-category' ||
+        activePath === 'business-source' ||
+        activePath === 'business-sources' ||
+        activePath === 'channel-invoice' ||
+        activePath === 'commission-invoice' ||
+        activePath === 'commission-invoices' ||
+        activePath.startsWith('business-channels-') ||
+        activePath.startsWith('business_channels_')
+      );
+    }
+    if (mod.moduleKey === 'housekeeping' || mod.moduleKey === 'house-keeping') {
+      return (
+        activePath === 'housekeeping' ||
+        activePath === 'house-keeping' ||
+        activePath === 'housekeeping-groups' ||
+        activePath === 'housekeeping-members' ||
+        activePath === 'housekeeping-assignment' ||
+        activePath === 'housekeeping-tasks' ||
+        activePath.startsWith('housekeeping-') ||
+        activePath.startsWith('house-keeping-') ||
+        activePath.startsWith('housekeeping_') ||
+        activePath.startsWith('house_keeping_')
       );
     }
     return (
@@ -261,7 +307,23 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                       activePath === `guest-${sub.key}` ||
                       (sub.key === 'guest-database' && (activePath === 'guest' || activePath === 'guest-database' || activePath === 'guest-hub' || activePath === 'guest-add' || activePath === 'guest-edit' || activePath === 'add-guest' || activePath === 'edit-guest')) ||
                       (sub.key === 'contacts' && (activePath === 'contacts' || activePath.startsWith('contacts-'))) ||
-                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found'));
+                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found')) ||
+                      (mod.moduleKey === 'business_channels' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        (sub.key === 'category' && (activePath === 'business_channels' || activePath === 'business-channels' || activePath === 'business-channels-category')) ||
+                        (sub.key === 'business-source' && (activePath === 'business-source' || activePath === 'business-sources')) ||
+                        (sub.key === 'invoice' && (activePath === 'channel-invoice' || activePath === 'invoice')) ||
+                        (sub.key === 'commission-invoice' && (activePath === 'commission-invoice' || activePath === 'commission-invoices'))
+                      )) ||
+                      (mod.moduleKey === 'housekeeping' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        (sub.key === 'groups' && (activePath === 'housekeeping' || activePath === 'house-keeping' || activePath === 'housekeeping-groups')) ||
+                        (sub.key === 'members' && activePath === 'housekeeping-members') ||
+                        (sub.key === 'assignment' && activePath === 'housekeeping-assignment') ||
+                        (sub.key === 'tasks' && activePath === 'housekeeping-tasks')
+                      ));
 
                     return (
                       <button
@@ -324,7 +386,23 @@ export const PmsSidebar: React.FC<PmsSidebarProps> = ({
                       activePath === `guest-${sub.key}` ||
                       (sub.key === 'guest-database' && (activePath === 'guest' || activePath === 'guest-database' || activePath === 'guest-hub' || activePath === 'guest-add' || activePath === 'guest-edit' || activePath === 'add-guest' || activePath === 'edit-guest')) ||
                       (sub.key === 'contacts' && (activePath === 'contacts' || activePath.startsWith('contacts-'))) ||
-                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found'));
+                      (sub.key === 'lost-and-found' && (activePath === 'lost-and-found' || activePath === 'lost_and_found')) ||
+                      (mod.moduleKey === 'business_channels' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        (sub.key === 'category' && (activePath === 'business_channels' || activePath === 'business-channels' || activePath === 'business-channels-category')) ||
+                        (sub.key === 'business-source' && (activePath === 'business-source' || activePath === 'business-sources')) ||
+                        (sub.key === 'invoice' && (activePath === 'channel-invoice' || activePath === 'invoice')) ||
+                        (sub.key === 'commission-invoice' && (activePath === 'commission-invoice' || activePath === 'commission-invoices'))
+                      )) ||
+                      (mod.moduleKey === 'housekeeping' && (
+                        activePath === sub.path ||
+                        activePath === sub.key ||
+                        (sub.key === 'groups' && (activePath === 'housekeeping' || activePath === 'house-keeping' || activePath === 'housekeeping-groups')) ||
+                        (sub.key === 'members' && activePath === 'housekeeping-members') ||
+                        (sub.key === 'assignment' && activePath === 'housekeeping-assignment') ||
+                        (sub.key === 'tasks' && activePath === 'housekeeping-tasks')
+                      ));
                     return (
                       <button
                         key={sub.key}

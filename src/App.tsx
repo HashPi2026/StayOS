@@ -301,6 +301,30 @@ const MainLayout: React.FC = () => {
       case 'front-desk-block-room':
       case 'front-desk-edit-group':
       case 'front-desk-room-comments':
+      case 'dashboard':
+      case 'reservation':
+      case 'rate_availability':
+      case 'rate-availability':
+      case 'audit':
+      case 'business_channels':
+      case 'business-channels':
+      case 'business-channels-category':
+      case 'business-source':
+      case 'business-sources':
+      case 'channel-invoice':
+      case 'commission-invoice':
+      case 'commission-invoices':
+      case 'guest':
+      case 'contacts':
+      case 'lost-and-found':
+      case 'housekeeping':
+      case 'house-keeping':
+      case 'housekeeping-groups':
+      case 'housekeeping-members':
+      case 'housekeeping-assignment':
+      case 'housekeeping-tasks':
+      case 'utility':
+      case 'reports':
         return <MainPmsShell />;
       default:
         return <PropertyMasterView />;
@@ -341,6 +365,12 @@ const MainLayout: React.FC = () => {
     'audit',
     'business_channels',
     'business-channels',
+    'business-channels-category',
+    'business-source',
+    'business-sources',
+    'channel-invoice',
+    'commission-invoice',
+    'commission-invoices',
     'guest',
     'guest-database',
     'guest-hub',
@@ -356,6 +386,10 @@ const MainLayout: React.FC = () => {
     'lost_and_found',
     'housekeeping',
     'house-keeping',
+    'housekeeping-groups',
+    'housekeeping-members',
+    'housekeeping-assignment',
+    'housekeeping-tasks',
     'utility',
     'reports',
   ].includes(normalizedPath) ||
@@ -375,6 +409,12 @@ const MainLayout: React.FC = () => {
     normalizedPath.startsWith('lost_and_found') ||
     normalizedPath.startsWith('rate-availability') ||
     normalizedPath.startsWith('rate_availability') ||
+    normalizedPath.startsWith('business-channels') ||
+    normalizedPath.startsWith('business_channels') ||
+    normalizedPath.startsWith('business-source') ||
+    normalizedPath.startsWith('business_source') ||
+    normalizedPath.startsWith('channel-invoice') ||
+    normalizedPath.startsWith('commission-invoice') ||
     normalizedPath.startsWith('housekeeping') ||
     normalizedPath.startsWith('house-keeping');
 

@@ -43,9 +43,13 @@ export type HousekeepingTab = 'groups' | 'members' | 'assignment' | 'tasks';
 
 interface HousekeepingViewProps {
   initialTab?: HousekeepingTab;
+  onTabChange?: (tab: HousekeepingTab) => void;
 }
 
-export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab = 'groups' }) => {
+export const HousekeepingView: React.FC<HousekeepingViewProps> = ({
+  initialTab = 'groups',
+  onTabChange,
+}) => {
   const { addToast } = useProperty();
 
   // Active sub-tab
@@ -56,6 +60,11 @@ export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab =
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  const handleTabSelect = (tab: HousekeepingTab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
 
   // Shared Data States
   const [groups, setGroups] = useState<HousekeepingGroup[]>(INITIAL_GROUPS);
@@ -343,10 +352,10 @@ export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab =
         <div className="max-w-[1720px] mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-1 overflow-x-auto py-2">
             <button
-              onClick={() => setActiveTab('groups')}
+              onClick={() => handleTabSelect('groups')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'groups'
-                  ? 'bg-[#2170e4] text-white shadow-xs'
+                  ? 'bg-[#4472C4] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -355,10 +364,10 @@ export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab =
             </button>
 
             <button
-              onClick={() => setActiveTab('members')}
+              onClick={() => handleTabSelect('members')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'members'
-                  ? 'bg-[#2170e4] text-white shadow-xs'
+                  ? 'bg-[#4472C4] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -367,10 +376,10 @@ export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab =
             </button>
 
             <button
-              onClick={() => setActiveTab('assignment')}
+              onClick={() => handleTabSelect('assignment')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'assignment'
-                  ? 'bg-[#2170e4] text-white shadow-xs'
+                  ? 'bg-[#4472C4] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -379,10 +388,10 @@ export const HousekeepingView: React.FC<HousekeepingViewProps> = ({ initialTab =
             </button>
 
             <button
-              onClick={() => setActiveTab('tasks')}
+              onClick={() => handleTabSelect('tasks')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                 activeTab === 'tasks'
-                  ? 'bg-[#2170e4] text-white shadow-xs'
+                  ? 'bg-[#4472C4] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >

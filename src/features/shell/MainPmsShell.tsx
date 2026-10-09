@@ -14,7 +14,7 @@ import { HousekeepingView } from '../housekeeping/HousekeepingView';
 import { UtilityView } from '../utility/UtilityView';
 import { ReportsView } from '../reports/ReportsView';
 import { ErrorBoundary } from '@/src/components/shared';
-import { PmsModuleInfo, PMS_MODULES_CONFIG, RATE_AVAILABILITY_SUBMENUS, GUEST_SUBMENUS, HOUSEKEEPING_SUBMENUS, FRONT_DESK_SUBMENUS } from './types';
+import { PmsModuleInfo, PMS_MODULES_CONFIG, RATE_AVAILABILITY_SUBMENUS, GUEST_SUBMENUS, HOUSEKEEPING_SUBMENUS, FRONT_DESK_SUBMENUS, BUSINESS_CHANNELS_SUBMENUS } from './types';
 
 const DEFAULT_MODULES: PmsModuleInfo[] = [
   { moduleKey: 'dashboard', displayName: 'Dashboard', iconKey: 'layout-dashboard', materialIcon: 'space_dashboard', sortOrder: 1, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.dashboard.description, plannedFeatures: PMS_MODULES_CONFIG.dashboard.plannedFeatures },
@@ -22,7 +22,7 @@ const DEFAULT_MODULES: PmsModuleInfo[] = [
   { moduleKey: 'front_desk', displayName: 'Front Desk', iconKey: 'concierge-bell', materialIcon: 'desk', sortOrder: 3, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.front_desk.description, plannedFeatures: PMS_MODULES_CONFIG.front_desk.plannedFeatures, subItems: FRONT_DESK_SUBMENUS },
   { moduleKey: 'rate_availability', displayName: 'Rate & Availability', iconKey: 'tags', materialIcon: 'sell', sortOrder: 4, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.rate_availability.description, plannedFeatures: PMS_MODULES_CONFIG.rate_availability.plannedFeatures, subItems: RATE_AVAILABILITY_SUBMENUS },
   { moduleKey: 'audit', displayName: 'Audit', iconKey: 'clipboard-list', materialIcon: 'fact_check', sortOrder: 5, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.audit.description, plannedFeatures: PMS_MODULES_CONFIG.audit.plannedFeatures },
-  { moduleKey: 'business_channels', displayName: 'Business Channels', iconKey: 'share-2', materialIcon: 'hub', sortOrder: 6, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.business_channels.description, plannedFeatures: PMS_MODULES_CONFIG.business_channels.plannedFeatures },
+  { moduleKey: 'business_channels', displayName: 'Business Channels', iconKey: 'share-2', materialIcon: 'hub', sortOrder: 6, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.business_channels.description, plannedFeatures: PMS_MODULES_CONFIG.business_channels.plannedFeatures, subItems: BUSINESS_CHANNELS_SUBMENUS },
   { moduleKey: 'guest', displayName: 'Guest', iconKey: 'users', materialIcon: 'group', sortOrder: 7, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.guest.description, plannedFeatures: PMS_MODULES_CONFIG.guest.plannedFeatures, subItems: GUEST_SUBMENUS },
   { moduleKey: 'housekeeping', displayName: 'Housekeeping', iconKey: 'broom', materialIcon: 'cleaning_services', sortOrder: 8, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.housekeeping.description, plannedFeatures: PMS_MODULES_CONFIG.housekeeping.plannedFeatures, subItems: HOUSEKEEPING_SUBMENUS },
   { moduleKey: 'utility', displayName: 'Utility', iconKey: 'wrench', materialIcon: 'build', sortOrder: 9, isBuilt: true, hasAccess: true, description: PMS_MODULES_CONFIG.utility.description, plannedFeatures: PMS_MODULES_CONFIG.utility.plannedFeatures },
@@ -71,7 +71,9 @@ export const MainPmsShell: React.FC = () => {
                 item.module_key === 'guest' ||
                 item.module_key === 'housekeeping' ||
                 item.module_key === 'front_desk' ||
-                item.module_key === 'front-desk'
+                item.module_key === 'front-desk' ||
+                item.module_key === 'business_channels' ||
+                item.module_key === 'business-channels'
                   ? true
                   : item.is_built,
               hasAccess: item.has_access !== false,
@@ -87,6 +89,8 @@ export const MainPmsShell: React.FC = () => {
                   ? GUEST_SUBMENUS
                   : item.module_key === 'housekeeping'
                   ? HOUSEKEEPING_SUBMENUS
+                  : item.module_key === 'business_channels' || item.module_key === 'business-channels'
+                  ? BUSINESS_CHANNELS_SUBMENUS
                   : undefined,
             };
           });
@@ -125,6 +129,18 @@ export const MainPmsShell: React.FC = () => {
     normalizedPath.startsWith('housekeeping-') ||
     normalizedPath.startsWith('house-keeping-');
 
+  const isBusinessChannels =
+    normalizedPath === 'business-channels' ||
+    normalizedPath === 'business_channels' ||
+    normalizedPath === 'business-channels-category' ||
+    normalizedPath === 'business-source' ||
+    normalizedPath === 'business-sources' ||
+    normalizedPath === 'channel-invoice' ||
+    normalizedPath === 'commission-invoice' ||
+    normalizedPath === 'commission-invoices' ||
+    normalizedPath.startsWith('business-channels-') ||
+    normalizedPath.startsWith('business_channels_');
+
   const isFrontDesk =
     normalizedPath === 'front-desk' ||
     normalizedPath === 'front_desk' ||
@@ -153,7 +169,7 @@ export const MainPmsShell: React.FC = () => {
       ? 'guest'
       : isHousekeeping
       ? 'housekeeping'
-      : normalizedPath === 'business-channels'
+      : isBusinessChannels
       ? 'business_channels'
       : normalizedPath;
 
@@ -166,6 +182,12 @@ export const MainPmsShell: React.FC = () => {
     else if (normalizedPath.includes('edit-group') || normalizedPath.includes('group')) activeSubMenuKey = 'edit-group';
     else if (normalizedPath.includes('room-comments') || normalizedPath.includes('comments')) activeSubMenuKey = 'room-comments';
     else activeSubMenuKey = 'search-reservation';
+  } else if (isBusinessChannels) {
+    if (normalizedPath.includes('category')) activeSubMenuKey = 'category';
+    else if (normalizedPath.includes('source')) activeSubMenuKey = 'business-source';
+    else if (normalizedPath.includes('commission')) activeSubMenuKey = 'commission-invoice';
+    else if (normalizedPath.includes('invoice')) activeSubMenuKey = 'invoice';
+    else activeSubMenuKey = 'category';
   } else if (isRateAvailability) {
     if (normalizedPath.includes('flash')) activeSubMenuKey = 'flash';
     else if (normalizedPath.includes('forecasting')) activeSubMenuKey = 'forecasting';
@@ -252,9 +274,26 @@ export const MainPmsShell: React.FC = () => {
             ) : currentModuleKey === 'audit' ? (
               <AuditView />
             ) : currentModuleKey === 'business_channels' ? (
-              <BusinessChannelsView />
+              <BusinessChannelsView
+                initialTab={activeSubMenuKey}
+                onTabChange={(tab) => {
+                  if (tab === 'category') navigate('business-channels-category' as any);
+                  else if (tab === 'business-source') navigate('business-source' as any);
+                  else if (tab === 'invoice') navigate('channel-invoice' as any);
+                  else if (tab === 'commission-invoice') navigate('commission-invoice' as any);
+                  else navigate('business-channels' as any);
+                }}
+              />
             ) : currentModuleKey === 'housekeeping' ? (
-              <HousekeepingView initialTab={activeSubMenuKey as any} />
+              <HousekeepingView
+                initialTab={activeSubMenuKey as any}
+                onTabChange={(tab) => {
+                  if (tab === 'members') navigate('housekeeping-members' as any);
+                  else if (tab === 'assignment') navigate('housekeeping-assignment' as any);
+                  else if (tab === 'tasks') navigate('housekeeping-tasks' as any);
+                  else navigate('housekeeping' as any);
+                }}
+              />
             ) : currentModuleKey === 'utility' ? (
               <UtilityView />
             ) : currentModuleKey === 'reports' ? (
