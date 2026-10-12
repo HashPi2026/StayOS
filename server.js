@@ -7,6 +7,7 @@ import { configurationRouter } from './modules/configuration/index.js';
 import { rateAvailabilityRouter } from './modules/rate_availability/index.js';
 import { guestRouter } from './modules/guest/index.js';
 import { reservationRouter } from './modules/reservation/index.js';
+import { dashboardRouter } from './modules/dashboard/index.js';
 import { shellRouter } from './modules/shell/index.js';
 import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -86,6 +87,10 @@ async function startServer() {
     app.use('/api/reservation', reservationRouter);
     app.use('/api/v1/group', reservationRouter);
     app.use('/api/group', reservationRouter);
+
+    // Mount StayOS Dashboard Module
+    app.use('/api/v1/dashboard', dashboardRouter);
+    app.use('/api/dashboard', dashboardRouter);
 
     // Direct endpoint aliases (/api/v1/guests, /api/v1/reservations, /api/v1/groups, etc.)
     app.use(['/api/v1', '/api'], (req, res, next) => {

@@ -302,6 +302,8 @@ const MainLayout: React.FC = () => {
       case 'front-desk-edit-group':
       case 'front-desk-room-comments':
       case 'dashboard':
+      case 'profile':
+      case 'user-profile':
       case 'reservation':
       case 'rate_availability':
       case 'rate-availability':
@@ -334,6 +336,8 @@ const MainLayout: React.FC = () => {
   const normalizedPath = (activePath || '').toLowerCase().replace(/^\/+/, '');
   const isPmsShellView = [
     'dashboard',
+    'profile',
+    'user-profile',
     'reservation',
     'front_desk',
     'front-desk',

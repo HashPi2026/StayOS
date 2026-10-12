@@ -336,6 +336,18 @@ export const PmsHeader: React.FC<PmsHeaderProps> = ({ isSidebarCollapsed }) => {
               <div className="py-1">
                 <button
                   onClick={() => {
+                    navigate('profile');
+                    setIsUserDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-[13px] text-slate-700 flex items-center gap-2.5 cursor-pointer font-medium"
+                >
+                  <span className="material-symbols-outlined text-[17px] text-[#4472C4]">
+                    account_circle
+                  </span>
+                  <span>Profile Details</span>
+                </button>
+                <button
+                  onClick={() => {
                     navigate('overview');
                     setIsUserDropdownOpen(false);
                   }}

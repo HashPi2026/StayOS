@@ -1,6 +1,8 @@
 export type NavigationPath =
   // Main PMS Shell Modules
   | 'dashboard'
+  | 'profile'
+  | 'user-profile'
   | 'reservation'
   | 'front_desk'
   | 'front-desk'

@@ -5,7 +5,7 @@ import { PmsHeader } from './PmsHeader';
 import { ComingSoonView } from './ComingSoonView';
 import { RateAvailabilityMaster } from '../rate-availability';
 import { GuestMaster } from '../guest';
-import { DashboardView } from '../dashboard/DashboardView';
+import { DashboardView, ProfileView } from '../dashboard';
 import { FrontDeskView } from '../frontdesk/FrontDeskView';
 import { ReservationView } from '../reservation/ReservationView';
 import { AuditView } from '../audit/AuditView';
@@ -262,6 +262,8 @@ export const MainPmsShell: React.FC = () => {
                   </div>
                 </div>
               </div>
+            ) : currentModuleKey === 'profile' || currentModuleKey === 'user-profile' ? (
+              <ProfileView />
             ) : currentModuleKey === 'dashboard' ? (
               <DashboardView />
             ) : currentModuleKey === 'front_desk' ? (

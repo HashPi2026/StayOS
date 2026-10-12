@@ -7,6 +7,8 @@ import { configurationRouter } from './modules/configuration';
 import { shellRouter } from './modules/shell';
 import { rateAvailabilityRouter } from './modules/rate_availability';
 import { guestRouter } from './modules/guest';
+import { dashboardRouter } from './modules/dashboard';
+import { reservationRouter } from './modules/reservation/index.js';
 import { requireModuleAccess } from './middleware/roleAccess.js';
 import { errorHandler } from './middleware/errorHandler';
 import { sendSuccess } from './utils/response';
@@ -82,6 +84,16 @@ async function startServer() {
   // Mount Guest Module
   app.use('/api/v1/guest', guestRouter);
   app.use('/api/guest', guestRouter);
+
+  // Mount Dashboard Module
+  app.use('/api/v1/dashboard', dashboardRouter);
+  app.use('/api/dashboard', dashboardRouter);
+
+  // Mount Reservation Module
+  app.use('/api/v1/reservation', reservationRouter);
+  app.use('/api/reservation', reservationRouter);
+  app.use('/api/v1/reservations', reservationRouter);
+  app.use('/api/reservations', reservationRouter);
 
   // ==================== STATIC / VITE MIDDLEWARE ====================
   if (process.env.NODE_ENV !== 'production') {
